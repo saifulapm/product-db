@@ -137,7 +137,7 @@ class SocksGallery extends ListRecords
             ->label('Download All Sock CADs')
             ->icon('heroicon-o-arrow-down-tray')
             ->color('info')
-            ->url('https://drive.google.com/file/d/1ZjqvCv5dyiYYtjIHNu-22NhoP7H9OprB/view?usp=sharing', shouldOpenInNewTab: true);
+            ->url('https://drive.google.com/uc?export=download&id=1ZjqvCv5dyiYYtjIHNu-22NhoP7H9OprB', shouldOpenInNewTab: true);
 
         // Add team notes edit action
         $teamNote = TeamNote::firstOrCreate(['page' => 'socks'], ['content' => '']);
