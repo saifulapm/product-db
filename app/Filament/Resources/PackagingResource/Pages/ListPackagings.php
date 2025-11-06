@@ -81,7 +81,7 @@ class ListPackagings extends ListRecords
             ->label('Download All Packaging CADs')
             ->icon('heroicon-o-arrow-down-tray')
             ->color('info')
-            ->url('https://cdn.shopify.com/s/files/1/0609/4752/9901/files/Packaging_Styles.pdf?v=1761517545', shouldOpenInNewTab: true);
+            ->url('https://drive.google.com/uc?export=download&id=18c1d1-HC1pKdWvjZoxSNj3vLUbzMcCyz', shouldOpenInNewTab: true);
 
         // Add team notes edit action
         $teamNote = TeamNote::firstOrCreate(['page' => 'packaging'], ['content' => '']);
