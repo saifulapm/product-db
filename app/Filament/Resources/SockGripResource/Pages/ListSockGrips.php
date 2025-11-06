@@ -81,7 +81,7 @@ class ListSockGrips extends ListRecords
             ->label('Download All Sock Grip CADs')
             ->icon('heroicon-o-arrow-down-tray')
             ->color('info')
-            ->url('https://cdn.shopify.com/s/files/1/0609/4752/9901/files/Grip_Pattern_Downloads.pdf?v=1761505527', shouldOpenInNewTab: true);
+            ->url('https://drive.google.com/uc?export=download&id=1hlgMc_wGtAVw91SQfnDWu_Ej_Agtt6vF', shouldOpenInNewTab: true);
 
         // Add team notes edit action
         $teamNote = TeamNote::firstOrCreate(['page' => 'sock-grips'], ['content' => '']);
