@@ -24,7 +24,7 @@ class ListBottles extends ListRecords
                 ->label('Download Bottle CADs')
                 ->icon('heroicon-o-arrow-down-tray')
                 ->color('info')
-                ->url('https://cdn.shopify.com/s/files/1/0609/4752/9901/files/Bottle_CADs.pdf?v=1761535475', shouldOpenInNewTab: true),
+                ->url('https://drive.google.com/uc?export=download&id=1x5Uf8Y6Oi-74TaXjpJtcdLhK5UaFIFiP', shouldOpenInNewTab: true),
         ];
 
         // Add team notes edit action
