@@ -12,3 +12,4 @@ class CreateThreadColor extends CreateRecord
 
 
 
+

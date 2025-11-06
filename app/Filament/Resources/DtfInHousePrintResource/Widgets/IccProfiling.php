@@ -53,9 +53,9 @@ class IccProfiling extends Widget implements HasActions
     public function editContent(): Action
     {
         return Action::make('edit_content')
-            ->label($this->content || !empty($this->existingImages) ? 'Edit Content' : 'Add Content')
+            ->label('Edit Content')
             ->icon('heroicon-o-pencil-square')
-            ->color('primary')
+            ->color('gray')
             ->form([
                 RichEditor::make('content')
                     ->label('Content')
@@ -77,7 +77,7 @@ class IccProfiling extends Widget implements HasActions
                         'underline',
                         'undo',
                     ])
-                    ->default(fn () => $this->content),
+                    ->default(mb_convert_encoding($this->content ?: '', 'UTF-8', 'UTF-8')),
                 TextInput::make('imageUrl')
                     ->label('Add Image from URL (Optional)')
                     ->url()
@@ -98,14 +98,19 @@ class IccProfiling extends Widget implements HasActions
                     }
                 }
                 
+                // Clean and ensure UTF-8 encoding
+                $content = $data['content'] ?? '';
+                $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8');
+                $content = iconv('UTF-8', 'UTF-8//IGNORE', $content);
+                
                 $widget = DtfWidgetContent::firstOrNew(['widget_name' => 'icc_profiling']);
                 $widget->content = json_encode([
-                    'text' => $data['content'] ?? '',
+                    'text' => $content,
                     'images' => $this->existingImages
                 ]);
                 $widget->save();
 
-                $this->content = $data['content'] ?? '';
+                $this->content = $content;
 
                 Notification::make()
                     ->title('Content updated successfully!')
@@ -113,7 +118,7 @@ class IccProfiling extends Widget implements HasActions
                     ->send();
             })
             ->requiresConfirmation(false)
-            ->modalHeading('Edit ICC Profiling')
+            ->modalHeading('Edit Content')
             ->modalSubmitActionLabel('Save')
             ->modalWidth('4xl');
     }
@@ -124,6 +129,7 @@ class IccProfiling extends Widget implements HasActions
             $this->editContent(),
         ];
     }
+
 
     public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
     {

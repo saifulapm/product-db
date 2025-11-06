@@ -47,9 +47,9 @@ class FileTypes extends Widget implements HasActions
     public function editContent(): Action
     {
         return Action::make('edit_content')
-            ->label($this->content ? 'Edit Content' : 'Add Content')
+            ->label('Edit Content')
             ->icon('heroicon-o-pencil-square')
-            ->color('primary')
+            ->color('gray')
             ->form([
                 RichEditor::make('content')
                     ->label('Content')
@@ -71,11 +71,18 @@ class FileTypes extends Widget implements HasActions
                         'underline',
                         'undo',
                     ])
-                    ->default(fn () => $this->content),
+                    ->default(mb_convert_encoding($this->content ?: '', 'UTF-8', 'UTF-8')),
             ])
             ->action(function (array $data): void {
+                // Clean and ensure UTF-8 encoding
+                $content = $data['content'] ?? '';
+                
+                // Strip invalid UTF-8 characters
+                $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8');
+                $content = iconv('UTF-8', 'UTF-8//IGNORE', $content);
+                
                 $widget = DtfWidgetContent::firstOrNew(['widget_name' => 'file_types']);
-                $widget->content = $data['content'];
+                $widget->content = $content;
                 $widget->save();
 
                 $this->content = $widget->content;
@@ -86,7 +93,7 @@ class FileTypes extends Widget implements HasActions
                     ->send();
             })
             ->requiresConfirmation(false)
-            ->modalHeading('Edit DTF File Types')
+            ->modalHeading('Edit Content')
             ->modalSubmitActionLabel('Save');
     }
 
@@ -96,6 +103,7 @@ class FileTypes extends Widget implements HasActions
             $this->editContent(),
         ];
     }
+
 
     public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
     {

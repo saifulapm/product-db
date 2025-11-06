@@ -9,15 +9,16 @@
                     <span>DTF Tone on Tone Colors</span>
                 </div>
                 @php
-                    // Ensure actions are cached first
-                    $this->getActions();
-                    // Then get the cached action
                     $action = $this->getAction('edit_colors');
+                    if (!$action) {
+                        $actions = $this->getActions();
+                        if (!empty($actions) && $actions[0] instanceof \Filament\Actions\Action) {
+                            $action = $this->cacheAction($actions[0]);
+                        }
+                    }
                 @endphp
                 @if($action)
                     {{ $action }}
-                @else
-                    {{ $this->editColors() }}
                 @endif
             </div>
         </x-slot>

@@ -39,7 +39,7 @@ class ToneOnToneColors extends Widget implements HasActions
         
         $this->colors = json_decode($widget->content ?: '[]', true) ?: [];
         
-        // Cache actions on mount to ensure they're available
+        // Cache actions to ensure they're available
         foreach ($this->getActions() as $action) {
             if ($action instanceof Action) {
                 $this->cacheAction($action);
@@ -50,9 +50,9 @@ class ToneOnToneColors extends Widget implements HasActions
     public function editColors(): Action
     {
         return Action::make('edit_colors')
-            ->label('Edit Colors')
-            ->icon('heroicon-o-pencil')
-            ->livewire($this)
+            ->label('Edit Content')
+            ->icon('heroicon-o-pencil-square')
+            ->color('gray')
             ->form([
                 \Filament\Forms\Components\Repeater::make('colors')
                     ->label('Tone on Tone Colors')
@@ -88,7 +88,7 @@ class ToneOnToneColors extends Widget implements HasActions
                     ->send();
             })
             ->requiresConfirmation(false)
-            ->modalHeading('Edit Tone on Tone Colors')
+            ->modalHeading('Edit Content')
             ->modalSubmitActionLabel('Save')
             ->modalWidth('4xl');
     }
@@ -99,6 +99,7 @@ class ToneOnToneColors extends Widget implements HasActions
             $this->editColors(),
         ];
     }
+
 
     public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
     {

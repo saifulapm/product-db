@@ -3,7 +3,16 @@
         <x-slot name="heading">
             <div class="flex items-center justify-between w-full">
                 <span>DTF Contact Info</span>
-                {{ $this->editContent() }}
+                @php
+                    $action = $this->getAction('edit_content');
+                    if (!$action) {
+                        $action = $this->editContent();
+                        $this->cacheAction($action);
+                    }
+                @endphp
+                @if($action)
+                    {{ $action }}
+                @endif
             </div>
         </x-slot>
         

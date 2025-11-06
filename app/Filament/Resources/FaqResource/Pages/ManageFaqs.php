@@ -19,3 +19,4 @@ class ManageFaqs extends ManageRecords
 }
 
 
+

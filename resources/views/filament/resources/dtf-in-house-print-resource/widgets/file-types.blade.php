@@ -3,7 +3,17 @@
         <x-slot name="heading">
             <div class="flex items-center justify-between w-full">
                 <span>DTF File Types</span>
-                {{ $this->editContent() }}
+                @php
+                    $action = $this->getAction('edit_content');
+                    // If action not found, ensure it's cached
+                    if (!$action) {
+                        $action = $this->editContent();
+                        $this->cacheAction($action);
+                    }
+                @endphp
+                @if($action)
+                    {{ $action }}
+                @endif
             </div>
         </x-slot>
         

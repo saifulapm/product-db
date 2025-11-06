@@ -4,15 +4,11 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\DtfInHousePrintResource\Widgets\DtfSourcing;
 use App\Filament\Resources\DtfInHousePrintResource\Widgets\HexCodeColors;
-use App\Filament\Resources\DtfInHousePrintResource\Widgets\FileTypes;
-use App\Filament\Resources\DtfInHousePrintResource\Widgets\ContactInfo;
-use App\Filament\Resources\DtfInHousePrintResource\Widgets\IccProfiling;
-use App\Filament\Resources\DtfInHousePrintResource\Widgets\CareOfDtfGarment;
 use App\Filament\Resources\DtfInHousePrintResource\Widgets\LeadTimesMinimums;
 use App\Filament\Resources\DtfInHousePrintResource\Widgets\CareInstructions;
 use App\Filament\Resources\DtfInHousePrintResource\Widgets\PressSettings;
-use App\Filament\Resources\DtfInHousePrintResource\Widgets\ToneOnToneColors;
 use App\Filament\Resources\DtfInHousePrintResource\Widgets\DtfInHousePrintHeader;
+use App\Filament\Resources\DtfInHousePrintResource\Widgets\VisualReference;
 use App\Models\TeamNote;
 use Filament\Actions\Action;
 use Filament\Forms\Components\RichEditor;
@@ -45,12 +41,8 @@ class ManageDtfInHousePrints extends Page
     public function getWidgets(): array
     {
         return [
-            FileTypes::class,
-            ContactInfo::class,
-            IccProfiling::class,
-            CareOfDtfGarment::class,
             PressSettings::class,
-            ToneOnToneColors::class,
+            VisualReference::class,
         ];
     }
 
