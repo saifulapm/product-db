@@ -18,18 +18,12 @@ class ReferenceImagesGallery extends ListRecords
     
     protected static ?string $title = 'Reference Images';
     
-    public $galleryItems = [];
-
-    public function mount(): void
-    {
-        parent::mount();
-        $this->loadGallery();
-    }
-
-    public function loadGallery(): void
+    protected static string $view = 'filament.resources.reference-image-resource.pages.reference-images-gallery';
+    
+    public function getGalleryItemsProperty(): array
     {
         $referenceImage = ReferenceImage::first();
-        $this->galleryItems = $referenceImage ? ($referenceImage->gallery_images ?? []) : [];
+        return $referenceImage ? ($referenceImage->gallery_images ?? []) : [];
     }
 
     public function getHeaderActions(): array
@@ -39,6 +33,7 @@ class ReferenceImagesGallery extends ListRecords
                 ->label('Add Image')
                 ->icon('heroicon-o-plus')
                 ->color('success')
+                ->livewire($this)
                 ->form([
                     Section::make('Add Image')
                         ->schema([
@@ -80,9 +75,9 @@ class ReferenceImagesGallery extends ListRecords
                         ->title('Image added successfully!')
                         ->success()
                         ->send();
-                    
-                    $this->loadGallery();
-                }),
+                })
+                ->modalHeading('Add Image')
+                ->modalSubmitActionLabel('Add Image'),
         ];
     }
     

@@ -28,6 +28,11 @@ class ReferenceImageResource extends Resource
     protected static ?string $navigationGroup = 'Embroidery';
     
     protected static ?int $navigationSort = 1;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
 
     public static function form(Form $form): Form
     {
