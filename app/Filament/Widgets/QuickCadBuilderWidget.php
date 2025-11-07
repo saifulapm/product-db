@@ -16,6 +16,8 @@ use Illuminate\Support\Str;
 
 class QuickCadBuilderWidget extends TableWidget
 {
+    protected static ?int $sort = 50;
+
     protected int | string | array $columnSpan = 'full';
 
     public function table(Table $table): Table

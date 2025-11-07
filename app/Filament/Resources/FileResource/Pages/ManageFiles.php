@@ -4,6 +4,7 @@ namespace App\Filament\Resources\FileResource\Pages;
 
 use App\Filament\Resources\FileResource;
 use App\Filament\Resources\FileResource\Widgets\FilesHeader;
+use App\Models\File;
 use App\Models\TeamNote;
 use Filament\Actions;
 use Filament\Actions\Action;
@@ -27,22 +28,31 @@ class ManageFiles extends ManageRecords
     {
         $actions = [
             Actions\CreateAction::make()
+                ->label('Upload Files')
                 ->mutateFormDataUsing(function (array $data): array {
-                    // Ensure path is properly set when creating
-                    if (isset($data['path']) && is_array($data['path'])) {
+                    if (isset($data['path']) && is_array($data['path']) && count($data['path']) > 1) {
+                        $data['_original_paths'] = $data['path'];
+                        $firstFile = $data['path'][0];
+                        $data['path'] = $firstFile;
+                    } elseif (isset($data['path']) && is_array($data['path'])) {
                         $data['path'] = $data['path'][0] ?? null;
                     }
+
                     if (isset($data['path']) && $data['path']) {
-                        $data['file_name'] = basename($data['path']);
+                        $path = is_string($data['path'])
+                            ? $data['path']
+                            : ($data['path'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile
+                                ? $data['path']->getFilename()
+                                : (string) $data['path']);
+
+                        $data['file_name'] = basename((string) $path);
                         $data['disk'] = 'public';
-                        
-                        // If name is not set, use the filename from path
+
                         if (empty($data['name'])) {
-                            $data['name'] = basename($data['path']);
+                            $data['name'] = basename((string) $path);
                         }
-                        
-                        // Get file info if file exists
-                        $filePath = Storage::disk('public')->path($data['path']);
+
+                        $filePath = Storage::disk('public')->path($path);
                         if (file_exists($filePath)) {
                             if (!isset($data['size'])) {
                                 $data['size'] = filesize($filePath);
@@ -50,17 +60,59 @@ class ManageFiles extends ManageRecords
                             if (!isset($data['mime_type'])) {
                                 $data['mime_type'] = mime_content_type($filePath);
                             }
-                            // Always automatically generate the URL from the file path
-                            $data['url'] = Storage::disk('public')->url($data['path']);
+                            $data['url'] = Storage::disk('public')->url($path);
                         }
                     }
+
                     return $data;
+                })
+                ->after(function (array $data, File $record): void {
+                    if (isset($data['_original_paths']) && is_array($data['_original_paths']) && count($data['_original_paths']) > 1) {
+                        $uploadedFiles = $data['_original_paths'];
+                        array_shift($uploadedFiles);
+
+                        $createdCount = 1;
+
+                        foreach ($uploadedFiles as $filePath) {
+                            $path = is_string($filePath)
+                                ? $filePath
+                                : (is_array($filePath)
+                                    ? ($filePath[0] ?? null)
+                                    : (string) $filePath);
+
+                            if (!$path) {
+                                continue;
+                            }
+
+                            $storagePath = Storage::disk('public')->path($path);
+
+                            if (file_exists($storagePath)) {
+                                File::create([
+                                    'path' => $path,
+                                    'file_name' => basename($path),
+                                    'name' => basename($path),
+                                    'disk' => 'public',
+                                    'size' => filesize($storagePath),
+                                    'mime_type' => mime_content_type($storagePath),
+                                    'url' => Storage::disk('public')->url($path),
+                                ]);
+                                $createdCount++;
+                            }
+                        }
+
+                        if ($createdCount > 1) {
+                            Notification::make()
+                                ->title('Files uploaded successfully')
+                                ->body("{$createdCount} file(s) have been uploaded.")
+                                ->success()
+                                ->send();
+                        }
+                    }
                 }),
         ];
 
-        // Add team notes edit action
         $teamNote = TeamNote::firstOrCreate(['page' => 'files'], ['content' => '']);
-        
+
         $actions[] = Action::make('edit_team_notes')
             ->label('Edit Team Notes')
             ->icon('heroicon-o-pencil-square')
@@ -89,13 +141,11 @@ class ManageFiles extends ManageRecords
                     ->default(mb_convert_encoding($teamNote->content ?: '', 'UTF-8', 'UTF-8')),
             ])
             ->action(function (array $data): void {
-                // Clean and ensure UTF-8 encoding
                 $content = $data['content'] ?? '';
-                
-                // Strip invalid UTF-8 characters
+
                 $content = mb_convert_encoding($content, 'UTF-8', 'UTF-8');
                 $content = iconv('UTF-8', 'UTF-8//IGNORE', $content);
-                
+
                 $teamNote = TeamNote::firstOrNew(['page' => 'files']);
                 $teamNote->content = $content;
                 $teamNote->save();
@@ -111,6 +161,4 @@ class ManageFiles extends ManageRecords
 
         return $actions;
     }
-
-
 }

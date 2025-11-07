@@ -157,7 +157,8 @@ class ThreadBookColorResource extends Resource
             ])
             ->actions([
                 // No actions - clicking the color name will navigate to view page
-            ]);
+            ])
+            ->defaultSort('name');
     }
 
     public static function getRelations(): array

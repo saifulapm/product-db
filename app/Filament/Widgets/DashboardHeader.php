@@ -18,6 +18,8 @@ class DashboardHeader extends Widget implements HasActions
 
     protected static string $view = 'filament.widgets.dashboard-header';
 
+    protected static ?int $sort = 100;
+
     protected int | string | array $columnSpan = 'full';
 
     public $content = '';
