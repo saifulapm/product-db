@@ -85,27 +85,10 @@ class PuffPrintColorResource extends Resource
                     ->color('success')
                     ->icon('heroicon-o-plus'),
                 Tables\Actions\Action::make('download_swatches')
-                    ->label('Download Swatches')
+                    ->label('Download Puff Print Swatches')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('primary')
-                    ->action(function () {
-                        $colors = PuffPrintColor::orderBy('name')->get();
-                        
-                        $filename = 'puff-print-swatches-' . date('Y-m-d') . '.txt';
-                        $content = "Puff Print Colors\n";
-                        $content .= str_repeat("=", 50) . "\n\n";
-                        
-                        foreach ($colors as $color) {
-                            $hexCode = $color->hex_code ?: 'No hex code';
-                            $content .= $color->name . ' - ' . $hexCode . "\n";
-                        }
-                        
-                        return response()->streamDownload(function () use ($content) {
-                            echo $content;
-                        }, $filename, [
-                            'Content-Type' => 'text/plain',
-                        ]);
-                    }),
+                    ->url('https://drive.google.com/file/d/16xunUQLB8JZMJQBdVFUlwye0bCQytto9/view?usp=sharing', shouldOpenInNewTab: true),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
