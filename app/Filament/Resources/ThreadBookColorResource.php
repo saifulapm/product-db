@@ -194,6 +194,9 @@ class ThreadBookColorResource extends Resource
                             ->send();
                     })
                     ->deselectRecordsAfterCompletion(),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->label('Delete Threads')
+                    ->icon('heroicon-o-trash'),
             ])
             ->actions([
                 // No actions - clicking the color name will navigate to view page
