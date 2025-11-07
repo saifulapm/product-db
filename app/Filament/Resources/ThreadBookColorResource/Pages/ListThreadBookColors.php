@@ -56,35 +56,35 @@ class ListThreadBookColors extends ListRecords
                         Forms\Components\Wizard\Step::make('Thread Numbers')
                             ->schema([
                                 Forms\Components\Textarea::make('thread_codes')
-                                    ->label('Thread Numbers (Column 2)')
-                                    ->placeholder("Paste the matching thread number per line\nExample:\nBC07\nL118")
+                                    ->label('Thread Book Numbers (Column 2)')
+                                    ->placeholder("Paste the matching thread book number per line\nExample:\nBC07\nL118")
                                     ->rows(10)
                                     ->required(),
                             ])
                             ->description('Paste the second column containing thread numbers.'),
+                        Forms\Components\Wizard\Step::make('Color Families')
+                            ->schema([
+                                Forms\Components\Textarea::make('color_families')
+                                    ->label('Color Families (Column 3)')
+                                    ->placeholder("Paste the matching color family/category per line (optional)\nExample:\nBlues\nReds")
+                                    ->rows(10),
+                            ])
+                            ->description('Optional third column for color family / category.'),
                         Forms\Components\Wizard\Step::make('Hex Codes')
                             ->schema([
                                 Forms\Components\Textarea::make('hex_codes')
-                                    ->label('Hex Codes (Column 3)')
+                                    ->label('Hex Codes (Column 4)')
                                     ->placeholder("Paste the matching hex code per line (optional)\nExample:\n#000000\n#FFFFFF")
                                     ->rows(10),
                             ])
-                            ->description('Optional third column for hex codes.'),
-                        Forms\Components\Wizard\Step::make('Image URLs')
-                            ->schema([
-                                Forms\Components\Textarea::make('image_urls')
-                                    ->label('Image URLs (Column 4)')
-                                    ->placeholder("Paste the matching image URL per line (optional)")
-                                    ->rows(10),
-                            ])
-                            ->description('Optional fourth column for image URLs.'),
+                            ->description('Optional fourth column for hex codes.'),
                     ])
                 ])
                 ->action(function (array $data): void {
                     $names = array_values(array_filter(array_map('trim', preg_split('/\r?\n/', $data['color_names'] ?? ''))));
                     $codes = array_values(array_filter(array_map('trim', preg_split('/\r?\n/', $data['thread_codes'] ?? ''))));
+                    $families = array_values(array_map(fn ($value) => trim($value ?? ''), preg_split('/\r?\n/', $data['color_families'] ?? '')));
                     $hexes = array_values(array_map(fn ($value) => trim($value ?? ''), preg_split('/\r?\n/', $data['hex_codes'] ?? '')));
-                    $images = array_values(array_map(fn ($value) => trim($value ?? ''), preg_split('/\r?\n/', $data['image_urls'] ?? '')));
 
                     $pairs = min(count($names), count($codes));
 
@@ -95,8 +95,8 @@ class ListThreadBookColors extends ListRecords
                     for ($i = 0; $i < $pairs; $i++) {
                         $name = $names[$i];
                         $code = $codes[$i];
+                        $family = $families[$i] ?? null;
                         $hex = $hexes[$i] ?? null;
-                        $imageUrl = $images[$i] ?? null;
 
                         if (blank($name) || blank($code)) {
                             $skipped++;
@@ -112,12 +112,12 @@ class ListThreadBookColors extends ListRecords
                                 'color_code' => $code,
                             ];
 
-                            if (filled($hex)) {
-                                $payload['hex_code'] = $hex;
+                            if (filled($family)) {
+                                $payload['color_category'] = $family;
                             }
 
-                            if (filled($imageUrl)) {
-                                $payload['image_url'] = $imageUrl;
+                            if (filled($hex)) {
+                                $payload['hex_code'] = $hex;
                             }
 
                             $record->update($payload);
@@ -128,15 +128,15 @@ class ListThreadBookColors extends ListRecords
                         ThreadBookColor::create([
                             'name' => $name,
                             'color_code' => $code,
+                            'color_category' => filled($family) ? $family : null,
                             'hex_code' => filled($hex) ? $hex : null,
-                            'image_url' => filled($imageUrl) ? $imageUrl : null,
                         ]);
                         $created++;
                     }
 
                     $skipped += abs(count($names) - count($codes));
+                    $skipped += max(0, collect($families)->skip($pairs)->filter(fn ($value) => filled($value))->count());
                     $skipped += max(0, collect($hexes)->skip($pairs)->filter(fn ($value) => filled($value))->count());
-                    $skipped += max(0, collect($images)->skip($pairs)->filter(fn ($value) => filled($value))->count());
 
                     Notification::make()
                         ->title('Thread book colors processed')
