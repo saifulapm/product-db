@@ -7,6 +7,7 @@ use App\Filament\Resources\ThreadBookColorResource\RelationManagers;
 use App\Models\ThreadBookColor;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -153,7 +154,46 @@ class ThreadBookColorResource extends Resource
             ->persistFiltersInSession()
             ->filtersLayout(Tables\Enums\FiltersLayout::Dropdown)
             ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\BulkAction::make('set_color_category')
+                    ->label('Set Color Category')
+                    ->icon('heroicon-o-swatch')
+                    ->color('primary')
+                    ->form([
+                        Forms\Components\Select::make('color_category')
+                            ->label('Color Category')
+                            ->options([
+                                'reds' => 'Reds',
+                                'blues' => 'Blues',
+                                'greens' => 'Greens',
+                                'yellows' => 'Yellows',
+                                'oranges' => 'Oranges',
+                                'purples' => 'Purples',
+                                'pinks' => 'Pinks',
+                                'browns' => 'Browns',
+                                'grays' => 'Grays',
+                                'neutrals' => 'Neutrals',
+                                'blacks' => 'Blacks',
+                                'whites' => 'Whites',
+                                'metallics' => 'Metallics',
+                                'multi' => 'Multi',
+                                'glitter' => 'Glitter',
+                                'heather' => 'Heather',
+                            ])
+                            ->required(),
+                    ])
+                    ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                        $updated = 0;
+                        foreach ($records as $record) {
+                            $record->update(['color_category' => $data['color_category']]);
+                            $updated++;
+                        }
+
+                        Notification::make()
+                            ->title("Updated {$updated} thread color(s)")
+                            ->success()
+                            ->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
             ])
             ->actions([
                 // No actions - clicking the color name will navigate to view page
