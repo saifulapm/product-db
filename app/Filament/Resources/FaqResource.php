@@ -62,34 +62,17 @@ class FaqResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('question')
                     ->searchable()
-                    ->limit(50),
-                Tables\Columns\TextColumn::make('solutions')
-                    ->label('Solutions')
-                    ->formatStateUsing(function ($state) {
-                        if (empty($state) || !is_array($state)) {
-                            return '—';
-                        }
-                        $solutions = array_column($state, 'solution');
-                        return count($solutions) . ' solution(s)';
-                    })
-                    ->badge()
-                    ->color('primary'),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->limit(50)
+                    ->url(fn (Faq $record): string => static::getUrl('view', ['record' => $record]))
+                    ->openUrlInNewTab(false)
+                    ->color('primary')
+                    ->underline(),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                Tables\Actions\ViewAction::make(),
             ])
             ->defaultSort('created_at', 'desc');
     }
@@ -106,6 +89,7 @@ class FaqResource extends Resource
         return [
             'index' => Pages\ListFaqs::route('/'),
             'create' => Pages\CreateFaq::route('/create'),
+            'view' => Pages\ViewFaq::route('/{record}'),
             'edit' => Pages\EditFaq::route('/{record}/edit'),
         ];
     }
