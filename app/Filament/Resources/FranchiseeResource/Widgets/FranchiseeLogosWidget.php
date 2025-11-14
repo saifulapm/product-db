@@ -18,6 +18,18 @@ class FranchiseeLogosWidget extends Widget implements HasForms
 
     protected int | string | array $columnSpan = 'full';
 
+    // Public properties for form fields
+    public $logo_1 = null;
+    public $logo_2 = null;
+    public $logo_3 = null;
+    public $logo_4 = null;
+    public $logo_5 = null;
+    public $logo_6 = null;
+    public $logo_7 = null;
+    public $logo_8 = null;
+    public $logo_9 = null;
+    public $logo_10 = null;
+
     public function mount(): void
     {
         $record = $this->getRecord();
