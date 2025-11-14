@@ -16,6 +16,44 @@ class ViewFranchisee extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('previous')
+                ->label('Previous')
+                ->icon('heroicon-o-chevron-left')
+                ->color('gray')
+                ->url(function () {
+                    $previousFranchisee = \App\Models\Franchisee::where('id', '<', $this->record->id)
+                        ->orderBy('id', 'desc')
+                        ->first();
+                    
+                    if ($previousFranchisee) {
+                        return $this->getResource()::getUrl('view', ['record' => $previousFranchisee]);
+                    }
+                    
+                    return null;
+                })
+                ->disabled(function () {
+                    return !\App\Models\Franchisee::where('id', '<', $this->record->id)->exists();
+                })
+                ->tooltip('View previous franchisee'),
+            Actions\Action::make('next')
+                ->label('Next')
+                ->icon('heroicon-o-chevron-right')
+                ->color('gray')
+                ->url(function () {
+                    $nextFranchisee = \App\Models\Franchisee::where('id', '>', $this->record->id)
+                        ->orderBy('id', 'asc')
+                        ->first();
+                    
+                    if ($nextFranchisee) {
+                        return $this->getResource()::getUrl('view', ['record' => $nextFranchisee]);
+                    }
+                    
+                    return null;
+                })
+                ->disabled(function () {
+                    return !\App\Models\Franchisee::where('id', '>', $this->record->id)->exists();
+                })
+                ->tooltip('View next franchisee'),
             Actions\EditAction::make(),
         ];
     }
