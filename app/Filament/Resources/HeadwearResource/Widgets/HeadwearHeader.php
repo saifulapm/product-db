@@ -9,7 +9,7 @@ use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Notifications\Notification;
-use Filament\Facades\Filament;
+use Filament\Support\Contracts\TranslatableContentDriver;
 
 class HeadwearHeader extends Widget implements HasActions
 {
