@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\SocksTwoResource\Pages;
 
 use App\Filament\Resources\SocksTwoResource;
-use App\Filament\Resources\SocksTwoResource\Widgets\SocksTwoHeader;
 use App\Models\Sock;
 use App\Models\TeamNote;
 use Filament\Actions\Action;
@@ -23,13 +22,6 @@ class SocksTwoGallery extends ListRecords
 {
     protected static string $resource = SocksTwoResource::class;
     protected static ?string $title = 'Hat Styles';
-
-    public function getHeaderWidgets(): array
-    {
-        return [
-            SocksTwoHeader::class,
-        ];
-    }
 
     public function getHeaderActions(): array
     {
