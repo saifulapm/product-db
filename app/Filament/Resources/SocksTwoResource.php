@@ -17,10 +17,10 @@ class SocksTwoResource extends Resource
     protected static ?string $model = Sock::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-sparkles';
-    protected static ?string $navigationLabel = 'Socks 2';
-    protected static ?string $modelLabel = 'Sock 2';
-    protected static ?string $pluralModelLabel = 'Socks 2';
-    protected static ?string $navigationGroup = 'Socks';
+    protected static ?string $navigationLabel = 'Hats';
+    protected static ?string $modelLabel = 'Hat';
+    protected static ?string $pluralModelLabel = 'Hats';
+    protected static ?string $navigationGroup = 'Headwear';
     protected static ?int $navigationSort = 1;
     protected static ?string $slug = 'socks-2';
 
