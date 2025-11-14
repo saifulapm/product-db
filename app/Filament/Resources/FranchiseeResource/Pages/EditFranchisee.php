@@ -21,9 +21,7 @@ class EditFranchisee extends EditRecord
     protected function getFooterWidgets(): array
     {
         return [
-            FranchiseeLogosWidget::class => [
-                'recordId' => $this->record?->id,
-            ],
+            FranchiseeLogosWidget::class,
         ];
     }
 }

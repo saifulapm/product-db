@@ -18,32 +18,35 @@ class FranchiseeLogosWidget extends Widget implements HasForms
 
     protected int | string | array $columnSpan = 'full';
 
-    public ?int $recordId = null;
-
-    public function mount(?int $recordId = null): void
+    public function mount(): void
     {
-        $this->recordId = $recordId;
+        $record = $this->getRecord();
         
-        if ($this->recordId) {
-            $record = \App\Models\Franchisee::find($this->recordId);
-            if ($record) {
-                $logos = $record->logos ?? [];
-                $formData = [];
-                
-                for ($i = 1; $i <= 10; $i++) {
-                    $formData["logo_{$i}"] = $logos[$i - 1] ?? null;
-                }
-                
-                $this->form->fill($formData);
+        if ($record) {
+            $logos = $record->logos ?? [];
+            $formData = [];
+            
+            for ($i = 1; $i <= 10; $i++) {
+                $formData["logo_{$i}"] = $logos[$i - 1] ?? null;
             }
+            
+            $this->form->fill($formData);
         }
     }
 
     protected function getRecord(): ?Model
     {
-        if ($this->recordId) {
-            return \App\Models\Franchisee::find($this->recordId);
+        // Get the record from the parent EditRecord or CreateRecord page
+        $parent = $this->getParent();
+        
+        if ($parent && method_exists($parent, 'getRecord')) {
+            return $parent->getRecord();
         }
+        
+        if ($parent && property_exists($parent, 'record')) {
+            return $parent->record ?? null;
+        }
+        
         return null;
     }
 
