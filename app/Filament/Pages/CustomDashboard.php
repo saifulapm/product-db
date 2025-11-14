@@ -3,11 +3,17 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\DashboardHeader;
+use App\Filament\Widgets\SendNotificationWidget;
 use Filament\Pages\Dashboard as BaseDashboard;
+use Filament\Actions\Action;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Auth;
 
 class CustomDashboard extends BaseDashboard
 {
+    public bool $showNotificationsPanel = false;
+
     public function getTitle(): string | Htmlable
     {
         $user = auth()->user();
@@ -21,6 +27,7 @@ class CustomDashboard extends BaseDashboard
 
         $teamNotesWidgets = [];
         $otherWidgets = [];
+        $notificationWidgets = [];
 
         foreach ($widgets as $widget) {
             $widgetClass = $this->resolveWidgetClass($widget);
@@ -30,10 +37,20 @@ class CustomDashboard extends BaseDashboard
                 continue;
             }
 
+            if ($widgetClass === SendNotificationWidget::class) {
+                $notificationWidgets[] = $widget;
+                continue;
+            }
+
             $otherWidgets[] = $widget;
         }
 
-        return array_merge($otherWidgets, $teamNotesWidgets);
+        // Add SendNotificationWidget if not already in the list
+        if (empty($notificationWidgets)) {
+            $notificationWidgets[] = SendNotificationWidget::class;
+        }
+
+        return array_merge($notificationWidgets, $otherWidgets, $teamNotesWidgets);
     }
 
     public function getHeaderWidgets(): array
@@ -43,7 +60,57 @@ class CustomDashboard extends BaseDashboard
 
     protected function getHeaderActions(): array
     {
-        return [];
+        return [
+            Action::make('notifications')
+                ->icon('heroicon-o-bell')
+                ->badge(fn () => $this->getUnreadNotificationsCount() > 0 ? $this->getUnreadNotificationsCount() : null)
+                ->badgeColor('danger')
+                ->color('gray')
+                ->action(function () {
+                    $this->showNotificationsPanel = true;
+                }),
+        ];
+    }
+
+    public function getUnreadNotificationsCount(): int
+    {
+        return DatabaseNotification::query()
+            ->where('notifiable_type', \App\Models\User::class)
+            ->where('notifiable_id', Auth::id())
+            ->whereNull('read_at')
+            ->count();
+    }
+
+    public function getNotifications()
+    {
+        return DatabaseNotification::query()
+            ->where('notifiable_type', \App\Models\User::class)
+            ->where('notifiable_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->limit(50)
+            ->get();
+    }
+
+    public function markAsRead(string $notificationId): void
+    {
+        $notification = DatabaseNotification::find($notificationId);
+        if ($notification && $notification->notifiable_id === Auth::id()) {
+            $notification->markAsRead();
+        }
+    }
+
+    public function markAllAsRead(): void
+    {
+        DatabaseNotification::query()
+            ->where('notifiable_type', \App\Models\User::class)
+            ->where('notifiable_id', Auth::id())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+    }
+
+    public function closeNotificationsPanel(): void
+    {
+        $this->showNotificationsPanel = false;
     }
 
     private function resolveWidgetClass(string | object $widget): ?string

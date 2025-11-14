@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
+use App\Models\Role;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -55,6 +56,16 @@ class UserResource extends Resource
                             ->default(true),
                     ])
                     ->columns(2),
+                Forms\Components\Section::make('Roles & Permissions')
+                    ->schema([
+                        Forms\Components\Select::make('roles')
+                            ->label('Roles')
+                            ->multiple()
+                            ->relationship('roles', 'name')
+                            ->preload()
+                            ->searchable()
+                            ->helperText('Assign roles to this user. Super Admin has full access.'),
+                    ]),
             ]);
     }
 
@@ -72,6 +83,12 @@ class UserResource extends Resource
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean(),
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->label('Roles')
+                    ->badge()
+                    ->color('primary')
+                    ->separator(',')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('last_login_at')
                     ->label('Last Login')
                     ->dateTime()

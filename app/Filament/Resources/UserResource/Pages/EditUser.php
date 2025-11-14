@@ -25,6 +25,12 @@ class EditUser extends EditRecord
             $data['name'] = trim($data['first_name'] . ' ' . $data['last_name']);
         }
         
+        // Handle role assignment
+        if (isset($data['roles'])) {
+            $this->record->roles()->sync($data['roles']);
+            unset($data['roles']);
+        }
+        
         return $data;
     }
 }

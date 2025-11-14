@@ -33,17 +33,26 @@ class FaqResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->columnSpanFull(),
-                Forms\Components\Textarea::make('answer')
-                    ->required()
-                    ->rows(4)
+                Forms\Components\Repeater::make('solutions')
+                    ->label('Solutions')
+                    ->schema([
+                        Forms\Components\TextInput::make('title')
+                            ->label('Solution Title')
+                            ->required()
+                            ->maxLength(255)
+                            ->placeholder('Enter a title for this solution...'),
+                        Forms\Components\Textarea::make('solution')
+                            ->label('Solution')
+                            ->required()
+                            ->rows(3)
+                            ->placeholder('Enter a solution...'),
+                    ])
+                    ->defaultItems(1)
+                    ->addActionLabel('Add Solution')
+                    ->reorderable(true)
+                    ->collapsible()
+                    ->itemLabel(fn (array $state): ?string => $state['title'] ?? $state['solution'] ?? 'New Solution')
                     ->columnSpanFull(),
-                Forms\Components\TextInput::make('sort_order')
-                    ->numeric()
-                    ->default(0)
-                    ->label('Sort Order'),
-                Forms\Components\Toggle::make('is_active')
-                    ->default(true)
-                    ->label('Active'),
             ]);
     }
 
@@ -54,21 +63,24 @@ class FaqResource extends Resource
                 Tables\Columns\TextColumn::make('question')
                     ->searchable()
                     ->limit(50),
-                Tables\Columns\TextColumn::make('answer')
-                    ->limit(100)
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('sort_order')
-                    ->sortable(),
-                Tables\Columns\IconColumn::make('is_active')
-                    ->boolean(),
+                Tables\Columns\TextColumn::make('solutions')
+                    ->label('Solutions')
+                    ->formatStateUsing(function ($state) {
+                        if (empty($state) || !is_array($state)) {
+                            return '—';
+                        }
+                        $solutions = array_column($state, 'solution');
+                        return count($solutions) . ' solution(s)';
+                    })
+                    ->badge()
+                    ->color('primary'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')
-                    ->label('Active Status'),
+                //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -79,7 +91,7 @@ class FaqResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('sort_order');
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getRelations(): array

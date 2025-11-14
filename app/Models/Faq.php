@@ -8,7 +8,7 @@ class Faq extends Model
 {
     protected $fillable = [
         'question',
-        'answer',
+        'solutions',
         'sort_order',
         'is_active',
     ];
@@ -16,6 +16,7 @@ class Faq extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'solutions' => 'array',
     ];
 
     public function scopeActive($query)

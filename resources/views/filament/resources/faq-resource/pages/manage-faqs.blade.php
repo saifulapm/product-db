@@ -38,10 +38,25 @@
                     class="border-t border-gray-200"
                 >
                     <div class="p-6 pt-4">
-                        <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <div class="pl-4 border-l-4 border-blue-600">
-                                <span class="text-base text-gray-900 leading-relaxed block whitespace-pre-wrap">{{ $faq->answer }}</span>
-                            </div>
+                        <div class="space-y-3">
+                            @if($faq->solutions && is_array($faq->solutions) && count($faq->solutions) > 0)
+                                @foreach($faq->solutions as $index => $solutionItem)
+                                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <div class="pl-4 border-l-4 border-blue-600">
+                                            @if(!empty($solutionItem['title']))
+                                                <div class="flex items-start gap-2 mb-2">
+                                                    <span class="text-sm font-semibold text-blue-600">{{ $solutionItem['title'] }}</span>
+                                                </div>
+                                            @endif
+                                            <span class="text-base text-gray-900 leading-relaxed block whitespace-pre-wrap">{{ $solutionItem['solution'] ?? '' }}</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                    <p class="text-sm text-gray-500 italic">No solutions available.</p>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
