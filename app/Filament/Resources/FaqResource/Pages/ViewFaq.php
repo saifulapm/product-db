@@ -46,9 +46,7 @@ class ViewFaq extends ViewRecord
                                     $html .= '<div class="pl-4 border-l-4 border-blue-600">';
                                     
                                     if (!empty($solutionItem['title'])) {
-                                        $html .= '<div class="mb-2">';
-                                        $html .= '<span class="text-sm font-semibold text-blue-600">' . htmlspecialchars($solutionItem['title']) . '</span>';
-                                        $html .= '</div>';
+                                        $html .= '<h3 class="mb-2 text-lg font-semibold text-blue-600">' . htmlspecialchars($solutionItem['title']) . '</h3>';
                                     }
                                     
                                     $solution = $solutionItem['solution'] ?? '';
