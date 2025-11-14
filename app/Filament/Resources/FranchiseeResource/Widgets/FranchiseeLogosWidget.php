@@ -23,11 +23,18 @@ class FranchiseeLogosWidget extends Widget implements HasForms
      */
     public array $formData = [];
 
+    /**
+     * Cache the record ID so Livewire requests can still resolve the model even
+     * when the current HTTP request no longer has the route parameters.
+     */
+    protected ?int $recordId = null;
+
     public function mount(): void
     {
-        $record = $this->getRecord();
+        $record = $this->resolveRecord();
         
         if ($record) {
+            $this->recordId = $record->getKey();
             $logos = $record->logos ?? [];
             $formData = [];
             
@@ -40,12 +47,17 @@ class FranchiseeLogosWidget extends Widget implements HasForms
         }
     }
 
-    protected function getRecord(): ?Model
+    protected function resolveRecord(): ?Model
     {
+        if ($this->recordId) {
+            return \App\Models\Franchisee::find($this->recordId);
+        }
+
         // Get record ID from route parameter (for edit pages)
         $recordId = request()->route('record');
         
         if ($recordId) {
+            $this->recordId = (int) $recordId;
             return \App\Models\Franchisee::find($recordId);
         }
         
@@ -168,7 +180,7 @@ class FranchiseeLogosWidget extends Widget implements HasForms
     public function save(): void
     {
         $data = $this->form->getState();
-        $record = $this->getRecord();
+        $record = $this->resolveRecord();
         
         if ($record) {
             $logos = [];
