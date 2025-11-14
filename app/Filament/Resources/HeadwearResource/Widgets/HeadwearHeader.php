@@ -10,7 +10,7 @@ use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Notifications\Notification;
 use Filament\Support\Contracts\TranslatableContentDriver;
-use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class HeadwearHeader extends Widget implements HasActions
 {
@@ -28,7 +28,7 @@ class HeadwearHeader extends Widget implements HasActions
 
     public function mount(): void
     {
-        $user = Auth::user();
+        $user = Filament::auth()->user();
         $this->isEditable = $user !== null;
 
         $teamNote = TeamNote::firstOrCreate(
