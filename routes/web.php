@@ -1,6 +1,5 @@
 <?php
 
-use App\Filament\Pages\TowelsControl;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -30,6 +29,5 @@ Route::prefix('admin')
         DispatchServingFilamentEvent::class,
     ])
     ->group(function () {
-        Route::get('/towels/control', TowelsControl::class)
-            ->name('filament.admin.pages.towels-control');
+        // Routes can be added here if needed
     });

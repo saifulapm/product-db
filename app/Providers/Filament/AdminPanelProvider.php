@@ -34,7 +34,6 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->topNavigation()
             ->brandName('Ethos')
             ->brandLogo(asset('images/ethos-logo.svg'))
             ->favicon(asset('images/ethos-logo.svg'))
@@ -52,19 +51,10 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Towels'),
                 NavigationGroup::make('Operations'),
                 NavigationGroup::make('Customer Service'),
-                NavigationGroup::make('Files'),
+                NavigationGroup::make('Data'),
                 NavigationGroup::make('Admin'),
             ])
             ->navigationItems([
-                NavigationItem::make('Controls')
-                    ->group('Towels')
-                    ->icon('heroicon-o-queue-list')
-                    ->url(fn (): string => \App\Filament\Pages\TowelsControl::getUrl()),
-                NavigationItem::make('Inventory')
-                    ->group('Operations')
-                    ->icon('heroicon-o-archive-box')
-                    ->url(fn (): string => url('/admin/inventory'))
-                    ->sort(0),
                 NavigationItem::make('Patches')
                     ->group('Patches')
                     ->icon('heroicon-o-squares-2x2')
@@ -99,8 +89,6 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->routes(function (Panel $panel) {
-                \App\Filament\Pages\TowelsControl::registerRoutes($panel);
-
                 Route::get('/products/download-csv-template', function () {
                     $headers = [
                         'name',

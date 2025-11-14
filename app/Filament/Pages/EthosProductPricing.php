@@ -10,11 +10,11 @@ class EthosProductPricing extends Page
 
     protected static ?string $title = 'Ethos Product Pricing';
 
-    protected static ?string $navigationGroup = 'Ethos';
+    protected static ?string $navigationGroup = 'Design Tools';
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'ethos/product-pricing';
 

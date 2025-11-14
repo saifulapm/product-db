@@ -28,7 +28,7 @@ class FileResource extends Resource
 
     protected static ?string $navigationLabel = 'Files';
 
-    protected static ?string $navigationGroup = 'Files';
+    protected static ?string $navigationGroup = 'Data';
 
     protected static ?int $navigationSort = 1;
 

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\FranchiseeResource\Pages;
 
 use App\Filament\Resources\FranchiseeResource;
+use App\Filament\Resources\FranchiseeResource\Widgets\FranchiseesHeader;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
@@ -14,6 +15,13 @@ class ListFranchisees extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+        ];
+    }
+
+    public function getHeaderWidgets(): array
+    {
+        return [
+            FranchiseesHeader::class,
         ];
     }
 }

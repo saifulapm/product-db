@@ -21,7 +21,7 @@ class FranchiseeResource extends Resource
 
     protected static ?string $navigationLabel = 'Franchisees';
 
-    protected static ?string $navigationGroup = 'Design Tools';
+    protected static ?string $navigationGroup = 'Data';
 
     protected static ?int $navigationSort = 1;
 
