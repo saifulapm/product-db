@@ -22,7 +22,7 @@ use Filament\Tables\Table;
 class SocksTwoGallery extends ListRecords
 {
     protected static string $resource = SocksTwoResource::class;
-    protected static ?string $title = 'Socks 2 Styles';
+    protected static ?string $title = 'Hat Styles';
 
     public function getHeaderWidgets(): array
     {
@@ -34,8 +34,8 @@ class SocksTwoGallery extends ListRecords
     public function getHeaderActions(): array
     {
         $actions = [
-            Action::make('add_sock_two')
-                ->label('Add New Sock Style')
+            Action::make('add_hat')
+                ->label('Add New Hat Style')
                 ->icon('heroicon-o-plus')
                 ->color('success')
                 ->form([
