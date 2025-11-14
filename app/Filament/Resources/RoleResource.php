@@ -21,7 +21,7 @@ class RoleResource extends Resource
     protected static ?string $navigationLabel = 'Roles';
     protected static ?string $modelLabel = 'Role';
     protected static ?string $pluralModelLabel = 'Roles';
-    protected static ?string $navigationGroup = 'Administration';
+    protected static ?string $navigationGroup = 'Admin';
     protected static bool $shouldRegisterNavigation = false; // Hide from navigation
 
     public static function form(Form $form): Form

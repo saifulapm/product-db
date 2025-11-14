@@ -79,6 +79,13 @@ class ProductResource extends Resource
                                     ->label('Product Type')
                                     ->maxLength(100),
                             ]),
+                        Forms\Components\TagsInput::make('available_sizes')
+                            ->label('Available Sizes')
+                            ->placeholder('Enter sizes (e.g., S, M, L, XL)')
+                            ->helperText('Enter the sizes available for this product. Press Enter or comma to add each size.')
+                            ->separator(',')
+                            ->suggestions(['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '28', '30', '32', '34', '36', '38', '40', '42', '44', '46'])
+                            ->columnSpanFull(),
                         Forms\Components\ColorPicker::make('base_color')
                             ->label('Base Color (Illustrator)')
                             ->live()

@@ -47,6 +47,11 @@ class CreateProduct extends CreateRecord
             $data['status'] = 'active';
         }
         
+        // Convert available_sizes array to comma-separated string if it's an array
+        if (isset($data['available_sizes']) && is_array($data['available_sizes'])) {
+            $data['available_sizes'] = implode(', ', $data['available_sizes']);
+        }
+        
         return $data;
     }
 

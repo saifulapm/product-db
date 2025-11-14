@@ -8,6 +8,7 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -44,16 +45,35 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Design Tools'),
                 NavigationGroup::make('In House Print'),
                 NavigationGroup::make('Embroidery'),
+                NavigationGroup::make('Patches'),
                 NavigationGroup::make('Socks'),
+                NavigationGroup::make('Headwear'),
                 NavigationGroup::make('Bottles'),
                 NavigationGroup::make('Towels'),
-                NavigationGroup::make('Hair Clips'),
+                NavigationGroup::make('Operations'),
                 NavigationGroup::make('Customer Service'),
                 NavigationGroup::make('Files'),
-                NavigationGroup::make('Administration'),
+                NavigationGroup::make('Admin'),
             ])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->navigationItems([
+                NavigationItem::make('Controls')
+                    ->group('Towels')
+                    ->icon('heroicon-o-queue-list')
+                    ->url(fn (): string => \App\Filament\Pages\TowelsControl::getUrl()),
+                NavigationItem::make('Inventory')
+                    ->group('Operations')
+                    ->icon('heroicon-o-archive-box')
+                    ->url(fn (): string => url('/admin/inventory'))
+                    ->sort(0),
+                NavigationItem::make('Patches')
+                    ->group('Patches')
+                    ->icon('heroicon-o-squares-2x2')
+                    ->url(fn (): string => \App\Filament\Resources\PatchResource::getUrl())
+                    ->sort(0),
+            ])
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
                 \App\Filament\Pages\CustomDashboard::class,
                 \App\Filament\Pages\ProfileSettings::class,
@@ -78,7 +98,9 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->routes(function () {
+            ->routes(function (Panel $panel) {
+                \App\Filament\Pages\TowelsControl::registerRoutes($panel);
+
                 Route::get('/products/download-csv-template', function () {
                     $headers = [
                         'name',

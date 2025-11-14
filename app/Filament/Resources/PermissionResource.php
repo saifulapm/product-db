@@ -21,7 +21,7 @@ class PermissionResource extends Resource
     protected static ?string $navigationLabel = 'Permissions';
     protected static ?string $modelLabel = 'Permission';
     protected static ?string $pluralModelLabel = 'Permissions';
-    protected static ?string $navigationGroup = 'Administration';
+    protected static ?string $navigationGroup = 'Admin';
     protected static bool $shouldRegisterNavigation = false; // Hide from navigation
 
     public static function form(Form $form): Form
