@@ -27,7 +27,7 @@ class FranchiseeLogosWidget extends Widget implements HasForms
      * Cache the record ID so Livewire requests can still resolve the model even
      * when the current HTTP request no longer has the route parameters.
      */
-    public ?int $recordId = null;
+    public $recordId = null;
 
     public function mount(): void
     {
