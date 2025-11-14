@@ -40,9 +40,9 @@ class ViewFaq extends ViewRecord
                                     return new \Illuminate\Support\HtmlString('<p class="text-gray-500 italic">No solutions available.</p>');
                                 }
                                 
-                                $html = '<div class="space-y-4">';
+                                $html = '<div class="space-y-4 -mx-6 px-6">';
                                 foreach ($solutions as $index => $solutionItem) {
-                                    $html .= '<div class="bg-gray-50 rounded-lg p-4 border border-gray-200">';
+                                    $html .= '<div class="bg-gray-50 rounded-lg p-4 border border-gray-200 w-full">';
                                     $html .= '<div class="pl-4 border-l-4 border-blue-600">';
                                     
                                     if (!empty($solutionItem['title'])) {
@@ -62,7 +62,8 @@ class ViewFaq extends ViewRecord
                             })
                             ->html()
                             ->columnSpanFull(),
-                    ]),
+                    ])
+                    ->extraAttributes(['class' => 'w-full']),
             ]);
     }
 }
