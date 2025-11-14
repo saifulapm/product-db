@@ -29,30 +29,52 @@ class FranchiseeResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('company')
-                    ->label('Company')
-                    ->required()
-                    ->options([
-                        'alpha-fit-club' => 'Alpha Fit Club',
-                        'barre3' => 'Barre3',
-                        'basecamp-fitness' => 'Basecamp Fitness',
-                        'bodybar' => 'Bodybar',
-                        'bodyrok' => 'Bodyrok',
-                        'f45' => 'F45',
-                        'fitstop' => 'Fitstop',
-                        'pvolve' => 'Pvolve',
-                        'starcycle' => 'Starcycle',
-                        'the-bar-method' => 'The Bar Method',
-                        'title-boxing' => 'Title Boxing',
+                Forms\Components\Section::make('Franchisee Information')
+                    ->schema([
+                        Forms\Components\Select::make('company')
+                            ->label('Company')
+                            ->required()
+                            ->options([
+                                'alpha-fit-club' => 'Alpha Fit Club',
+                                'barre3' => 'Barre3',
+                                'basecamp-fitness' => 'Basecamp Fitness',
+                                'bodybar' => 'Bodybar',
+                                'bodyrok' => 'Bodyrok',
+                                'f45' => 'F45',
+                                'fitstop' => 'Fitstop',
+                                'pvolve' => 'Pvolve',
+                                'starcycle' => 'Starcycle',
+                                'the-bar-method' => 'The Bar Method',
+                                'title-boxing' => 'Title Boxing',
+                            ])
+                            ->searchable(),
+                        Forms\Components\TextInput::make('location')
+                            ->label('Location')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('franchisee_name')
+                            ->label('Franchisee Name')
+                            ->maxLength(255),
                     ])
-                    ->searchable(),
-                Forms\Components\TextInput::make('location')
-                    ->label('Location')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('franchisee_name')
-                    ->label('Franchisee Name')
-                    ->maxLength(255),
+                    ->columns(2),
+                Forms\Components\Section::make('Franchisee Logos')
+                    ->description('Upload up to 10 logo files for this franchisee.')
+                    ->schema([
+                        Forms\Components\FileUpload::make('logos')
+                            ->label('Logos')
+                            ->image()
+                            ->multiple()
+                            ->maxFiles(10)
+                            ->reorderable()
+                            ->directory('franchisees/logos')
+                            ->disk('public')
+                            ->maxSize(5120)
+                            ->imagePreviewHeight('100')
+                            ->downloadable()
+                            ->openable()
+                            ->helperText('PNG, JPG, SVG — up to 10 files.'),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 
