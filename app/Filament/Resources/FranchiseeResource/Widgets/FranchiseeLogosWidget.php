@@ -18,17 +18,10 @@ class FranchiseeLogosWidget extends Widget implements HasForms
 
     protected int | string | array $columnSpan = 'full';
 
-    // Public properties for form fields - untyped to avoid Livewire serialization issues
-    public $logo_1;
-    public $logo_2;
-    public $logo_3;
-    public $logo_4;
-    public $logo_5;
-    public $logo_6;
-    public $logo_7;
-    public $logo_8;
-    public $logo_9;
-    public $logo_10;
+    /**
+     * Store all form state inside a single array to keep Livewire happy.
+     */
+    public array $formData = [];
 
     public function mount(): void
     {
@@ -43,7 +36,13 @@ class FranchiseeLogosWidget extends Widget implements HasForms
             }
             
             $this->form->fill($formData);
+            $this->formData = $formData;
         }
+    }
+
+    protected function getFormStatePath(): string
+    {
+        return 'formData';
     }
 
     protected function getRecord(): ?Model
