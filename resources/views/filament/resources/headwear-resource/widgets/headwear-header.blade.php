@@ -6,9 +6,7 @@
                     <p class="text-sm font-medium text-gray-900 dark:text-white">Headwear Team Notes</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Share launch plans, approved blanks, or sourcing reminders.</p>
                 </div>
-                @if($this->isEditable)
-                    {{ $this->getAction('edit_notes') }}
-                @endif
+                {{ $this->getAction('edit_notes') }}
             </div>
         </x-slot>
 
