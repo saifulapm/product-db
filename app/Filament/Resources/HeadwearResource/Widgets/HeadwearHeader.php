@@ -9,7 +9,6 @@ use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Notifications\Notification;
-use Filament\Support\Contracts\TranslatableContentDriver;
 use Filament\Facades\Filament;
 
 class HeadwearHeader extends Widget implements HasActions
@@ -112,14 +111,9 @@ class HeadwearHeader extends Widget implements HasActions
         ];
     }
 
-    public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
-    {
-        return null;
-    }
-
     public function getMountedFormComponentAction() { return null; }
-    public function mountedFormComponentActionShouldOpenModal(): bool { return false; }
-    public function mountedFormComponentActionHasForm(): bool { return false; }
+    public function mountedFormComponentActionShouldOpenModal(): bool { return true; }
+    public function mountedFormComponentActionHasForm(): bool { return true; }
     public function getMountedFormComponentActionForm() { return null; }
     public function unmountFormComponentAction(bool $shouldCancelParentActions = true, bool $shouldCloseModal = true): void {}
 }
