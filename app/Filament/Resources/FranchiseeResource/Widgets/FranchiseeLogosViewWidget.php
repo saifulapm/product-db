@@ -31,12 +31,37 @@ class FranchiseeLogosViewWidget extends Widget
     public function getLogos(): array
     {
         $record = $this->getRecord();
-        
-        if (!$record || !$record->logos) {
+
+        if (!$record || empty($record->logos)) {
             return [];
         }
 
-        return $record->logos;
+        return collect($record->logos)
+            ->map(function ($logo, $index) {
+                $path = null;
+
+                if (is_string($logo)) {
+                    $path = $logo;
+                } elseif (is_array($logo)) {
+                    $path = $logo['path'] ?? $logo['url'] ?? $logo['file'] ?? null;
+                }
+
+                if (!$path) {
+                    return null;
+                }
+
+                $url = $this->getLogoUrl($path);
+
+                return [
+                    'path' => $path,
+                    'url' => $url,
+                    'filename' => basename($path),
+                    'label' => 'Logo ' . ($index + 1),
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     public function getLogoUrl(string $logoPath): string
