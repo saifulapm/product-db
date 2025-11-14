@@ -40,11 +40,6 @@ class FranchiseeLogosWidget extends Widget implements HasForms
         }
     }
 
-    protected function getFormStatePath(): string
-    {
-        return 'formData';
-    }
-
     protected function getRecord(): ?Model
     {
         // Get record ID from route parameter (for edit pages)
@@ -166,7 +161,8 @@ class FranchiseeLogosWidget extends Widget implements HasForms
                             ->previewable(),
                     ])
                     ->columns(2),
-            ]);
+            ])
+            ->statePath('formData');
     }
 
     public function save(): void
