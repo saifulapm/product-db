@@ -9,6 +9,8 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 
 class FranchiseeLogosWidget extends Widget implements HasForms
 {
@@ -35,6 +37,7 @@ class FranchiseeLogosWidget extends Widget implements HasForms
         
         if ($record) {
             $this->recordId = $record->getKey();
+            Session::put($this->getSessionKey(), $this->recordId);
             $logos = $record->logos ?? [];
             $formData = [];
             
@@ -53,11 +56,17 @@ class FranchiseeLogosWidget extends Widget implements HasForms
             return \App\Models\Franchisee::find($this->recordId);
         }
 
+        if ($sessionRecordId = Session::get($this->getSessionKey())) {
+            $this->recordId = $sessionRecordId;
+            return \App\Models\Franchisee::find($sessionRecordId);
+        }
+
         // Get record ID from route parameter (for edit pages)
         $recordId = request()->route('record');
         
         if ($recordId) {
             $this->recordId = (int) $recordId;
+            Session::put($this->getSessionKey(), $this->recordId);
             return \App\Models\Franchisee::find($recordId);
         }
         
@@ -206,6 +215,13 @@ class FranchiseeLogosWidget extends Widget implements HasForms
                 ->warning()
                 ->send();
         }
+    }
+
+    protected function getSessionKey(): string
+    {
+        $userId = Auth::id() ?? 'guest';
+
+        return "franchisee_logos_record_id_{$userId}";
     }
 }
 
