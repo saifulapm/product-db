@@ -1,14 +1,12 @@
 <x-filament-widgets::widget>
     <x-filament::section>
-        <x-slot name="header">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">Headwear Team Notes</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Share launch plans, approved blanks, or sourcing reminders.</p>
-                </div>
-                {{ $this->getAction('edit_notes') }}
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">Headwear Team Notes</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Share launch plans, approved blanks, or sourcing reminders.</p>
             </div>
-        </x-slot>
+            {{ $this->getAction('edit_notes') }}
+        </div>
 
         <div class="prose max-w-none dark:prose-invert">
             @if(empty($this->content))
