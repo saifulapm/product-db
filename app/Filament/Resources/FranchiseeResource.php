@@ -75,6 +75,7 @@ class FranchiseeResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -96,6 +97,7 @@ class FranchiseeResource extends Resource
         return [
             'index' => Pages\ListFranchisees::route('/'),
             'create' => Pages\CreateFranchisee::route('/create'),
+            'view' => Pages\ViewFranchisee::route('/{record}'),
             'edit' => Pages\EditFranchisee::route('/{record}/edit'),
         ];
     }
