@@ -18,17 +18,17 @@ class FranchiseeLogosWidget extends Widget implements HasForms
 
     protected int | string | array $columnSpan = 'full';
 
-    // Public properties for form fields - using mixed to handle arrays (during upload) and strings (stored paths)
-    public mixed $logo_1 = null;
-    public mixed $logo_2 = null;
-    public mixed $logo_3 = null;
-    public mixed $logo_4 = null;
-    public mixed $logo_5 = null;
-    public mixed $logo_6 = null;
-    public mixed $logo_7 = null;
-    public mixed $logo_8 = null;
-    public mixed $logo_9 = null;
-    public mixed $logo_10 = null;
+    // Public properties for form fields - untyped to avoid Livewire serialization issues
+    public $logo_1;
+    public $logo_2;
+    public $logo_3;
+    public $logo_4;
+    public $logo_5;
+    public $logo_6;
+    public $logo_7;
+    public $logo_8;
+    public $logo_9;
+    public $logo_10;
 
     public function mount(): void
     {
