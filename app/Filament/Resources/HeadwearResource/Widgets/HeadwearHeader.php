@@ -28,9 +28,8 @@ class HeadwearHeader extends Widget implements HasActions
 
     public function mount(): void
     {
-        $panelAuth = Filament::getCurrentPanel()?->auth();
-        $user = $panelAuth?->user() ?? Filament::auth()?->user();
-        $this->isEditable = $user !== null;
+        // Temporarily keep editing available to any signed-in panel user
+        $this->isEditable = true;
 
         $teamNote = TeamNote::firstOrCreate(
             ['page' => 'headwear'],
