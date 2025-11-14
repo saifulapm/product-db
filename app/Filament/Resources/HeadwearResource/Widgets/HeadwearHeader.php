@@ -111,6 +111,11 @@ class HeadwearHeader extends Widget implements HasActions
         ];
     }
 
+    public function makeFilamentTranslatableContentDriver(): ?TranslatableContentDriver
+    {
+        return null;
+    }
+
     public function getMountedFormComponentAction() { return null; }
     public function mountedFormComponentActionShouldOpenModal(): bool { return true; }
     public function mountedFormComponentActionHasForm(): bool { return true; }
