@@ -65,8 +65,7 @@ class FaqResource extends Resource
                     ->limit(50)
                     ->url(fn (Faq $record): string => static::getUrl('view', ['record' => $record]))
                     ->openUrlInNewTab(false)
-                    ->color('primary')
-                    ->underline(),
+                    ->color('primary'),
             ])
             ->filters([
                 //
