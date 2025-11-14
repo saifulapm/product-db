@@ -39,20 +39,20 @@ class SocksTwoGallery extends ListRecords
                 ->icon('heroicon-o-plus')
                 ->color('success')
                 ->form([
-                    Section::make('Sock Information')
+                    Section::make('Hat Information')
                         ->schema([
                             TextInput::make('name')
-                                ->label('Sock Style')
+                                ->label('Hat Style')
                                 ->required()
                                 ->maxLength(255)
                                 ->placeholder('e.g., Athletic Crew Socks, Dress Socks'),
                             Textarea::make('description')
-                                ->label('Bullet Points')
+                                ->label('Hat Highlights')
                                 ->maxLength(1000)
                                 ->rows(4)
                                 ->placeholder('Enter each bullet point on a new line:' . PHP_EOL . '• Moisture-wicking technology' . PHP_EOL . '• Cushioned sole for comfort' . PHP_EOL . '• Reinforced heel and toe'),
                             Textarea::make('images')
-                                ->label('Sock Cover Image')
+                                ->label('Hat Cover Image')
                                 ->maxLength(1000)
                                 ->placeholder('Enter cover image URL:' . PHP_EOL . 'https://example.com/sock-cover.jpg')
                                 ->helperText('Enter the main cover image URL for this sock style')
@@ -63,9 +63,9 @@ class SocksTwoGallery extends ListRecords
                     Section::make('Specifications')
                         ->schema([
                             TextInput::make('ribbing_height')
-                                ->label('Height of Sock Ribbing')
+                                ->label('Height / Crown Profile')
                                 ->maxLength(255)
-                                ->placeholder('e.g., 2 inches, 5cm'),
+                                ->placeholder('e.g., Low profile, High crown, 2-inch ribbing'),
                             TextInput::make('fabric')
                                 ->label('Fabric')
                                 ->maxLength(255)
@@ -127,7 +127,7 @@ class SocksTwoGallery extends ListRecords
         ];
 
         $actions[] = Action::make('download_all_cads')
-            ->label('Download All Sock CADs')
+            ->label('Download All Hat CADs')
             ->icon('heroicon-o-arrow-down-tray')
             ->color('info')
             ->url('https://drive.google.com/uc?export=download&id=1ZjqvCv5dyiYYtjIHNu-22NhoP7H9OprB', shouldOpenInNewTab: true);

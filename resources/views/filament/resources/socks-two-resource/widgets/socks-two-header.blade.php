@@ -1,8 +1,8 @@
 <x-filament-widgets::widget>
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <p class="text-sm font-medium text-gray-900 dark:text-white">Socks 2 Team Notes</p>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Share launch plans, approved blanks, or sourcing reminders.</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">Hat Team Notes</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Share launch plans, trim approvals, or sourcing reminders for hats.</p>
         </div>
         {{ $this->getAction('edit_notes') }}
     </div>
