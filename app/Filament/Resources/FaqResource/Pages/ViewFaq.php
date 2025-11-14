@@ -34,13 +34,14 @@ class ViewFaq extends ViewRecord
                     ->schema([
                         Infolists\Components\TextEntry::make('solutions')
                             ->label('')
-                            ->formatStateUsing(function ($state) {
-                                if (empty($state) || !is_array($state)) {
+                            ->state(function ($record) {
+                                $solutions = $record->solutions ?? [];
+                                if (empty($solutions) || !is_array($solutions)) {
                                     return new \Illuminate\Support\HtmlString('<p class="text-gray-500 italic">No solutions available.</p>');
                                 }
                                 
                                 $html = '<div class="space-y-4">';
-                                foreach ($state as $index => $solutionItem) {
+                                foreach ($solutions as $index => $solutionItem) {
                                     $html .= '<div class="bg-gray-50 rounded-lg p-4 border border-gray-200">';
                                     $html .= '<div class="pl-4 border-l-4 border-blue-600">';
                                     
@@ -59,6 +60,7 @@ class ViewFaq extends ViewRecord
                                 
                                 return new \Illuminate\Support\HtmlString($html);
                             })
+                            ->html()
                             ->columnSpanFull(),
                     ]),
             ]);
