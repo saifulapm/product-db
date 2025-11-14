@@ -46,7 +46,6 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Embroidery'),
                 NavigationGroup::make('Patches'),
                 NavigationGroup::make('Socks'),
-                NavigationGroup::make('Headwear'),
                 NavigationGroup::make('Bottles'),
                 NavigationGroup::make('Towels'),
                 NavigationGroup::make('Operations'),
