@@ -22,7 +22,7 @@ class EditFranchisee extends EditRecord
     {
         return [
             FranchiseeLogosWidget::class => [
-                'recordId' => $this->record->id,
+                'recordId' => $this->record?->id,
             ],
         ];
     }
