@@ -36,15 +36,11 @@ class FranchiseeLogosWidget extends Widget implements HasForms
 
     protected function getRecord(): ?Model
     {
-        // Get the record from the parent EditRecord or CreateRecord page
-        $parent = $this->getParent();
+        // Get record ID from route parameter (for edit pages)
+        $recordId = request()->route('record');
         
-        if ($parent && method_exists($parent, 'getRecord')) {
-            return $parent->getRecord();
-        }
-        
-        if ($parent && property_exists($parent, 'record')) {
-            return $parent->record ?? null;
+        if ($recordId) {
+            return \App\Models\Franchisee::find($recordId);
         }
         
         return null;
