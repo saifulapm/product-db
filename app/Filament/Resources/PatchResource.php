@@ -56,23 +56,19 @@ class PatchResource extends Resource
                         Forms\Components\TextInput::make('minimums')
                             ->label('Minimums')
                             ->default('10pcs')
-                            ->disabled()
-                            ->dehydrated()
-                            ->helperText('Minimum order quantity is always 10pcs'),
+                            ->maxLength(255)
+                            ->placeholder('e.g., 10pcs, 12 pieces, 24 pieces')
+                            ->helperText('Enter the minimum order quantity for this patch'),
                         Forms\Components\TextInput::make('backing')
                             ->label('Backing Type')
                             ->default('Iron On')
-                            ->disabled()
-                            ->dehydrated()
-                            ->helperText('All patches use iron-on backing')
-                            ->afterStateHydrated(function (Forms\Components\TextInput $component, $state) {
-                                if (empty($state)) {
-                                    $component->state('Iron On');
-                                }
-                            }),
+                            ->maxLength(255)
+                            ->placeholder('e.g., Iron On, Sew On, Velcro')
+                            ->helperText('Enter the backing type for this patch'),
                         Forms\Components\TextInput::make('lead_time')
                             ->label('Lead Time')
-                            ->maxLength(100),
+                            ->maxLength(100)
+                            ->placeholder('e.g., 2-3 weeks, 4-6 weeks'),
                         Forms\Components\TagsInput::make('colors')
                             ->label('Available Colors')
                             ->placeholder('Add color names or hex codes')
@@ -99,14 +95,26 @@ class PatchResource extends Resource
                     ->weight('bold'),
                 Tables\Columns\TextColumn::make('minimums')
                     ->label('Minimums')
-                    ->default('10pcs'),
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('backing')
                     ->label('Backing')
-                    ->default('Iron On')
+                    ->searchable()
+                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('lead_time')
                     ->label('Lead Time')
+                    ->searchable()
+                    ->sortable()
                     ->toggleable(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
             ])
