@@ -55,9 +55,18 @@ class EditTask extends EditRecord
         $record = $this->record;
         $notifications = [];
         
+        // Only process subtasks if the form contains the relevant toggle fields
+        // This prevents creating subtasks when editing other fields like assigned_to or due_date
+        $hasSubtaskFields = isset($data['add_products']) || isset($data['design_details']) || isset($data['website_images']);
+        
+        if (!$hasSubtaskFields) {
+            // No subtask fields in form, skip subtask processing
+            return;
+        }
+        
         // Handle "Add Products" subtask
         $addProductsSubtask = Task::where('parent_task_id', $record->id)
-            ->where('title', 'like', 'Add Products%')
+            ->where('title', 'Add Products')
             ->first();
         
         if (!empty($data['add_products']) && $data['add_products'] === true) {
@@ -73,8 +82,10 @@ class EditTask extends EditRecord
             ];
             
             if ($addProductsSubtask) {
+                // Update existing subtask
                 $addProductsSubtask->update($subtaskData);
             } else {
+                // Only create if it doesn't exist
                 $subtaskData['actions'] = [[
                     'action' => 'created',
                     'user_id' => auth()->id(),
@@ -85,7 +96,8 @@ class EditTask extends EditRecord
                 $notifications[] = 'Add Products subtask created';
             }
         } else {
-            if ($addProductsSubtask) {
+            // Only delete if toggle is explicitly false and subtask exists
+            if ($addProductsSubtask && isset($data['add_products']) && $data['add_products'] === false) {
                 $addProductsSubtask->delete();
                 $notifications[] = 'Add Products subtask removed';
             }
@@ -97,8 +109,9 @@ class EditTask extends EditRecord
             ->first();
         
         if (!empty($data['design_details']) && $data['design_details'] === true) {
+            $subtaskTitle = 'Size Grade or Thread Colors Needed - ' . $record->title;
             $subtaskData = [
-                'title' => 'Size Grade or Thread Colors Needed - ' . $record->title,
+                'title' => $subtaskTitle,
                 'description' => 'Subtask for: ' . $record->title,
                 'parent_task_id' => $record->id,
                 'project_id' => $record->project_id,
@@ -109,8 +122,10 @@ class EditTask extends EditRecord
             ];
             
             if ($designDetailsSubtask) {
+                // Update existing subtask
                 $designDetailsSubtask->update($subtaskData);
             } else {
+                // Only create if it doesn't exist
                 $subtaskData['actions'] = [[
                     'action' => 'created',
                     'user_id' => auth()->id(),
@@ -121,7 +136,8 @@ class EditTask extends EditRecord
                 $notifications[] = 'Size Grade/Thread Colors subtask created';
             }
         } else {
-            if ($designDetailsSubtask) {
+            // Only delete if toggle is explicitly false and subtask exists
+            if ($designDetailsSubtask && isset($data['design_details']) && $data['design_details'] === false) {
                 $designDetailsSubtask->delete();
                 $notifications[] = 'Size Grade/Thread Colors subtask removed';
             }
@@ -133,8 +149,9 @@ class EditTask extends EditRecord
             ->first();
         
         if (!empty($data['website_images']) && $data['website_images'] === true) {
+            $subtaskTitle = 'Website Images - ' . $record->title;
             $subtaskData = [
-                'title' => 'Website Images - ' . $record->title,
+                'title' => $subtaskTitle,
                 'description' => 'Subtask for: ' . $record->title,
                 'parent_task_id' => $record->id,
                 'project_id' => $record->project_id,
@@ -145,8 +162,10 @@ class EditTask extends EditRecord
             ];
             
             if ($websiteImagesSubtask) {
+                // Update existing subtask
                 $websiteImagesSubtask->update($subtaskData);
             } else {
+                // Only create if it doesn't exist
                 $subtaskData['actions'] = [[
                     'action' => 'created',
                     'user_id' => auth()->id(),
@@ -157,7 +176,8 @@ class EditTask extends EditRecord
                 $notifications[] = 'Website Images subtask created';
             }
         } else {
-            if ($websiteImagesSubtask) {
+            // Only delete if toggle is explicitly false and subtask exists
+            if ($websiteImagesSubtask && isset($data['website_images']) && $data['website_images'] === false) {
                 $websiteImagesSubtask->delete();
                 $notifications[] = 'Website Images subtask removed';
             }

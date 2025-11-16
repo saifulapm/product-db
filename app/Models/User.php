@@ -120,4 +120,12 @@ class User extends Authenticatable implements FilamentUser
     {
         return $query->where('is_active', true);
     }
+
+    /**
+     * Get tasks assigned to this user.
+     */
+    public function assignedTasks()
+    {
+        return $this->hasMany(Task::class, 'assigned_to');
+    }
 }

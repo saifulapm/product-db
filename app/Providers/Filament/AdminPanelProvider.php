@@ -87,6 +87,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
+            ->discoverPages(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->pages([
                 \App\Filament\Pages\CustomDashboard::class,
                 \App\Filament\Pages\ProfileSettings::class,
