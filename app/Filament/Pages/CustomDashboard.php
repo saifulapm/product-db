@@ -59,12 +59,9 @@ class CustomDashboard extends BaseDashboard
             array_unshift($otherWidgets, TasksDueWidget::class);
         }
 
-        // Add SendNotificationWidget if not already in the list
-        if (empty($notificationWidgets)) {
-            $notificationWidgets[] = SendNotificationWidget::class;
-        }
-
-        return array_merge($notificationWidgets, $otherWidgets, $teamNotesWidgets);
+        // Remove SendNotificationWidget from dashboard
+        // return array_merge($notificationWidgets, $otherWidgets, $teamNotesWidgets);
+        return array_merge($otherWidgets, $teamNotesWidgets);
     }
 
     public function getHeaderWidgets(): array
