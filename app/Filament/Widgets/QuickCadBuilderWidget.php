@@ -19,6 +19,19 @@ class QuickCadBuilderWidget extends TableWidget
     protected static ?int $sort = 50;
 
     protected int | string | array $columnSpan = 'full';
+    
+    public static function canView(): bool
+    {
+        // Only show on QuickCadBuilder page, not on dashboard
+        $route = request()->route();
+        if (!$route) {
+            return false;
+        }
+        
+        $routeName = $route->getName();
+        // Hide from dashboard, only show on QuickCadBuilder page
+        return str_contains($routeName, 'quick-cad-builder');
+    }
 
     public function table(Table $table): Table
     {

@@ -55,6 +55,12 @@ class EditTask extends EditRecord
         $record = $this->record;
         $notifications = [];
         
+        // Only process subtasks for main tasks (tasks without a parent)
+        // Subtasks should not trigger subtask creation logic
+        if ($record->parent_task_id) {
+            return;
+        }
+        
         // Only process subtasks if the form contains the relevant toggle fields
         // This prevents creating subtasks when editing other fields like assigned_to or due_date
         $hasSubtaskFields = isset($data['add_products']) || isset($data['design_details']) || isset($data['website_images']);

@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Widgets\DashboardHeader;
 use App\Filament\Widgets\SendNotificationWidget;
+use App\Filament\Widgets\TasksDueWidget;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Actions\Action;
 use Illuminate\Contracts\Support\Htmlable;
@@ -29,6 +30,8 @@ class CustomDashboard extends BaseDashboard
         $otherWidgets = [];
         $notificationWidgets = [];
 
+        $hasTasksDueWidget = false;
+        
         foreach ($widgets as $widget) {
             $widgetClass = $this->resolveWidgetClass($widget);
 
@@ -41,8 +44,19 @@ class CustomDashboard extends BaseDashboard
                 $notificationWidgets[] = $widget;
                 continue;
             }
+            
+            if ($widgetClass === TasksDueWidget::class) {
+                $hasTasksDueWidget = true;
+                $otherWidgets[] = $widget;
+                continue;
+            }
 
             $otherWidgets[] = $widget;
+        }
+        
+        // Add TasksDueWidget if not already in the list
+        if (!$hasTasksDueWidget) {
+            array_unshift($otherWidgets, TasksDueWidget::class);
         }
 
         // Add SendNotificationWidget if not already in the list
