@@ -5,12 +5,12 @@
             $overdueTasks = $this->getOverdueTasks();
         @endphp
         
-        @if($overdueTasks->count() > 0)
-            <x-filament::section>
-                <x-slot name="heading">
-                    <span class="text-red-600 dark:text-red-400">Overdue ({{ $overdueTasks->count() }})</span>
-                </x-slot>
-                
+        <x-filament::section>
+            <x-slot name="heading">
+                <span class="text-red-600 dark:text-red-400">Overdue ({{ $overdueTasks->count() }})</span>
+            </x-slot>
+            
+            @if($overdueTasks->count() > 0)
                 <div class="space-y-2">
                     @foreach($overdueTasks as $task)
                         <a 
@@ -42,12 +42,17 @@
                         </a>
                     @endforeach
                 </div>
-            </x-filament::section>
-        @endif
+            @else
+                <div class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                    <p>No overdue tasks.</p>
+                </div>
+            @endif
+        </x-filament::section>
         
         <!-- Tasks Due Today -->
         @php
             $tasksDueToday = $this->getTasksDueToday();
+            $allTasksComplete = $this->areAllTasksComplete();
         @endphp
         
         <x-filament::section>
@@ -55,7 +60,13 @@
                 Due Today ({{ $tasksDueToday->count() }})
             </x-slot>
             
-            @if($tasksDueToday->count() > 0)
+            @if($allTasksComplete)
+                <div class="text-center py-6">
+                    <p class="text-lg font-semibold text-green-600 dark:text-green-400">
+                        All your tasks for the day are done - LFG 🥳
+                    </p>
+                </div>
+            @elseif($tasksDueToday->count() > 0)
                 <div class="space-y-2">
                     @foreach($tasksDueToday as $task)
                         <a 
@@ -99,12 +110,12 @@
             $upcomingTasks = $this->getUpcomingTasks();
         @endphp
         
-        @if($upcomingTasks->count() > 0)
-            <x-filament::section>
-                <x-slot name="heading">
-                    Upcoming ({{ $upcomingTasks->count() }})
-                </x-slot>
-                
+        <x-filament::section>
+            <x-slot name="heading">
+                Upcoming ({{ $upcomingTasks->count() }})
+            </x-slot>
+            
+            @if($upcomingTasks->count() > 0)
                 <div class="space-y-2">
                     @foreach($upcomingTasks as $task)
                         <a 
@@ -136,8 +147,12 @@
                         </a>
                     @endforeach
                 </div>
-            </x-filament::section>
-        @endif
+            @else
+                <div class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
+                    <p>No upcoming tasks.</p>
+                </div>
+            @endif
+        </x-filament::section>
     </div>
 </x-filament-widgets::widget>
 

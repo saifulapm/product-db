@@ -41,6 +41,27 @@ class TasksDueWidget extends Widget
             ->get();
     }
     
+    public function getAllTasksDueToday()
+    {
+        $userId = Auth::id();
+        $today = Carbon::today();
+        
+        return Task::where('assigned_to', $userId)
+            ->whereDate('due_date', $today)
+            ->with(['assignedUser', 'parentTask', 'project'])
+            ->get();
+    }
+    
+    public function areAllTasksComplete()
+    {
+        $allTasks = $this->getAllTasksDueToday();
+        $incompleteTasks = $this->getTasksDueToday();
+        
+        // Show celebration if there are no incomplete tasks
+        // (either all tasks are complete, or there are no tasks at all)
+        return $incompleteTasks->isEmpty();
+    }
+    
     public function getUpcomingTasks()
     {
         return Task::where('assigned_to', Auth::id())
