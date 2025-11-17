@@ -21,12 +21,6 @@
                 <!-- View Type Switcher -->
                 <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                     <button 
-                        wire:click="setViewType('month')"
-                        class="px-3 py-1.5 text-sm font-medium rounded transition-colors {{ $viewType === 'month' ? 'bg-primary-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}"
-                    >
-                        Month
-                    </button>
-                    <button 
                         wire:click="setViewType('week')"
                         class="px-3 py-1.5 text-sm font-medium rounded transition-colors {{ $viewType === 'week' ? 'bg-primary-600 text-white' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}"
                     >
@@ -62,72 +56,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- Month View -->
-        @if($viewType === 'month')
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-600 overflow-hidden flex flex-col" style="height: calc(100vh - 250px);">
-            <!-- Day Headers -->
-            <div class="grid grid-cols-7 gap-0 border-b-2 border-gray-300 dark:border-gray-600 flex-shrink-0">
-                @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $dayName)
-                    <div class="p-3 bg-gray-50 dark:bg-gray-900 text-center font-semibold text-sm text-gray-700 dark:text-gray-300 {{ !$loop->last ? 'border-r border-gray-300 dark:border-gray-600' : '' }}">
-                        {{ $dayName }}
-                    </div>
-                @endforeach
-            </div>
-            <!-- Calendar Days Grid -->
-            <div class="grid grid-cols-7 gap-0 flex-1 overflow-y-auto">
-                @foreach($this->getMonthDays() as $dayData)
-                    @php
-                        $date = $dayData['date'];
-                        $isCurrentMonth = $dayData['isCurrentMonth'];
-                        $isToday = $dayData['isToday'];
-                        $tasks = $this->getTasksForDate($date);
-                        $isLastInRow = $loop->iteration % 7 === 0;
-                    @endphp
-                    <div class="flex flex-col min-h-[120px] border-r border-b border-gray-200 dark:border-gray-700 {{ !$isCurrentMonth ? 'bg-gray-50 dark:bg-gray-900/50 opacity-60' : 'bg-white dark:bg-gray-800' }}">
-                        <!-- Day Number -->
-                        <div class="p-2 flex-shrink-0">
-                            <span class="text-sm font-semibold {{ $isToday ? 'text-primary-600 dark:text-primary-400' : ($isCurrentMonth ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500') }}">
-                                {{ $date->day }}
-                            </span>
-                        </div>
-                        <!-- Tasks -->
-                        <div class="p-1 flex-1 overflow-y-auto">
-                            <div class="space-y-1">
-                                @foreach($tasks->take(3) as $task)
-                                    @php
-                                        $taskTitle = $task->title;
-                                        $subtaskName = strpos($taskTitle, ' - ') !== false 
-                                            ? trim(explode(' - ', $taskTitle)[0])
-                                            : trim($taskTitle);
-                                        
-                                        $tagBgColor = match($subtaskName) {
-                                            'Add Products' => 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
-                                            'Size Grade or Thread Colors Needed' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-                                            'Website Images' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-                                            default => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-                                        };
-                                    @endphp
-                                    <a 
-                                        href="{{ $this->getViewTaskUrl($task) }}"
-                                        class="block text-xs p-1 rounded truncate {{ $tagBgColor }} hover:opacity-80 transition-opacity"
-                                        title="{{ $task->title }}"
-                                    >
-                                        {{ $subtaskName }}
-                                    </a>
-                                @endforeach
-                                @if($tasks->count() > 3)
-                                    <div class="text-xs text-gray-500 dark:text-gray-400 p-1">
-                                        +{{ $tasks->count() - 3 }} more
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-        @endif
 
         <!-- Week View -->
         @if($viewType === 'week')
@@ -174,7 +102,7 @@
                         $tasks = $this->getTasksForDate($date);
                         $isLast = $loop->last;
                     @endphp
-                    <div class="flex flex-col h-full w-full {{ !$isLast ? 'border-r border-gray-300 dark:border-gray-600' : '' }}">
+                    <div class="flex flex-col h-full w-full {{ !$isLast ? 'border-r border-gray-300 dark:border-gray-600' : '' }}" style="{{ !$isLast ? 'border-right: 1px solid rgb(209 213 219) !important;' : '' }}">
                         <!-- Day Header -->
                         <div class="p-4 bg-gray-50 dark:bg-gray-900 border-b-2 border-gray-300 dark:border-gray-600 flex-shrink-0">
                             <div class="text-center">

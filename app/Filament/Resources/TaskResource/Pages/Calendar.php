@@ -22,7 +22,7 @@ class Calendar extends Page
     
     public $currentDate;
     
-    public $viewType = 'week'; // 'month', 'week', '3day', 'day'
+    public $viewType = 'week'; // 'week', '3day', 'day'
     
     public $selectedAssignee = null;
     
@@ -30,9 +30,24 @@ class Calendar extends Page
     
     public function mount(): void
     {
-        $this->currentDate = now()->startOfWeek();
         $this->selectedAssignee = request()->query('selectedAssignee');
-        $this->viewType = request()->query('viewType', 'week');
+        $viewType = request()->query('viewType', 'week');
+        
+        // If month view is requested, default to week
+        if ($viewType === 'month') {
+            $this->viewType = 'week';
+        } else {
+            $this->viewType = $viewType;
+        }
+        
+        // Initialize currentDate based on view type (store as string for Livewire)
+        if ($this->viewType === 'week') {
+            $this->currentDate = now()->startOfWeek()->toDateString();
+        } elseif ($this->viewType === '3day' || $this->viewType === 'day') {
+            $this->currentDate = now()->startOfDay()->toDateString();
+        } else {
+            $this->currentDate = now()->startOfWeek()->toDateString();
+        }
     }
     
     public function updatedSelectedAssignee(): void
@@ -42,18 +57,22 @@ class Calendar extends Page
     
     public function setViewType(string $viewType): void
     {
+        // Reject month view, default to week if requested
+        if ($viewType === 'month') {
+            $viewType = 'week';
+        }
+        
         $this->viewType = $viewType;
         
-        // Adjust current date based on view type
-        if ($viewType === 'month') {
-            $this->currentDate = $this->currentDate->copy()->startOfMonth()->startOfWeek();
-        } elseif ($viewType === 'week') {
-            $this->currentDate = $this->currentDate->copy()->startOfWeek();
+        // Adjust current date based on view type (parse string to Carbon, then back to string)
+        $date = Carbon::parse($this->currentDate);
+        if ($viewType === 'week') {
+            $this->currentDate = $date->copy()->startOfWeek()->toDateString();
         } elseif ($viewType === '3day') {
             // Keep current date, just adjust to start of the 3-day range
-            $this->currentDate = $this->currentDate->copy()->startOfDay();
+            $this->currentDate = $date->copy()->startOfDay()->toDateString();
         } elseif ($viewType === 'day') {
-            $this->currentDate = $this->currentDate->copy()->startOfDay();
+            $this->currentDate = $date->copy()->startOfDay()->toDateString();
         }
     }
     
@@ -64,48 +83,50 @@ class Calendar extends Page
     
     public function previous(): void
     {
-        if ($this->viewType === 'month') {
-            $this->currentDate = $this->currentDate->copy()->subMonth()->startOfMonth()->startOfWeek();
-        } elseif ($this->viewType === 'week') {
-            $this->currentDate = $this->currentDate->copy()->subWeek();
+        if ($this->viewType === 'week') {
+            $newDate = Carbon::parse($this->currentDate)->subWeek();
+            $this->currentDate = $newDate->toDateString();
         } elseif ($this->viewType === '3day') {
-            $this->currentDate = $this->currentDate->copy()->subDays(3);
+            $newDate = Carbon::parse($this->currentDate)->subDays(3);
+            $this->currentDate = $newDate->toDateString();
         } elseif ($this->viewType === 'day') {
-            $this->currentDate = $this->currentDate->copy()->subDay();
+            $newDate = Carbon::parse($this->currentDate)->subDay();
+            $this->currentDate = $newDate->toDateString();
         }
     }
     
     public function next(): void
     {
-        if ($this->viewType === 'month') {
-            $this->currentDate = $this->currentDate->copy()->addMonth()->startOfMonth()->startOfWeek();
-        } elseif ($this->viewType === 'week') {
-            $this->currentDate = $this->currentDate->copy()->addWeek();
+        if ($this->viewType === 'week') {
+            $newDate = Carbon::parse($this->currentDate)->addWeek();
+            $this->currentDate = $newDate->toDateString();
         } elseif ($this->viewType === '3day') {
-            $this->currentDate = $this->currentDate->copy()->addDays(3);
+            $newDate = Carbon::parse($this->currentDate)->addDays(3);
+            $this->currentDate = $newDate->toDateString();
         } elseif ($this->viewType === 'day') {
-            $this->currentDate = $this->currentDate->copy()->addDay();
+            $newDate = Carbon::parse($this->currentDate)->addDay();
+            $this->currentDate = $newDate->toDateString();
         }
     }
     
     public function goToToday(): void
     {
-        if ($this->viewType === 'month') {
-            $this->currentDate = now()->startOfMonth()->startOfWeek();
-        } elseif ($this->viewType === 'week') {
-            $this->currentDate = now()->startOfWeek();
+        if ($this->viewType === 'week') {
+            $this->currentDate = now()->startOfWeek()->toDateString();
+        } elseif ($this->viewType === '3day' || $this->viewType === 'day') {
+            $this->currentDate = now()->startOfDay()->toDateString();
         } else {
-            $this->currentDate = now()->startOfDay();
+            $this->currentDate = now()->startOfWeek()->toDateString();
         }
     }
     
     public function getDateRange(): string
     {
-        if ($this->viewType === 'month') {
-            return $this->currentDate->copy()->startOfMonth()->format('F Y');
-        } elseif ($this->viewType === 'week') {
-            $start = $this->currentDate->copy();
-            $end = $this->currentDate->copy()->endOfWeek();
+        $date = Carbon::parse($this->currentDate);
+        
+        if ($this->viewType === 'week') {
+            $start = $date->copy();
+            $end = $date->copy()->endOfWeek();
             
             if ($start->month === $end->month) {
                 return $start->format('M d') . ' - ' . $end->format('d, Y');
@@ -113,8 +134,8 @@ class Calendar extends Page
                 return $start->format('M d') . ' - ' . $end->format('M d, Y');
             }
         } elseif ($this->viewType === '3day') {
-            $start = $this->currentDate->copy();
-            $end = $this->currentDate->copy()->addDays(2);
+            $start = $date->copy();
+            $end = $date->copy()->addDays(2);
             
             if ($start->month === $end->month) {
                 return $start->format('M d') . ' - ' . $end->format('d, Y');
@@ -122,7 +143,7 @@ class Calendar extends Page
                 return $start->format('M d') . ' - ' . $end->format('M d, Y');
             }
         } elseif ($this->viewType === 'day') {
-            return $this->currentDate->copy()->format('l, F d, Y');
+            return $date->copy()->format('l, F d, Y');
         }
         
         return '';
@@ -131,7 +152,7 @@ class Calendar extends Page
     public function getWeekDays(): array
     {
         $days = [];
-        $currentDate = $this->currentDate->copy();
+        $currentDate = Carbon::parse($this->currentDate)->copy();
         
         for ($i = 0; $i < 7; $i++) {
             $days[] = $currentDate->copy();
@@ -144,7 +165,7 @@ class Calendar extends Page
     public function getThreeDays(): array
     {
         $days = [];
-        $currentDate = $this->currentDate->copy();
+        $currentDate = Carbon::parse($this->currentDate)->copy();
         
         for ($i = 0; $i < 3; $i++) {
             $days[] = $currentDate->copy();
@@ -156,30 +177,7 @@ class Calendar extends Page
     
     public function getSingleDay(): Carbon
     {
-        return $this->currentDate->copy();
-    }
-    
-    public function getMonthDays(): array
-    {
-        $days = [];
-        
-        // Start from the first day of the month, then go back to the start of that week
-        $monthStart = $this->currentDate->copy()->startOfMonth();
-        $calendarStart = $monthStart->copy()->startOfWeek();
-        
-        // Generate 6 weeks (42 days) to ensure full month display
-        $currentDate = $calendarStart->copy();
-        
-        for ($i = 0; $i < 42; $i++) {
-            $days[] = [
-                'date' => $currentDate->copy(),
-                'isCurrentMonth' => $currentDate->month === $monthStart->month,
-                'isToday' => $currentDate->isToday(),
-            ];
-            $currentDate->addDay();
-        }
-        
-        return $days;
+        return Carbon::parse($this->currentDate)->copy();
     }
     
     public function getTasksForDate(Carbon $date)
