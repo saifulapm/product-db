@@ -4,9 +4,11 @@ namespace App\Filament\Resources\TaskResource\Pages;
 
 use App\Filament\Resources\TaskResource;
 use App\Models\Task;
+use App\Models\User;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
+use Carbon\Carbon;
 
 class EditTask extends EditRecord
 {
@@ -76,20 +78,78 @@ class EditTask extends EditRecord
             ->first();
         
         if (!empty($data['add_products']) && $data['add_products'] === true) {
+            // Determine assigned user: use manual selection if provided, otherwise auto-assign to Grace
+            $assignedTo = null;
+            if (!empty($data['add_products_subtask_assigned_to'])) {
+                // Manual override provided
+                $assignedTo = $data['add_products_subtask_assigned_to'];
+            } else {
+                // Auto-assign to Grace (only when creating new subtask, not updating existing)
+                if (!$addProductsSubtask) {
+                    $graceUser = User::where('email', 'grace@ethos.community')->first();
+                    $assignedTo = $graceUser ? $graceUser->id : null;
+                }
+            }
+            
+            // Determine due date: use manual selection if provided, otherwise calculate based on PST time
+            $dueDateFormatted = null;
+            if (!empty($data['add_products_subtask_due_date'])) {
+                // Manual override provided
+                $dueDateFormatted = Carbon::parse($data['add_products_subtask_due_date'])->format('Y-m-d');
+            } else {
+                // Auto-calculate based on PST time (only when creating new subtask, not updating existing)
+                if (!$addProductsSubtask) {
+                    // If created before 2pm PST: due date is same day
+                    // If created after 2pm PST: due date is following day
+                    $pstNow = Carbon::now('America/Los_Angeles');
+                    $dueDate = $pstNow->copy();
+                    
+                    if ($pstNow->hour >= 14) {
+                        // After 2pm PST, set due date to next day
+                        $dueDate->addDay();
+                    }
+                    // Before 2pm PST, due date is same day (already set)
+                    
+                    // Format as date only (Y-m-d)
+                    $dueDateFormatted = $dueDate->format('Y-m-d');
+                }
+            }
+            
             $subtaskData = [
                 'title' => 'Add Products',
                 'description' => 'Subtask for: ' . $record->title,
                 'parent_task_id' => $record->id,
                 'project_id' => $record->project_id,
-                'assigned_to' => $data['add_products_subtask_assigned_to'] ?? null,
-                'due_date' => $data['add_products_subtask_due_date'] ?? null,
+                'assigned_to' => $assignedTo,
+                'due_date' => $dueDateFormatted,
                 'created_by' => $record->created_by,
                 'priority' => $record->priority ?? 1,
             ];
             
             if ($addProductsSubtask) {
-                // Update existing subtask
-                $addProductsSubtask->update($subtaskData);
+                // Update existing subtask - use manual override if provided, otherwise keep existing values
+                $updateData = [
+                    'title' => $subtaskData['title'],
+                    'description' => $subtaskData['description'],
+                    'project_id' => $subtaskData['project_id'],
+                    'priority' => $subtaskData['priority'],
+                ];
+                
+                // Use manual override if provided, otherwise keep existing value
+                if (isset($assignedTo)) {
+                    $updateData['assigned_to'] = $assignedTo;
+                } else {
+                    $updateData['assigned_to'] = $addProductsSubtask->assigned_to;
+                }
+                
+                // Use manual override if provided, otherwise keep existing value
+                if (isset($dueDateFormatted)) {
+                    $updateData['due_date'] = $dueDateFormatted;
+                } else {
+                    $updateData['due_date'] = $addProductsSubtask->due_date;
+                }
+                
+                $addProductsSubtask->update($updateData);
             } else {
                 // Only create if it doesn't exist
                 $subtaskData['actions'] = [[

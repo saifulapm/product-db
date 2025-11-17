@@ -4,9 +4,11 @@ namespace App\Filament\Resources\TaskResource\Pages;
 
 use App\Filament\Resources\TaskResource;
 use App\Models\Task;
+use App\Models\User;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Notifications\Notification;
+use Carbon\Carbon;
 
 class CreateTask extends CreateRecord
 {
@@ -39,13 +41,46 @@ class CreateTask extends CreateRecord
         
         // Create subtask if "Add Products" is checked
         if (!empty($data['add_products']) && $data['add_products'] === true) {
+            // Determine assigned user: use manual selection if provided, otherwise auto-assign to Grace
+            $assignedTo = null;
+            if (!empty($data['add_products_subtask_assigned_to'])) {
+                // Manual override provided
+                $assignedTo = $data['add_products_subtask_assigned_to'];
+            } else {
+                // Auto-assign to Grace
+                $graceUser = User::where('email', 'grace@ethos.community')->first();
+                $assignedTo = $graceUser ? $graceUser->id : null;
+            }
+            
+            // Determine due date: use manual selection if provided, otherwise calculate based on PST time
+            $dueDateFormatted = null;
+            if (!empty($data['add_products_subtask_due_date'])) {
+                // Manual override provided
+                $dueDateFormatted = Carbon::parse($data['add_products_subtask_due_date'])->format('Y-m-d');
+            } else {
+                // Auto-calculate based on PST time
+                // If created before 2pm PST: due date is same day
+                // If created after 2pm PST: due date is following day
+                $pstNow = Carbon::now('America/Los_Angeles');
+                $dueDate = $pstNow->copy();
+                
+                if ($pstNow->hour >= 14) {
+                    // After 2pm PST, set due date to next day
+                    $dueDate->addDay();
+                }
+                // Before 2pm PST, due date is same day (already set)
+                
+                // Format as date only (Y-m-d)
+                $dueDateFormatted = $dueDate->format('Y-m-d');
+            }
+            
             $subtaskData = [
                 'title' => 'Add Products',
                 'description' => 'Subtask for: ' . $this->record->title,
                 'parent_task_id' => $this->record->id,
                 'project_id' => $this->record->project_id,
-                'assigned_to' => $data['add_products_subtask_assigned_to'] ?? null,
-                'due_date' => $data['add_products_subtask_due_date'] ?? null,
+                'assigned_to' => $assignedTo,
+                'due_date' => $dueDateFormatted,
                 'created_by' => auth()->id(),
                 'priority' => $this->record->priority ?? 1,
                 'actions' => [[
