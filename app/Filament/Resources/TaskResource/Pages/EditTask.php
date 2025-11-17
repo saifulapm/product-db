@@ -175,21 +175,67 @@ class EditTask extends EditRecord
             ->first();
         
         if (!empty($data['design_details']) && $data['design_details'] === true) {
+            // Determine assigned user: use manual selection if provided, otherwise auto-assign to Ephraim
+            $assignedTo = null;
+            if (!empty($data['subtask_assigned_to'])) {
+                // Manual override provided
+                $assignedTo = $data['subtask_assigned_to'];
+            } else {
+                // Auto-assign to Ephraim (only when creating new subtask, not updating existing)
+                if (!$designDetailsSubtask) {
+                    $ephraimUser = User::where('email', 'ephraim.ethos@gmail.com')->first();
+                    $assignedTo = $ephraimUser ? $ephraimUser->id : null;
+                }
+            }
+            
+            // Determine due date: use manual selection if provided, otherwise set to same day
+            $dueDateFormatted = null;
+            if (!empty($data['subtask_due_date'])) {
+                // Manual override provided
+                $dueDateFormatted = Carbon::parse($data['subtask_due_date'])->format('Y-m-d');
+            } else {
+                // Auto-set to same day (only when creating new subtask, not updating existing)
+                if (!$designDetailsSubtask) {
+                    $dueDateFormatted = Carbon::now()->format('Y-m-d');
+                }
+            }
+            
             $subtaskTitle = 'Size Grade or Thread Colors Needed - ' . $record->title;
             $subtaskData = [
                 'title' => $subtaskTitle,
                 'description' => 'Subtask for: ' . $record->title,
                 'parent_task_id' => $record->id,
                 'project_id' => $record->project_id,
-                'assigned_to' => $data['subtask_assigned_to'] ?? null,
-                'due_date' => $data['subtask_due_date'] ?? null,
+                'assigned_to' => $assignedTo,
+                'due_date' => $dueDateFormatted,
                 'created_by' => $record->created_by,
                 'priority' => $record->priority ?? 1,
             ];
             
             if ($designDetailsSubtask) {
-                // Update existing subtask
-                $designDetailsSubtask->update($subtaskData);
+                // Update existing subtask - use manual override if provided, otherwise keep existing values
+                $updateData = [
+                    'title' => $subtaskData['title'],
+                    'description' => $subtaskData['description'],
+                    'project_id' => $subtaskData['project_id'],
+                    'priority' => $subtaskData['priority'],
+                ];
+                
+                // Use manual override if provided, otherwise keep existing value
+                if (isset($assignedTo)) {
+                    $updateData['assigned_to'] = $assignedTo;
+                } else {
+                    $updateData['assigned_to'] = $designDetailsSubtask->assigned_to;
+                }
+                
+                // Use manual override if provided, otherwise keep existing value
+                if (isset($dueDateFormatted)) {
+                    $updateData['due_date'] = $dueDateFormatted;
+                } else {
+                    $updateData['due_date'] = $designDetailsSubtask->due_date;
+                }
+                
+                $designDetailsSubtask->update($updateData);
             } else {
                 // Only create if it doesn't exist
                 $subtaskData['actions'] = [[
@@ -215,21 +261,67 @@ class EditTask extends EditRecord
             ->first();
         
         if (!empty($data['website_images']) && $data['website_images'] === true) {
+            // Determine assigned user: use manual selection if provided, otherwise auto-assign to Vinzent
+            $assignedTo = null;
+            if (!empty($data['website_images_subtask_assigned_to'])) {
+                // Manual override provided
+                $assignedTo = $data['website_images_subtask_assigned_to'];
+            } else {
+                // Auto-assign to Vinzent (only when creating new subtask, not updating existing)
+                if (!$websiteImagesSubtask) {
+                    $vinzentUser = User::where('email', 'vinzent@ethos.community')->first();
+                    $assignedTo = $vinzentUser ? $vinzentUser->id : null;
+                }
+            }
+            
+            // Determine due date: use manual selection if provided, otherwise set to next day
+            $dueDateFormatted = null;
+            if (!empty($data['website_images_subtask_due_date'])) {
+                // Manual override provided
+                $dueDateFormatted = Carbon::parse($data['website_images_subtask_due_date'])->format('Y-m-d');
+            } else {
+                // Auto-set to next day (only when creating new subtask, not updating existing)
+                if (!$websiteImagesSubtask) {
+                    $dueDateFormatted = Carbon::now()->addDay()->format('Y-m-d');
+                }
+            }
+            
             $subtaskTitle = 'Website Images - ' . $record->title;
             $subtaskData = [
                 'title' => $subtaskTitle,
                 'description' => 'Subtask for: ' . $record->title,
                 'parent_task_id' => $record->id,
                 'project_id' => $record->project_id,
-                'assigned_to' => $data['website_images_subtask_assigned_to'] ?? null,
-                'due_date' => $data['website_images_subtask_due_date'] ?? null,
+                'assigned_to' => $assignedTo,
+                'due_date' => $dueDateFormatted,
                 'created_by' => $record->created_by,
                 'priority' => $record->priority ?? 1,
             ];
             
             if ($websiteImagesSubtask) {
-                // Update existing subtask
-                $websiteImagesSubtask->update($subtaskData);
+                // Update existing subtask - use manual override if provided, otherwise keep existing values
+                $updateData = [
+                    'title' => $subtaskData['title'],
+                    'description' => $subtaskData['description'],
+                    'project_id' => $subtaskData['project_id'],
+                    'priority' => $subtaskData['priority'],
+                ];
+                
+                // Use manual override if provided, otherwise keep existing value
+                if (isset($assignedTo)) {
+                    $updateData['assigned_to'] = $assignedTo;
+                } else {
+                    $updateData['assigned_to'] = $websiteImagesSubtask->assigned_to;
+                }
+                
+                // Use manual override if provided, otherwise keep existing value
+                if (isset($dueDateFormatted)) {
+                    $updateData['due_date'] = $dueDateFormatted;
+                } else {
+                    $updateData['due_date'] = $websiteImagesSubtask->due_date;
+                }
+                
+                $websiteImagesSubtask->update($updateData);
             } else {
                 // Only create if it doesn't exist
                 $subtaskData['actions'] = [[

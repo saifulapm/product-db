@@ -97,13 +97,34 @@ class CreateTask extends CreateRecord
         
         // Create subtask if "Size Grade or Thread Colors Needed" is checked
         if (!empty($data['design_details']) && $data['design_details'] === true) {
+            // Determine assigned user: use manual selection if provided, otherwise auto-assign to Ephraim
+            $assignedTo = null;
+            if (!empty($data['subtask_assigned_to'])) {
+                // Manual override provided
+                $assignedTo = $data['subtask_assigned_to'];
+            } else {
+                // Auto-assign to Ephraim
+                $ephraimUser = User::where('email', 'ephraim.ethos@gmail.com')->first();
+                $assignedTo = $ephraimUser ? $ephraimUser->id : null;
+            }
+            
+            // Determine due date: use manual selection if provided, otherwise set to same day
+            $dueDateFormatted = null;
+            if (!empty($data['subtask_due_date'])) {
+                // Manual override provided
+                $dueDateFormatted = Carbon::parse($data['subtask_due_date'])->format('Y-m-d');
+            } else {
+                // Auto-set to same day
+                $dueDateFormatted = Carbon::now()->format('Y-m-d');
+            }
+            
             $subtaskData = [
                 'title' => 'Size Grade or Thread Colors Needed - ' . $this->record->title,
                 'description' => 'Subtask for: ' . $this->record->title,
                 'parent_task_id' => $this->record->id,
                 'project_id' => $this->record->project_id,
-                'assigned_to' => $data['subtask_assigned_to'] ?? null,
-                'due_date' => $data['subtask_due_date'] ?? null,
+                'assigned_to' => $assignedTo,
+                'due_date' => $dueDateFormatted,
                 'created_by' => auth()->id(),
                 'priority' => $this->record->priority ?? 1,
                 'actions' => [[
@@ -120,13 +141,34 @@ class CreateTask extends CreateRecord
         
         // Create subtask if "Website Images" is checked
         if (!empty($data['website_images']) && $data['website_images'] === true) {
+            // Determine assigned user: use manual selection if provided, otherwise auto-assign to Vinzent
+            $assignedTo = null;
+            if (!empty($data['website_images_subtask_assigned_to'])) {
+                // Manual override provided
+                $assignedTo = $data['website_images_subtask_assigned_to'];
+            } else {
+                // Auto-assign to Vinzent
+                $vinzentUser = User::where('email', 'vinzent@ethos.community')->first();
+                $assignedTo = $vinzentUser ? $vinzentUser->id : null;
+            }
+            
+            // Determine due date: use manual selection if provided, otherwise set to next day
+            $dueDateFormatted = null;
+            if (!empty($data['website_images_subtask_due_date'])) {
+                // Manual override provided
+                $dueDateFormatted = Carbon::parse($data['website_images_subtask_due_date'])->format('Y-m-d');
+            } else {
+                // Auto-set to next day
+                $dueDateFormatted = Carbon::now()->addDay()->format('Y-m-d');
+            }
+            
             $subtaskData = [
                 'title' => 'Website Images - ' . $this->record->title,
                 'description' => 'Subtask for: ' . $this->record->title,
                 'parent_task_id' => $this->record->id,
                 'project_id' => $this->record->project_id,
-                'assigned_to' => $data['website_images_subtask_assigned_to'] ?? null,
-                'due_date' => $data['website_images_subtask_due_date'] ?? null,
+                'assigned_to' => $assignedTo,
+                'due_date' => $dueDateFormatted,
                 'created_by' => auth()->id(),
                 'priority' => $this->record->priority ?? 1,
                 'actions' => [[
