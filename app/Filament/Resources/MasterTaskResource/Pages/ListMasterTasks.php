@@ -141,4 +141,26 @@ class ListMasterTasks extends Page
     {
         return TaskResource::getUrl('view', ['record' => $task]);
     }
+    
+    public function editTask(int $taskId): void
+    {
+        $this->redirect(TaskResource::getUrl('edit', ['record' => $taskId]));
+    }
+    
+    public function deleteTask(int $taskId): void
+    {
+        $task = Task::find($taskId);
+        
+        if ($task) {
+            // Delete subtasks first
+            $task->subtasks()->delete();
+            // Delete the task
+            $task->delete();
+            
+            \Filament\Notifications\Notification::make()
+                ->title('Task deleted successfully')
+                ->success()
+                ->send();
+        }
+    }
 }

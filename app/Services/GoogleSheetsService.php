@@ -322,17 +322,18 @@ class GoogleSheetsService
             }
 
             // Map columns based on CAD Product Database format:
-            // A: Ethos ID, B: Product Name, C: Supplier, D: Product Type, E: Website URL, F: Base Color, G: Tone on Tone Darker, H: Tone on Tone Lighter, I: Notes
+            // A: Ethos ID, B: Product Name, F: Base Color, G: Tone on Tone Darker, H: Tone on Tone Lighter, I: Minimums, J: Printed/Embroidered - 1 Logo, K: Printed/Embroidered - 2 Logos, L: Printed/Embroidered - 3 Logos, M: Notes
             $productData = [
-                'sku' => $row[0] ?? null,                    // Ethos ID
-                'name' => $row[1] ?? null,                   // Product Name
-                'supplier' => $row[2] ?? null,              // Supplier
-                'product_type' => $row[3] ?? null,           // Product Type
-                'website_url' => $row[4] ?? null,            // Website URL
-                'base_color' => $row[5] ?? null,             // Base Color
-                'tone_on_tone_darker' => $row[6] ?? null,    // Tone on Tone Darker
-                'tone_on_tone_lighter' => $row[7] ?? null,   // Tone on Tone Lighter
-                'notes' => $row[8] ?? null,                 // Notes
+                'sku' => $row[0] ?? null,                    // A: Ethos ID
+                'name' => $row[1] ?? null,                   // B: Product Name
+                'base_color' => $row[5] ?? null,             // F: Base Color
+                'tone_on_tone_darker' => $row[6] ?? null,    // G: Tone on Tone Darker
+                'tone_on_tone_lighter' => $row[7] ?? null,   // H: Tone on Tone Lighter
+                'minimums' => isset($row[8]) && $row[8] !== '' ? trim($row[8]) : null,  // I: Minimums
+                'printed_embroidered_1_logo' => $this->parsePrice($row[9] ?? null),  // J: Printed/Embroidered - 1 Logo
+                'printed_embroidered_2_logos' => $this->parsePrice($row[10] ?? null), // K: Printed/Embroidered - 2 Logos
+                'printed_embroidered_3_logos' => $this->parsePrice($row[11] ?? null), // L: Printed/Embroidered - 3 Logos
+                'notes' => $row[12] ?? null,                 // M: Notes
             ];
 
             // Only add if we have at least a name
@@ -342,5 +343,29 @@ class GoogleSheetsService
         }
 
         return $products;
+    }
+
+    /**
+     * Parse price value from Google Sheets cell
+     * Handles strings like "$10.00", "10.00", "10", etc.
+     */
+    private function parsePrice($value)
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        // Convert to string and remove currency symbols and whitespace
+        $cleaned = trim((string) $value);
+        $cleaned = preg_replace('/[^\d.]/', '', $cleaned);
+
+        if ($cleaned === '' || $cleaned === '.') {
+            return null;
+        }
+
+        $floatValue = (float) $cleaned;
+        
+        // Return null if the value is 0 (might be empty cell)
+        return $floatValue > 0 ? $floatValue : null;
     }
 }

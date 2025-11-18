@@ -59,6 +59,11 @@ class Product extends Model implements HasMedia
         // Base color fields
         'base_color',
         'base_color_hex',
+        // B2B Pricing fields
+        'b2b_price',
+        'printed_embroidered_1_logo',
+        'printed_embroidered_2_logos',
+        'printed_embroidered_3_logos',
     ];
 
     protected $casts = [
@@ -66,6 +71,10 @@ class Product extends Model implements HasMedia
         'cost' => 'decimal:2',
         'weight' => 'decimal:2',
         'starting_from_price' => 'decimal:2',
+        'b2b_price' => 'decimal:2',
+        'printed_embroidered_1_logo' => 'decimal:2',
+        'printed_embroidered_2_logos' => 'decimal:2',
+        'printed_embroidered_3_logos' => 'decimal:2',
         'images' => 'array',
         'specifications' => 'array',
         'customization_methods' => 'array',

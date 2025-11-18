@@ -44,11 +44,11 @@ class ProductResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
-    protected static ?string $navigationLabel = 'CAD Library';
+    protected static ?string $navigationLabel = 'Product Database';
 
     protected static ?string $modelLabel = 'Product';
 
-    protected static ?string $pluralModelLabel = 'CAD Library';
+    protected static ?string $pluralModelLabel = 'Product Database';
 
     protected static ?string $navigationGroup = 'Design Tools';
 
@@ -129,6 +129,41 @@ class ProductResource extends Resource
                     ])
                     ->columns(2),
 
+                Section::make('B2B Price & Minimums')
+                    ->schema([
+                        Forms\Components\TextInput::make('minimums')
+                            ->label('Minimums')
+                            ->placeholder('e.g., "No minimums" or "12 pieces"')
+                            ->helperText('Minimum order quantity or requirements')
+                            ->columnSpanFull(),
+                        Grid::make(3)
+                            ->schema([
+                                Forms\Components\TextInput::make('printed_embroidered_1_logo')
+                                    ->label('Printed / Embroidered - 1 Logo')
+                                    ->numeric()
+                                    ->prefix('$')
+                                    ->step(0.01)
+                                    ->placeholder('0.00')
+                                    ->helperText('Price for 1 logo customization'),
+                                Forms\Components\TextInput::make('printed_embroidered_2_logos')
+                                    ->label('Printed / Embroidered - 2 Logos')
+                                    ->numeric()
+                                    ->prefix('$')
+                                    ->step(0.01)
+                                    ->placeholder('0.00')
+                                    ->helperText('Price for 2 logos customization'),
+                                Forms\Components\TextInput::make('printed_embroidered_3_logos')
+                                    ->label('Printed / Embroidered - 3 Logos')
+                                    ->numeric()
+                                    ->prefix('$')
+                                    ->step(0.01)
+                                    ->placeholder('0.00')
+                                    ->helperText('Price for 3 logos customization'),
+                            ]),
+                    ])
+                    ->columns(1)
+                    ->collapsible(),
+
                 Section::make('CAD Download')
                     ->schema([
                         SpatieMediaLibraryFileUpload::make('cad_download')
@@ -187,28 +222,6 @@ class ProductResource extends Resource
                     ->description(fn ($record) => $record->product_type)
                     ->url(fn ($record) => route('filament.admin.resources.products.view', $record))
                     ->color('primary'),
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'inactive' => 'warning',
-                        'discontinued' => 'danger',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'active' => 'Active',
-                        'inactive' => 'Inactive',
-                        'discontinued' => 'Discontinued',
-                        default => $state,
-                    })
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('supplier')
-                    ->searchable()
-                    ->sortable()
-                    ->badge()
-                    ->color('gray'),
                 Tables\Columns\TextColumn::make('base_color')
                     ->label('Base Color')
                     ->formatStateUsing(function ($state) {
@@ -245,6 +258,29 @@ class ProductResource extends Resource
                         );
                     })
                     ->html(),
+                Tables\Columns\TextColumn::make('minimums')
+                    ->label('Minimums')
+                    ->searchable()
+                    ->sortable()
+                    ->formatStateUsing(fn ($state) => $state ?: 'N/A'),
+                Tables\Columns\TextColumn::make('printed_embroidered_1_logo')
+                    ->label('1 Logo Price')
+                    ->sortable()
+                    ->formatStateUsing(function ($state) {
+                        return $state ? '$' . number_format($state, 2) : 'N/A';
+                    }),
+                Tables\Columns\TextColumn::make('printed_embroidered_2_logos')
+                    ->label('2 Logos Price')
+                    ->sortable()
+                    ->formatStateUsing(function ($state) {
+                        return $state ? '$' . number_format($state, 2) : 'N/A';
+                    }),
+                Tables\Columns\TextColumn::make('printed_embroidered_3_logos')
+                    ->label('3 Logos Price')
+                    ->sortable()
+                    ->formatStateUsing(function ($state) {
+                        return $state ? '$' . number_format($state, 2) : 'N/A';
+                    }),
                 Tables\Columns\TextColumn::make('cad_download')
                     ->label('CAD Download')
                     ->html()
@@ -728,12 +764,16 @@ class ProductResource extends Resource
                                         <li>Use these column headers in row 1:</li>
                                     </ol>
                                     <div class="bg-gray-100 p-2 rounded text-sm font-mono">
-                                        name, supplier, product_type, website_url, base_color, tone_on_tone_darker, tone_on_tone_lighter, notes
-                                    </div>
-                                    <p class="text-sm"><strong>Sample data:</strong></p>
-                                    <div class="bg-gray-100 p-2 rounded text-sm font-mono">
-                                        Sample Product 1, Supplier A, T-Shirt, https://example.com, #ffffff, #e8e8e8, #dedede, Sample notes<br>
-                                        Sample Product 2, Supplier B, Hoodie, https://example.com, #000000, #333333, #666666, Another sample
+                                        Column A: Ethos ID<br>
+                                        Column B: Product Name<br>
+                                        Column F: Base Color<br>
+                                        Column G: Tone on Tone Darker<br>
+                                        Column H: Tone on Tone Lighter<br>
+                                        Column I: Minimums<br>
+                                        Column J: Printed / Embroidered - 1 Logo<br>
+                                        Column K: Printed / Embroidered - 2 Logos<br>
+                                        Column L: Printed / Embroidered - 3 Logos<br>
+                                        Column M: Notes
                                     </div>
                                     <p class="text-sm"><strong>Note:</strong> You need a Google API key configured in your .env file (GOOGLE_API_KEY)</p>
                                 </div>
@@ -754,8 +794,8 @@ class ProductResource extends Resource
                             ->helperText('Your CAD Product Database Google Sheet URL'),
                         Forms\Components\TextInput::make('sheet_range')
                             ->label('Sheet Range (Optional)')
-                            ->default('A1:I10')
-                            ->helperText('Range to import (A1:I10 - Ethos ID in column A, then your 8 product fields).'),
+                            ->default('A1:M1000')
+                            ->helperText('Range to import (A1:M1000 - Ethos ID in column A, Product Name in B, Base Color in F, Tone colors in G-H, Minimums in I, Pricing in J-L, Notes in M).'),
                     ])
                     ->action(function (array $data) {
                         try {
