@@ -524,6 +524,95 @@ class ProductResource extends Resource
                                 ->send();
                         })
                         ->deselectRecordsAfterCompletion(),
+                    Tables\Actions\BulkAction::make('update_minimums')
+                        ->label('Update Minimums')
+                        ->icon('heroicon-o-currency-dollar')
+                        ->form([
+                            Forms\Components\TextInput::make('minimums')
+                                ->label('Minimums')
+                                ->placeholder('e.g., "No minimums" or "12 pieces"')
+                                ->helperText('Minimum order quantity or requirements')
+                                ->maxLength(255),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                            if (isset($data['minimums']) && $data['minimums'] !== null && $data['minimums'] !== '') {
+                                $records->each(function (Product $record) use ($data) {
+                                    $record->update(['minimums' => $data['minimums']]);
+                                });
+                                
+                                Notification::make()
+                                    ->title('Minimums updated successfully')
+                                    ->success()
+                                    ->body('Updated ' . $records->count() . ' product(s)')
+                                    ->send();
+                            } else {
+                                Notification::make()
+                                    ->title('No minimums value provided')
+                                    ->warning()
+                                    ->body('Please enter a minimums value')
+                                    ->send();
+                            }
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                    Tables\Actions\BulkAction::make('update_b2b_pricing')
+                        ->label('Update B2B Pricing')
+                        ->icon('heroicon-o-currency-dollar')
+                        ->form([
+                            Forms\Components\TextInput::make('printed_embroidered_1_logo')
+                                ->label('Printed / Embroidered - 1 Logo')
+                                ->numeric()
+                                ->prefix('$')
+                                ->step(0.01)
+                                ->placeholder('0.00')
+                                ->helperText('Price for 1 logo customization'),
+                            Forms\Components\TextInput::make('printed_embroidered_2_logos')
+                                ->label('Printed / Embroidered - 2 Logos')
+                                ->numeric()
+                                ->prefix('$')
+                                ->step(0.01)
+                                ->placeholder('0.00')
+                                ->helperText('Price for 2 logos customization'),
+                            Forms\Components\TextInput::make('printed_embroidered_3_logos')
+                                ->label('Printed / Embroidered - 3 Logos')
+                                ->numeric()
+                                ->prefix('$')
+                                ->step(0.01)
+                                ->placeholder('0.00')
+                                ->helperText('Price for 3 logos customization'),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                            $updateData = [];
+                            
+                            // Only include fields that have values
+                            if (isset($data['printed_embroidered_1_logo']) && $data['printed_embroidered_1_logo'] !== null && $data['printed_embroidered_1_logo'] !== '') {
+                                $updateData['printed_embroidered_1_logo'] = (float) $data['printed_embroidered_1_logo'];
+                            }
+                            if (isset($data['printed_embroidered_2_logos']) && $data['printed_embroidered_2_logos'] !== null && $data['printed_embroidered_2_logos'] !== '') {
+                                $updateData['printed_embroidered_2_logos'] = (float) $data['printed_embroidered_2_logos'];
+                            }
+                            if (isset($data['printed_embroidered_3_logos']) && $data['printed_embroidered_3_logos'] !== null && $data['printed_embroidered_3_logos'] !== '') {
+                                $updateData['printed_embroidered_3_logos'] = (float) $data['printed_embroidered_3_logos'];
+                            }
+                            
+                            if (!empty($updateData)) {
+                                $records->each(function (Product $record) use ($updateData) {
+                                    $record->update($updateData);
+                                });
+                                
+                                Notification::make()
+                                    ->title('B2B Pricing updated successfully')
+                                    ->success()
+                                    ->body('Updated ' . $records->count() . ' product(s)')
+                                    ->send();
+                            } else {
+                                Notification::make()
+                                    ->title('No pricing data provided')
+                                    ->warning()
+                                    ->body('Please enter at least one pricing value')
+                                    ->send();
+                            }
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
