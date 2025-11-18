@@ -18,9 +18,7 @@ class ListProducts extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        $actions = [
-            Actions\CreateAction::make(),
-        ];
+        $actions = [];
 
         // Add team notes edit action
         $teamNote = TeamNote::firstOrCreate(['page' => 'products'], ['content' => '']);
