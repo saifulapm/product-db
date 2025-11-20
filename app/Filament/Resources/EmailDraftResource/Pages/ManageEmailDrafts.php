@@ -47,3 +47,4 @@ class ManageEmailDrafts extends ManageRecords
     }
 }
 
+

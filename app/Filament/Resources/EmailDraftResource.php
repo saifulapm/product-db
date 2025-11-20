@@ -49,9 +49,22 @@ class EmailDraftResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->columnSpan('full'),
-                Forms\Components\Textarea::make('description')
-                    ->rows(3)
-                    ->maxLength(500)
+                Forms\Components\RichEditor::make('description')
+                    ->toolbarButtons([
+                        'blockquote',
+                        'bold',
+                        'bulletList',
+                        'codeBlock',
+                        'h2',
+                        'h3',
+                        'italic',
+                        'link',
+                        'orderedList',
+                        'redo',
+                        'strike',
+                        'underline',
+                        'undo',
+                    ])
                     ->columnSpan('full'),
             ]);
     }
@@ -63,8 +76,18 @@ class EmailDraftResource extends Resource
                 Tables\Columns\TextColumn::make('department')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('description')
+                    ->html()
                     ->searchable()
-                    ->limit(50),
+                    ->limit(100)
+                    ->tooltip(function (Tables\Columns\TextColumn $column): ?string {
+                        $state = $column->getState();
+                        // Strip HTML tags for tooltip
+                        $plainText = strip_tags($state);
+                        if (strlen($plainText) <= $column->getLimit()) {
+                            return null;
+                        }
+                        return $plainText;
+                    }),
             ])
             ->filters([
                 //

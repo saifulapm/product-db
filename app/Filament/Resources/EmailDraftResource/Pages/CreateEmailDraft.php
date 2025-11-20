@@ -11,3 +11,4 @@ class CreateEmailDraft extends CreateRecord
     protected static string $resource = EmailDraftResource::class;
 }
 
+

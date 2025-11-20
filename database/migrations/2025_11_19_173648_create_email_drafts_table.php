@@ -14,16 +14,7 @@ return new class extends Migration
         Schema::create('email_drafts', function (Blueprint $table) {
             $table->id();
             $table->string('department');
-            $table->string('title')->nullable();
-            $table->string('description')->nullable();
-            $table->string('phone')->nullable();
-            $table->string('email')->nullable();
-            $table->string('hours')->nullable();
-            $table->string('icon_color')->default('blue');
-            $table->string('icon_name')->default('chat');
-            $table->integer('sort_order')->default(0);
-            $table->boolean('is_active')->default(true);
-            $table->boolean('is_emergency')->default(false);
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }
