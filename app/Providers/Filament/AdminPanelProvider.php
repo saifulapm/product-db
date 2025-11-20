@@ -93,6 +93,7 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Pages\ProfileSettings::class,
                 \App\Filament\Pages\ManageDtfInHousePrints::class,
                 \App\Filament\Pages\QuickCadBuilder::class,
+                \App\Filament\Pages\PoSubmission::class,
             ])
             ->userMenuItems([
                 'profile' => MenuItem::make()
