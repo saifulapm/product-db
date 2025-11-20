@@ -35,15 +35,36 @@ class ListMasterTasks extends Page
     
     public ?string $sortBy = 'due_date_asc';
     
+    public ?string $taskTypeFilter = null;
+    
+    public ?string $assigneeFilter = null;
+    
+    public ?string $statusFilter = null;
+    
+    public string $viewType = 'list';
+    
     protected $queryString = [
         'search' => ['except' => ''],
         'sortBy' => ['except' => 'due_date_asc'],
+        'taskTypeFilter' => ['except' => null],
+        'assigneeFilter' => ['except' => null],
+        'statusFilter' => ['except' => null],
+        'viewType' => ['except' => 'list'],
     ];
     
     public function mount(): void
     {
         $this->search = request()->query('search', '');
         $this->sortBy = request()->query('sortBy', 'due_date_asc');
+        $this->taskTypeFilter = request()->query('taskTypeFilter');
+        $this->assigneeFilter = request()->query('assigneeFilter');
+        $this->statusFilter = request()->query('statusFilter');
+        $this->viewType = request()->query('viewType', 'list');
+    }
+    
+    public function setViewType(string $viewType): void
+    {
+        $this->viewType = $viewType;
     }
     
     public function updatedSearch(): void
@@ -56,10 +77,35 @@ class ListMasterTasks extends Page
         // This will trigger a re-render when sort changes
     }
     
+    public function updatedTaskTypeFilter(): void
+    {
+        // This will trigger a re-render when filter changes
+    }
+    
+    public function updatedAssigneeFilter(): void
+    {
+        // This will trigger a re-render when filter changes
+    }
+    
+    public function updatedStatusFilter(): void
+    {
+        // This will trigger a re-render when filter changes
+    }
+    
+    public function getTaskTypeOptions()
+    {
+        return \App\Models\Project::orderBy('name')->pluck('name', 'id')->toArray();
+    }
+    
+    public function getAssigneeOptions()
+    {
+        return \App\Models\User::orderBy('name')->pluck('name', 'id')->toArray();
+    }
+    
     public function getIncompleteTasks()
     {
         $tasks = Task::whereNull('parent_task_id')
-            ->with(['subtasks'])
+            ->with(['subtasks', 'assignedUser', 'project'])
             ->get()
             ->filter(function ($task) {
                 $subtasks = $task->subtasks;
@@ -79,6 +125,20 @@ class ListMasterTasks extends Page
             });
         }
         
+        // Apply task type filter
+        if (!empty($this->taskTypeFilter)) {
+            $tasks = $tasks->filter(function ($task) {
+                return $task->project_id == $this->taskTypeFilter;
+            });
+        }
+        
+        // Apply assignee filter
+        if (!empty($this->assigneeFilter)) {
+            $tasks = $tasks->filter(function ($task) {
+                return $task->assigned_to == $this->assigneeFilter;
+            });
+        }
+        
         // Apply sorting
         return $this->sortTasks($tasks);
     }
@@ -86,13 +146,18 @@ class ListMasterTasks extends Page
     public function getCompleteTasks()
     {
         $tasks = Task::whereNull('parent_task_id')
-            ->with(['subtasks'])
+            ->with(['subtasks', 'assignedUser', 'project'])
             ->get()
             ->filter(function ($task) {
+                // If task is marked as completed, include it regardless of subtasks
+                if ($task->is_completed) {
+                    return true;
+                }
+                
+                // Otherwise, check if all subtasks are completed (for backward compatibility)
                 $subtasks = $task->subtasks;
-                // Only show in complete if task has subtasks AND all are completed
                 if ($subtasks->isEmpty()) {
-                    return false; // Tasks without subtasks don't go to complete section
+                    return false; // Tasks without subtasks that aren't marked as completed don't go to complete section
                 }
                 $completedSubtasks = $subtasks->where('is_completed', true)->count();
                 return $completedSubtasks === $subtasks->count() && $subtasks->count() > 0;
@@ -102,6 +167,20 @@ class ListMasterTasks extends Page
         if (!empty($this->search)) {
             $tasks = $tasks->filter(function ($task) {
                 return stripos($task->title, $this->search) !== false;
+            });
+        }
+        
+        // Apply task type filter
+        if (!empty($this->taskTypeFilter)) {
+            $tasks = $tasks->filter(function ($task) {
+                return $task->project_id == $this->taskTypeFilter;
+            });
+        }
+        
+        // Apply assignee filter
+        if (!empty($this->assigneeFilter)) {
+            $tasks = $tasks->filter(function ($task) {
+                return $task->assigned_to == $this->assigneeFilter;
             });
         }
         
@@ -159,6 +238,118 @@ class ListMasterTasks extends Page
             
             \Filament\Notifications\Notification::make()
                 ->title('Task deleted successfully')
+                ->success()
+                ->send();
+        }
+    }
+    
+    public function markTaskAsComplete(int $taskId): void
+    {
+        $task = Task::find($taskId);
+        
+        if ($task) {
+            // Get subtasks and identify which were already completed
+            $subtasks = $task->subtasks;
+            $alreadyCompletedSubtasks = $subtasks->where('is_completed', true)->pluck('id')->toArray();
+            $incompleteSubtasks = $subtasks->where('is_completed', false);
+            $autoCompletedSubtaskIds = $incompleteSubtasks->pluck('id')->toArray();
+            
+            // Mark all subtasks as completed first
+            $task->subtasks()->update(['is_completed' => true, 'completed_at' => now()]);
+            
+            // Mark the main task as completed and store which subtasks were auto-completed
+            $actions = $task->actions ?? [];
+            $actions[] = [
+                'action' => 'completed',
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()->name ?? 'System',
+                'timestamp' => now()->toDateTimeString(),
+                'auto_completed_subtasks' => $autoCompletedSubtaskIds, // Store IDs of subtasks that were auto-completed
+                'already_completed_subtasks' => $alreadyCompletedSubtasks, // Store IDs of subtasks that were already completed
+            ];
+            
+            $task->update([
+                'is_completed' => true,
+                'completed_at' => now(),
+                'actions' => $actions,
+            ]);
+            
+            $message = 'Task marked as complete';
+            if ($incompleteSubtasks->count() > 0) {
+                $message .= '. ' . $incompleteSubtasks->count() . ' subtask(s) were automatically marked as complete.';
+            }
+            
+            \Filament\Notifications\Notification::make()
+                ->title($message)
+                ->success()
+                ->send();
+        }
+    }
+    
+    public function hasIncompleteSubtasks(int $taskId): bool
+    {
+        $task = Task::find($taskId);
+        
+        if (!$task) {
+            return false;
+        }
+        
+        $subtasks = $task->subtasks;
+        if ($subtasks->isEmpty()) {
+            return false;
+        }
+        
+        return $subtasks->where('is_completed', false)->count() > 0;
+    }
+    
+    public function markTaskAsIncomplete(int $taskId): void
+    {
+        $task = Task::find($taskId);
+        
+        if ($task) {
+            // Find the most recent completion action to get which subtasks were auto-completed
+            $actions = $task->actions ?? [];
+            $lastCompletionAction = null;
+            
+            // Find the last 'completed' action
+            foreach (array_reverse($actions) as $action) {
+                if (isset($action['action']) && $action['action'] === 'completed') {
+                    $lastCompletionAction = $action;
+                    break;
+                }
+            }
+            
+            // If we have info about which subtasks were auto-completed, only mark those as incomplete
+            if ($lastCompletionAction && isset($lastCompletionAction['auto_completed_subtasks'])) {
+                $autoCompletedSubtaskIds = $lastCompletionAction['auto_completed_subtasks'];
+                
+                // Only mark the auto-completed subtasks as incomplete
+                if (!empty($autoCompletedSubtaskIds)) {
+                    $task->subtasks()
+                        ->whereIn('id', $autoCompletedSubtaskIds)
+                        ->update(['is_completed' => false, 'completed_at' => null]);
+                }
+            } else {
+                // Fallback: if we don't have the info, mark all subtasks as incomplete
+                $task->subtasks()->update(['is_completed' => false, 'completed_at' => null]);
+            }
+            
+            // Mark the main task as incomplete
+            $actions[] = [
+                'action' => 'reopened',
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()->name ?? 'System',
+                'timestamp' => now()->toDateTimeString(),
+            ];
+            
+            $task->update([
+                'is_completed' => false,
+                'completed_at' => null,
+                'actions' => $actions,
+            ]);
+            
+            \Filament\Notifications\Notification::make()
+                ->title('Task marked as incomplete')
                 ->success()
                 ->send();
         }

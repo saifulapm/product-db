@@ -23,6 +23,11 @@ class CreateTask extends CreateRecord
             $data['priority'] = 1; // Default to Low
         }
         
+        // Set default due date to today if not provided
+        if (!isset($data['due_date']) || empty($data['due_date'])) {
+            $data['due_date'] = Carbon::today()->format('Y-m-d');
+        }
+        
         // Log the creation action
         $data['actions'] = [[
             'action' => 'created',

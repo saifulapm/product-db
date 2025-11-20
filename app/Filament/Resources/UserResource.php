@@ -32,6 +32,15 @@ class UserResource extends Resource
             ->schema([
                 Forms\Components\Section::make('User Information')
                     ->schema([
+                        Forms\Components\FileUpload::make('profile_picture')
+                            ->label('Profile Picture')
+                            ->image()
+                            ->avatar()
+                            ->imageEditor()
+                            ->disk('public')
+                            ->directory('profile-pictures')
+                            ->columnSpanFull()
+                            ->helperText('Upload a profile picture. It will be displayed in a circle on task cards.'),
                         Forms\Components\TextInput::make('first_name')
                             ->label('First Name')
                             ->required()
@@ -73,6 +82,34 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('profile_picture')
+                    ->label('Avatar')
+                    ->formatStateUsing(function ($state, $record) {
+                        if ($state) {
+                            return new \Illuminate\Support\HtmlString(
+                                '<img src="' . \Illuminate\Support\Facades\Storage::disk('public')->url($state) . '" alt="' . htmlspecialchars($record->name) . '" class="w-8 h-8 rounded-full object-cover" />'
+                            );
+                        }
+                        
+                        // Generate initials
+                        $initials = '';
+                        if ($record->first_name && $record->last_name) {
+                            $initials = strtoupper(substr($record->first_name, 0, 1) . substr($record->last_name, 0, 1));
+                        } else {
+                            $name = $record->name ?? '';
+                            $parts = explode(' ', trim($name));
+                            if (count($parts) >= 2) {
+                                $initials = strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1));
+                            } else {
+                                $initials = strtoupper(substr($name, 0, 1));
+                            }
+                        }
+                        
+                        return new \Illuminate\Support\HtmlString(
+                            '<div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center"><span class="text-xs font-semibold text-primary-600 dark:text-primary-400">' . htmlspecialchars($initials) . '</span></div>'
+                        );
+                    })
+                    ->html(),
                 Tables\Columns\TextColumn::make('full_name')
                     ->label('Name')
                     ->searchable(['first_name', 'last_name', 'name'])

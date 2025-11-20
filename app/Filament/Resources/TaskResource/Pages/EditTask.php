@@ -50,6 +50,27 @@ class EditTask extends EditRecord
         
         return $data;
     }
+    
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        // Preserve is_completed and completed_at status when editing
+        // Only update if explicitly provided in the form (which shouldn't happen)
+        // Otherwise, preserve the existing values
+        if (!isset($data['is_completed'])) {
+            $data['is_completed'] = $this->record->is_completed ?? false;
+        }
+        
+        if (!isset($data['completed_at'])) {
+            $data['completed_at'] = $this->record->completed_at;
+        }
+        
+        // Preserve actions array if not being updated
+        if (!isset($data['actions'])) {
+            $data['actions'] = $this->record->actions;
+        }
+        
+        return $data;
+    }
 
     protected function afterSave(): void
     {

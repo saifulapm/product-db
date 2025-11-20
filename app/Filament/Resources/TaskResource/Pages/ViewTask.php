@@ -653,33 +653,32 @@ class ViewTask extends ViewRecord
                     ->collapsible()
                     ->collapsed(false)
                     ->columnSpanFull(),
-                Infolists\Components\Section::make('Timeline')
+                Infolists\Components\Section::make('History Timeline')
                     ->schema([
-                        Infolists\Components\RepeatableEntry::make('actions')
+                        Infolists\Components\RepeatableEntry::make('history_timeline')
                             ->schema([
-                                Infolists\Components\TextEntry::make('action')
-                                    ->label('Action')
+                                Infolists\Components\TextEntry::make('type')
+                                    ->label('')
                                     ->formatStateUsing(function ($state) {
                                         return match($state) {
-                                            'created' => 'Created',
-                                            'completed' => 'Completed',
-                                            'incompleted' => 'Incompleted',
-                                            default => ucfirst($state ?? 'Unknown'),
+                                            'created' => '📝',
+                                            'completed' => '✅',
+                                            'reopened' => '🔄',
+                                            'subtask_completed' => '✓',
+                                            default => '•',
                                         };
                                     })
-                                    ->badge()
-                                    ->color(function ($state) {
-                                        return match($state) {
-                                            'created' => 'info',
-                                            'completed' => 'success',
-                                            'incompleted' => 'warning',
-                                            default => 'gray',
-                                        };
-                                    }),
+                                    ->size('lg')
+                                    ->columnSpan(1),
+                                Infolists\Components\TextEntry::make('event_description')
+                                    ->label('Event')
+                                    ->weight('bold')
+                                    ->columnSpan(2),
                                 Infolists\Components\TextEntry::make('user_name')
                                     ->label('User')
                                     ->badge()
-                                    ->color('info'),
+                                    ->color('info')
+                                    ->columnSpan(1),
                                 Infolists\Components\TextEntry::make('timestamp')
                                     ->label('Date & Time')
                                     ->formatStateUsing(function ($state) {
@@ -693,38 +692,85 @@ class ViewTask extends ViewRecord
                                         }
                                     })
                                     ->badge()
-                                    ->color('gray'),
+                                    ->color('gray')
+                                    ->columnSpan(1),
                             ])
-                            ->columns(3)
-                            ->visible(fn (): bool => !empty($record->actions) && is_array($record->actions) && count($record->actions ?? []) > 0),
-                        // Show creation info for tasks without actions logged (fallback for older tasks)
-                        Infolists\Components\RepeatableEntry::make('legacy_creation')
-                            ->schema([
-                                Infolists\Components\TextEntry::make('action')
-                                    ->label('Action')
-                                    ->formatStateUsing(fn (): string => 'Created')
-                                    ->badge()
-                                    ->color('info'),
-                                Infolists\Components\TextEntry::make('user_name')
-                                    ->label('User')
-                                    ->formatStateUsing(fn (): string => $record->creator->name ?? 'Unknown')
-                                    ->badge()
-                                    ->color('info'),
-                                Infolists\Components\TextEntry::make('timestamp')
-                                    ->label('Date & Time')
-                                    ->formatStateUsing(fn (): string => $record->created_at ? $record->created_at->format('M d, Y g:i A') : 'N/A')
-                                    ->badge()
-                                    ->color('gray'),
-                            ])
-                            ->columns(3)
-                            ->getStateUsing(fn (): array => [
-                                [
-                                    'action' => 'created',
+                            ->columns(5)
+                            ->getStateUsing(function () use ($record) {
+                                $timeline = [];
+                                
+                                // Add task creation event
+                                if ($record->created_at) {
+                                    $timeline[] = [
+                                        'type' => 'created',
+                                        'event_description' => 'Task created',
                                     'user_name' => $record->creator->name ?? 'Unknown',
-                                    'timestamp' => $record->created_at ? $record->created_at->toDateTimeString() : null,
-                                ]
-                            ])
-                            ->visible(fn (): bool => (empty($record->actions) || !is_array($record->actions) || count($record->actions ?? []) === 0) && $record->created_at),
+                                        'timestamp' => $record->created_at->toDateTimeString(),
+                                        'data' => [],
+                                    ];
+                                }
+                                
+                                // Add subtask completion events
+                                foreach ($record->subtasks()->whereNotNull('completed_at')->orderBy('completed_at', 'asc')->get() as $subtask) {
+                                    // Try to get user from subtask's actions array
+                                    $subtaskActions = $subtask->actions ?? [];
+                                    $completedBy = 'System';
+                                    foreach (array_reverse($subtaskActions) as $action) {
+                                        if (isset($action['action']) && $action['action'] === 'completed' && isset($action['user_name'])) {
+                                            $completedBy = $action['user_name'];
+                                            break;
+                                        }
+                                    }
+                                    
+                                    $timeline[] = [
+                                        'type' => 'subtask_completed',
+                                        'event_description' => 'Subtask completed: ' . $subtask->title,
+                                        'user_name' => $completedBy,
+                                        'timestamp' => $subtask->completed_at->toDateTimeString(),
+                                        'data' => [
+                                            'subtask_title' => $subtask->title,
+                                            'subtask_id' => $subtask->id,
+                                        ],
+                                    ];
+                                }
+                                
+                                // Add actions from the actions array
+                                $actions = $record->actions ?? [];
+                                foreach ($actions as $action) {
+                                    if (isset($action['action']) && isset($action['timestamp'])) {
+                                        $actionType = $action['action'];
+                                        
+                                        // Skip 'created' if we already have it from created_at
+                                        if ($actionType === 'created' && $record->created_at) {
+                                            continue;
+                                        }
+                                        
+                                        $eventDescription = match($actionType) {
+                                            'completed' => 'Task marked as complete',
+                                            'incompleted' => 'Task reopened',
+                                            default => ucfirst($actionType),
+                                        };
+                                        
+                                        $timeline[] = [
+                                            'type' => $actionType === 'incompleted' ? 'reopened' : $actionType,
+                                            'event_description' => $eventDescription,
+                                            'user_name' => $action['user_name'] ?? 'System',
+                                            'timestamp' => $action['timestamp'],
+                                            'data' => $action,
+                                        ];
+                                    }
+                                }
+                                
+                                // Sort timeline by timestamp (oldest first)
+                                usort($timeline, function ($a, $b) {
+                                    $timeA = $a['timestamp'] ?? '';
+                                    $timeB = $b['timestamp'] ?? '';
+                                    return strcmp($timeA, $timeB);
+                                });
+                                
+                                return $timeline;
+                            })
+                            ->visible(fn (): bool => $record->created_at || ($record->subtasks()->whereNotNull('completed_at')->count() > 0) || (!empty($record->actions) && is_array($record->actions) && count($record->actions) > 0)),
                     ])
                     ->collapsible()
                     ->collapsed(fn (): bool => !$isSubtask)

@@ -26,6 +26,8 @@ class Calendar extends Page
     
     public $selectedAssignee = null;
     
+    public bool $isFullScreen = false;
+    
     protected $queryString = ['selectedAssignee', 'viewType'];
     
     public function mount(): void
@@ -237,5 +239,16 @@ class Calendar extends Page
     public function getWeekRange(): string
     {
         return $this->getDateRange();
+    }
+    
+    public function toggleFullScreen(): void
+    {
+        $this->isFullScreen = !$this->isFullScreen;
+    }
+    
+    public function exitFullScreen(): void
+    {
+        $this->isFullScreen = false;
+        $this->dispatch('calendar-fullscreen-closed');
     }
 }

@@ -527,7 +527,7 @@ class ProductResource extends Resource
                     Tables\Actions\BulkAction::make('update_minimums')
                         ->label('Update Minimums')
                         ->icon('heroicon-o-currency-dollar')
-                        ->form([
+                    ->form([
                             Forms\Components\TextInput::make('minimums')
                                 ->label('Minimums')
                                 ->placeholder('e.g., "No minimums" or "12 pieces"')
@@ -545,19 +545,19 @@ class ProductResource extends Resource
                                     ->success()
                                     ->body('Updated ' . $records->count() . ' product(s)')
                                     ->send();
-                            } else {
-                                Notification::make()
+                                    } else {
+                            Notification::make()
                                     ->title('No minimums value provided')
                                     ->warning()
                                     ->body('Please enter a minimums value')
-                                    ->send();
-                            }
-                        })
+                                ->send();
+                        }
+                    })
                         ->deselectRecordsAfterCompletion(),
                     Tables\Actions\BulkAction::make('update_b2b_pricing')
                         ->label('Update B2B Pricing')
                         ->icon('heroicon-o-currency-dollar')
-                        ->form([
+                    ->form([
                             Forms\Components\TextInput::make('printed_embroidered_1_logo')
                                 ->label('Printed / Embroidered - 1 Logo')
                                 ->numeric()
@@ -598,20 +598,20 @@ class ProductResource extends Resource
                                 $records->each(function (Product $record) use ($updateData) {
                                     $record->update($updateData);
                                 });
-                                
-                                Notification::make()
+                            
+                            Notification::make()
                                     ->title('B2B Pricing updated successfully')
-                                    ->success()
+                                ->success()
                                     ->body('Updated ' . $records->count() . ' product(s)')
-                                    ->send();
+                                ->send();
                             } else {
-                                Notification::make()
+                            Notification::make()
                                     ->title('No pricing data provided')
                                     ->warning()
                                     ->body('Please enter at least one pricing value')
-                                    ->send();
-                            }
-                        })
+                                ->send();
+                        }
+                    })
                         ->deselectRecordsAfterCompletion(),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
