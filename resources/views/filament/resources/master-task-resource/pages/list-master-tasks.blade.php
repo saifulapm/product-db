@@ -48,19 +48,19 @@
                             <option value="{{ $id }}">{{ $name }}</option>
                         @endforeach
                     </select>
-                </div>
-                <div class="sm:w-64">
+            </div>
+            <div class="sm:w-64">
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Status
                     </label>
-                    <select
+                <select
                         wire:model.live="statusFilter"
-                        class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                    >
+                    class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                >
                         <option value="">All Tasks</option>
                         <option value="incomplete">Incomplete Only</option>
                         <option value="complete">Complete Only</option>
-                    </select>
+                </select>
                 </div>
             </div>
         </div>
@@ -132,9 +132,9 @@
                             <!-- Task Name -->
                             <div class="flex-shrink-0 min-w-0" style="flex-basis: 200px;">
                                 <a href="{{ $this->getViewTaskUrl($task) }}" class="text-sm font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 underline block truncate">
-                                    {{ $task->title }}
-                                </a>
-                            </div>
+                                {{ $task->title }}
+                            </a>
+                        </div>
                             
                             <!-- Progress Bar -->
                             <div class="flex-1 min-w-0 px-4">
@@ -150,7 +150,7 @@
                                         class="h-3 rounded-full transition-all duration-300"
                                         style="width: {{ $progressPercentage }}%; background: {{ $gradient }}; min-width: 2px;"
                                     ></div>
-                                </div>
+                        </div>
                             </div>
                             
                             <!-- Subtask Count -->
@@ -239,9 +239,9 @@
                             <!-- Task Name -->
                             <div class="flex-shrink-0 min-w-0" style="flex-basis: 200px;">
                                 <a href="{{ $this->getViewTaskUrl($task) }}" class="text-sm font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 underline block truncate">
-                                    {{ $task->title }}
-                                </a>
-                            </div>
+                                {{ $task->title }}
+                            </a>
+                        </div>
                             
                             <!-- Progress Bar -->
                             <div class="flex-1 min-w-0 px-4">
@@ -257,7 +257,7 @@
                                         class="h-3 rounded-full transition-all duration-300"
                                         style="width: {{ $progressPercentage }}%; background: {{ $gradient }}; min-width: 2px;"
                                     ></div>
-                                </div>
+                        </div>
                             </div>
                             
                             <!-- Subtask Count -->

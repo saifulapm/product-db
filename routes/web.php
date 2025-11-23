@@ -29,5 +29,11 @@ Route::prefix('admin')
         DispatchServingFilamentEvent::class,
     ])
     ->group(function () {
-        // Routes can be added here if needed
+        Route::post('mockups/{record}/upload-pdf', [\App\Filament\Resources\MockupsSubmissionResource\Pages\ViewMockupsSubmission::class, 'handlePdfUpload'])->name('mockups.upload-pdf');
+        Route::post('mockups/{record}/update-product-status', [\App\Filament\Resources\MockupsSubmissionResource\Pages\ViewMockupsSubmission::class, 'updateProductStatus'])->name('mockups.update-product-status');
+        Route::post('mockups/{record}/update-product-notes', [\App\Filament\Resources\MockupsSubmissionResource\Pages\ViewMockupsSubmission::class, 'updateProductNotes'])->name('mockups.update-product-notes');
+        Route::post('mockups/{record}/save-product', [\App\Filament\Resources\MockupsSubmissionResource\Pages\ViewMockupsSubmission::class, 'saveProduct'])->name('mockups.save-product');
+        Route::post('mockups/{record}/upload-product-image', [\App\Filament\Resources\MockupsSubmissionResource\Pages\ViewMockupsSubmission::class, 'uploadProductImage'])->name('mockups.upload-product-image');
+        Route::post('mockups/{record}/add-comment', [\App\Filament\Resources\MockupsSubmissionResource\Pages\ViewMockupsSubmission::class, 'addComment'])->name('mockups.add-comment');
+        Route::post('mockups/{record}/send-to-client', [\App\Filament\Resources\MockupsSubmissionResource\Pages\ViewMockupsSubmission::class, 'sendToClient'])->name('mockups.send-to-client');
     });

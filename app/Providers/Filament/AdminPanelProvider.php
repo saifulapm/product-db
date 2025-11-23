@@ -65,6 +65,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make('Tasks'),
+                NavigationGroup::make('Mockups'),
                 NavigationGroup::make('Design Tools'),
                 NavigationGroup::make('In House Print'),
                 NavigationGroup::make('Embroidery'),
@@ -83,6 +84,11 @@ class AdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-squares-2x2')
                     ->url(fn (): string => \App\Filament\Resources\PatchResource::getUrl())
                     ->sort(0),
+                NavigationItem::make('Submissions')
+                    ->group('Mockups')
+                    ->icon('heroicon-o-photo')
+                    ->url(fn (): string => \App\Filament\Resources\MockupsSubmissionResource::getUrl('index'))
+                    ->sort(1),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')

@@ -28,6 +28,18 @@ class CreateTask extends CreateRecord
             $data['due_date'] = Carbon::today()->format('Y-m-d');
         }
         
+        // Generate tracking number for Mockups tasks
+        if (!empty($data['project_id'])) {
+            $project = \App\Models\Project::find($data['project_id']);
+            if ($project && $project->name === 'Mockups') {
+                // Get the highest tracking number for Mockups tasks and add 1
+                $maxTrackingNumber = Task::whereHas('project', function ($query) {
+                    $query->where('name', 'Mockups');
+                })->max('tracking_number') ?? 0;
+                $data['tracking_number'] = $maxTrackingNumber + 1;
+            }
+        }
+        
         // Log the creation action
         $data['actions'] = [[
             'action' => 'created',
