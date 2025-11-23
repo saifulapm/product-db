@@ -26,6 +26,8 @@ class Calendar extends Page
     
     public $selectedAssignee = null;
     
+    public $isFullScreen = false;
+    
     protected $queryString = ['selectedAssignee', 'viewType'];
     
     public function mount(): void

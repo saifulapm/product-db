@@ -31,17 +31,6 @@
                     class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                 />
             </div>
-            <div class="sm:w-64">
-                <select
-                    wire:model.live="sortBy"
-                    class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                >
-                    <option value="due_date_asc">Deadline: Earliest First</option>
-                    <option value="due_date_desc">Deadline: Latest First</option>
-                    <option value="title_asc">Title: A-Z</option>
-                    <option value="title_desc">Title: Z-A</option>
-                </select>
-                </div>
             </div>
             
             <!-- Filters -->
@@ -56,20 +45,6 @@
                     >
                         <option value="">All Task Types</option>
                         @foreach($this->getTaskTypeOptions() as $id => $name)
-                            <option value="{{ $id }}">{{ $name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="sm:w-64">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Assigned To
-                    </label>
-                    <select
-                        wire:model.live="assigneeFilter"
-                        class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                    >
-                        <option value="">All Assignees</option>
-                        @foreach($this->getAssigneeOptions() as $id => $name)
                             <option value="{{ $id }}">{{ $name }}</option>
                         @endforeach
                     </select>
@@ -102,22 +77,21 @@
                         $isWebsiteImages = strtolower($projectName) === 'website images';
                         
                         if ($isProductAdditions) {
-                            $bgColor = 'bg-purple-50 dark:bg-purple-900/30';
-                            $borderColor = 'border-purple-200 dark:border-purple-800';
-                            $bgStyle = 'background-color: #faf5ff;';
+                            $bgColor = 'bg-purple-50 dark:bg-purple-950/50 dark:border-purple-700/50';
+                            $borderColor = 'border-purple-200 dark:border-purple-700';
+                            $hoverColor = 'hover:bg-purple-100 dark:hover:bg-purple-950/70';
                         } elseif ($isWebsiteImages) {
-                            $bgColor = 'bg-blue-50 dark:bg-blue-900/30';
-                            $borderColor = 'border-blue-200 dark:border-blue-800';
-                            $bgStyle = 'background-color: #eff6ff;';
+                            $bgColor = 'bg-blue-50 dark:bg-blue-950/50 dark:border-blue-700/50';
+                            $borderColor = 'border-blue-200 dark:border-blue-700';
+                            $hoverColor = 'hover:bg-blue-100 dark:hover:bg-blue-950/70';
                         } else {
-                            $bgColor = 'bg-orange-50 dark:bg-orange-900/30';
-                            $borderColor = 'border-orange-200 dark:border-orange-800';
-                            $bgStyle = 'background-color: #fff7ed;';
+                            $bgColor = 'bg-orange-50 dark:bg-orange-950/50 dark:border-orange-700/50';
+                            $borderColor = 'border-orange-200 dark:border-orange-700';
+                            $hoverColor = 'hover:bg-orange-100 dark:hover:bg-orange-950/70';
                         }
                     @endphp
                     <div 
-                        class="{{ $bgColor }} rounded-lg shadow-sm border {{ $borderColor }} flex items-center justify-between p-4 hover:shadow-md transition-shadow relative task-card w-full" 
-                        style="{{ $bgStyle }}"
+                        class="{{ $bgColor }} {{ $hoverColor }} rounded-lg shadow-sm border {{ $borderColor }} flex items-center justify-between p-4 hover:shadow-md transition-all relative task-card w-full" 
                         data-task-id="{{ $task->id }}"
                         x-data="contextMenu()"
                         @contextmenu.prevent="positionMenu($event)"
@@ -153,99 +127,44 @@
                             </button>
                         </div>
                         
-                        <!-- List View Layout -->
-                        <div class="flex items-center flex-1 min-w-0" style="gap: 6px;">
-                            @if($task->assignedUser)
-                                <div class="flex-shrink-0">
-                                    @if($task->assignedUser->profile_picture)
-                                        <div class="flex flex-col items-center justify-center min-w-[60px] px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 overflow-hidden">
-                                            <img 
-                                                src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($task->assignedUser->profile_picture) }}" 
-                                                alt="{{ $task->assignedUser->name }}"
-                                                class="w-full h-full object-cover"
-                                                title="{{ $task->assignedUser->name }}"
-                                            />
-                                        </div>
-                                    @else
-                                        @php
-                                            $initials = '';
-                                            if ($task->assignedUser->first_name && $task->assignedUser->last_name) {
-                                                $initials = strtoupper(substr($task->assignedUser->first_name, 0, 1) . substr($task->assignedUser->last_name, 0, 1));
-                                            } else {
-                                                $name = $task->assignedUser->name ?? '';
-                                                $parts = explode(' ', trim($name));
-                                                if (count($parts) >= 2) {
-                                                    $initials = strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1));
-                                                } else {
-                                                    $initials = strtoupper(substr($name, 0, 1));
-                                                }
-                                            }
-                                        @endphp
-                                        <div class="flex items-center justify-center min-w-[60px] px-3 py-2 aspect-square rounded-full border border-gray-300 dark:border-gray-600 bg-primary-100 dark:bg-primary-900">
-                                            <span class="text-lg font-bold text-primary-600 dark:text-primary-400 uppercase">{{ $initials }}</span>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-                            @php
-                                $earliestDueDate = null;
-                                if ($task->subtasks->isNotEmpty()) {
-                                    $earliestDueDate = $task->subtasks->whereNotNull('due_date')->min('due_date');
-                                } elseif ($task->due_date) {
-                                    $earliestDueDate = $task->due_date;
-                                }
-                            @endphp
-                            @if($earliestDueDate)
-                                <div class="flex-shrink-0">
-                                    <div class="flex flex-col items-center justify-center min-w-[60px] px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
-                                        <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                            {{ \Carbon\Carbon::parse($earliestDueDate)->format('M') }}
-                                        </div>
-                                        <div class="text-xl font-bold text-gray-900 dark:text-white">
-                                            {{ \Carbon\Carbon::parse($earliestDueDate)->format('d') }}
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                            <div class="flex-1 flex flex-col justify-center">
-                                <a href="{{ $this->getViewTaskUrl($task) }}" class="text-lg font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 underline block truncate" style="margin-bottom: 10px;">
+                        <!-- List View Layout - Single Row -->
+                        <div class="flex items-center flex-1 min-w-0 gap-4">
+                            <!-- Task Name -->
+                            <div class="flex-shrink-0 min-w-0" style="flex-basis: 200px;">
+                                <a href="{{ $this->getViewTaskUrl($task) }}" class="text-sm font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 underline block truncate">
                                     {{ $task->title }}
                                 </a>
+                            </div>
+                            
+                            <!-- Progress Bar -->
+                            <div class="flex-1 min-w-0 px-4">
                                 @php
                                     $progressPercentage = $this->getProgressPercentage($task);
+                                    $allSubtasksCompleted = $task->subtasks->count() > 0 && $task->subtasks->where('is_completed', true)->count() === $task->subtasks->count();
+                                    $gradient = $allSubtasksCompleted 
+                                        ? 'linear-gradient(to right, #9ca3af, #6b7280, #4b5563)' 
+                                        : 'linear-gradient(to right, #93c5fd, #3b82f6, #1e40af)';
                                 @endphp
-                                <div class="flex-1 w-full">
-                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5" style="max-width: 100%;">
-                                        <div 
-                                            class="h-1.5 rounded-full transition-all duration-300"
-                                            style="width: {{ $progressPercentage }}%; background: linear-gradient(to right, #93c5fd, #3b82f6, #1e40af);"
-                                        ></div>
-                        </div>
-                            </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4 flex-shrink-0">
-                            @if($task->subtasks->count() > 0)
-                                <div class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                    {{ $task->subtasks->where('is_completed', true)->count() }}/{{ $task->subtasks->count() }} subtasks
+                                <div class="w-full bg-gray-200 dark:bg-gray-700/50 rounded-full h-3 shadow-inner">
+                                    <div 
+                                        class="h-3 rounded-full transition-all duration-300"
+                                        style="width: {{ $progressPercentage }}%; background: {{ $gradient }}; min-width: 2px;"
+                                    ></div>
                                 </div>
-                            @endif
-                            @php
-                                $hasIncompleteSubtasks = $task->subtasks->where('is_completed', false)->count() > 0;
-                                $confirmMessage = $hasIncompleteSubtasks 
-                                    ? '⚠️ Warning: Not all subtasks are completed. Are you sure you want to mark this task as complete? All incomplete subtasks will be automatically marked as complete.'
-                                    : 'Are you sure you want to mark this task as complete?';
-                            @endphp
-                            <button
-                                wire:click="markTaskAsComplete({{ $task->id }})"
-                                wire:confirm="{{ $confirmMessage }}"
-                                class="flex items-center justify-center w-8 h-8 rounded-full border-2 border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors"
-                                title="Mark as complete"
-                            >
-                                <svg class="w-5 h-5 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                            </button>
+                            </div>
+                            
+                            <!-- Subtask Count -->
+                            <div class="flex-shrink-0">
+                                @if($task->subtasks->count() > 0)
+                                    <div class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap font-medium">
+                                        {{ $task->subtasks->where('is_completed', true)->count() }}/{{ $task->subtasks->count() }} subtasks
+                                    </div>
+                                @else
+                                    <div class="text-sm text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                        0 subtasks
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @empty
@@ -269,8 +188,7 @@
             <div class="space-y-4 w-full">
                 @forelse($this->getCompleteTasks() as $task)
                     <div 
-                        class="bg-gray-100 dark:bg-gray-800 rounded-lg shadow-sm border border-gray-300 dark:border-gray-700 flex items-center justify-between p-4 hover:shadow-md transition-shadow relative task-card w-full" 
-                        style="background-color: #f3f4f6;"
+                        class="bg-gray-200 dark:bg-gray-700 dark:border-gray-600 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 flex items-center justify-between p-4 hover:shadow-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-all relative task-card w-full" 
                         data-task-id="{{ $task->id }}"
                         x-data="contextMenu()"
                         @contextmenu.prevent="positionMenu($event)"
@@ -316,80 +234,44 @@
                             </button>
                         </div>
                         
-                        <!-- List View Layout -->
-                        <div class="flex items-center flex-1 min-w-0" style="gap: 6px;">
-                            @if($task->assignedUser)
-                                <div class="flex-shrink-0">
-                                    @if($task->assignedUser->profile_picture)
-                                        <div class="flex flex-col items-center justify-center min-w-[60px] px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 overflow-hidden h-full">
-                                            <img 
-                                                src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($task->assignedUser->profile_picture) }}" 
-                                                alt="{{ $task->assignedUser->name }}"
-                                                class="w-full h-full object-cover"
-                                                title="{{ $task->assignedUser->name }}"
-                                            />
-                                        </div>
-                                    @else
-                                        @php
-                                            $initials = '';
-                                            if ($task->assignedUser->first_name && $task->assignedUser->last_name) {
-                                                $initials = strtoupper(substr($task->assignedUser->first_name, 0, 1) . substr($task->assignedUser->last_name, 0, 1));
-                                            } else {
-                                                $name = $task->assignedUser->name ?? '';
-                                                $parts = explode(' ', trim($name));
-                                                if (count($parts) >= 2) {
-                                                    $initials = strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1));
-                                                } else {
-                                                    $initials = strtoupper(substr($name, 0, 1));
-                                                }
-                                            }
-                                        @endphp
-                                        <div class="flex items-center justify-center min-w-[60px] px-3 py-2 aspect-square rounded-full border border-gray-300 dark:border-gray-600 bg-primary-100 dark:bg-primary-900">
-                                            <span class="text-lg font-bold text-primary-600 dark:text-primary-400 uppercase">{{ $initials }}</span>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-                            @php
-                                $earliestDueDate = null;
-                                if ($task->subtasks->isNotEmpty()) {
-                                    $earliestDueDate = $task->subtasks->whereNotNull('due_date')->min('due_date');
-                                } elseif ($task->due_date) {
-                                    $earliestDueDate = $task->due_date;
-                                }
-                            @endphp
-                            @if($earliestDueDate)
-                                <div class="flex-shrink-0">
-                                    <div class="flex flex-col items-center justify-center min-w-[60px] px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800">
-                                        <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                                            {{ \Carbon\Carbon::parse($earliestDueDate)->format('M') }}
-                                        </div>
-                                        <div class="text-xl font-bold text-gray-900 dark:text-white">
-                                            {{ \Carbon\Carbon::parse($earliestDueDate)->format('d') }}
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                            <div class="flex-1 min-w-0">
-                                <a href="{{ $this->getViewTaskUrl($task) }}" class="text-lg font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 underline block truncate">
+                        <!-- List View Layout - Single Row -->
+                        <div class="flex items-center flex-1 min-w-0 gap-4">
+                            <!-- Task Name -->
+                            <div class="flex-shrink-0 min-w-0" style="flex-basis: 200px;">
+                                <a href="{{ $this->getViewTaskUrl($task) }}" class="text-sm font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 underline block truncate">
                                     {{ $task->title }}
                                 </a>
-                                <div class="mt-1 w-full max-w-[200px]">
-                                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                                        <div 
-                                            class="h-1.5 rounded-full transition-all duration-300"
-                                            style="width: 100%; background: linear-gradient(to right, #93c5fd, #3b82f6, #1e40af);"
-                                        ></div>
-                        </div>
                             </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4 flex-shrink-0">
-                            @if($task->subtasks->count() > 0)
-                                <div class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                                    {{ $task->subtasks->where('is_completed', true)->count() }}/{{ $task->subtasks->count() }} subtasks
+                            
+                            <!-- Progress Bar -->
+                            <div class="flex-1 min-w-0 px-4">
+                                @php
+                                    $progressPercentage = $this->getProgressPercentage($task);
+                                    $allSubtasksCompleted = $task->subtasks->count() > 0 && $task->subtasks->where('is_completed', true)->count() === $task->subtasks->count();
+                                    $gradient = $allSubtasksCompleted 
+                                        ? 'linear-gradient(to right, #9ca3af, #6b7280, #4b5563)' 
+                                        : 'linear-gradient(to right, #93c5fd, #3b82f6, #1e40af)';
+                                @endphp
+                                <div class="w-full bg-gray-200 dark:bg-gray-700/50 rounded-full h-3 shadow-inner">
+                                    <div 
+                                        class="h-3 rounded-full transition-all duration-300"
+                                        style="width: {{ $progressPercentage }}%; background: {{ $gradient }}; min-width: 2px;"
+                                    ></div>
                                 </div>
-                            @endif
+                            </div>
+                            
+                            <!-- Subtask Count -->
+                            <div class="flex-shrink-0">
+                                @if($task->subtasks->count() > 0)
+                                    <div class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap font-medium">
+                                        {{ $task->subtasks->where('is_completed', true)->count() }}/{{ $task->subtasks->count() }} subtasks
+                                    </div>
+                                @else
+                                    <div class="text-sm text-gray-400 dark:text-gray-500 whitespace-nowrap">
+                                        0 subtasks
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 @empty

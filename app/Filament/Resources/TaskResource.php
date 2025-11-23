@@ -32,6 +32,65 @@ class TaskResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Hidden::make('parent_task_id'),
+                Forms\Components\Section::make('Subtask Details')
+                    ->schema([
+                        Forms\Components\TextInput::make('title')
+                            ->label('Subtask Title')
+                            ->required()
+                            ->maxLength(255)
+                            ->placeholder('Enter subtask title'),
+                        Forms\Components\Select::make('project_id')
+                            ->label('Task Type')
+                            ->relationship('project', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Select a task type')
+                            ->required()
+                            ->disabled(fn ($record) => !empty($record?->parent_task_id))
+                            ->dehydrated(),
+                        Forms\Components\Textarea::make('description')
+                            ->label('Description')
+                            ->rows(4)
+                            ->columnSpanFull()
+                            ->placeholder('Enter subtask description'),
+                        FileUpload::make('attachments')
+                            ->label('Attachments')
+                            ->helperText('Upload files related to this subtask')
+                            ->multiple()
+                            ->acceptedFileTypes(['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
+                            ->maxSize(10240) // 10MB
+                            ->directory('tasks/attachments')
+                            ->disk('public')
+                            ->downloadable()
+                            ->openable()
+                            ->previewable()
+                            ->columnSpanFull(),
+                        Forms\Components\Select::make('assigned_to')
+                            ->label('Assigned To')
+                            ->relationship('assignedUser', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Select a user'),
+                        Forms\Components\DatePicker::make('due_date')
+                            ->label('Due Date')
+                            ->displayFormat('M d, Y')
+                            ->placeholder('Select due date'),
+                        Forms\Components\Select::make('priority')
+                            ->label('Priority')
+                            ->options([
+                                1 => 'Low',
+                                2 => 'Medium',
+                                3 => 'High',
+                                4 => 'Urgent',
+                            ])
+                            ->placeholder('Select priority (optional)'),
+                        Forms\Components\Toggle::make('is_completed')
+                            ->label('Completed')
+                            ->default(false),
+                    ])
+                    ->columns(2)
+                    ->visible(fn ($record) => !empty($record?->parent_task_id)),
                 Forms\Components\Section::make('Task Details')
                     ->schema([
                         Forms\Components\TextInput::make('title')
@@ -46,7 +105,43 @@ class TaskResource extends Resource
                             ->preload()
                             ->placeholder('Select a task type')
                             ->required()
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(function ($state, $set) {
+                                if ($state) {
+                                    $project = \App\Models\Project::find($state);
+                                    if ($project && $project->name === 'Product Additions') {
+                                        // Set Grace Perez as default assignee
+                                        $graceUser = User::where('name', 'Grace Perez')
+                                            ->orWhere('email', 'grace@ethos.community')
+                                            ->first();
+                                        if ($graceUser) {
+                                            $set('add_products_subtask_assigned_to', $graceUser->id);
+                                        }
+                                        // Set current date as default due date
+                                        $set('add_products_subtask_due_date', now()->format('Y-m-d'));
+                                    } elseif ($project && $project->name === 'Product Adjustments') {
+                                        // Set Nuel Sarsonas as default assignee
+                                        $nuelUser = User::where('name', 'Nuel Sarsonas')
+                                            ->orWhere('email', 'like', '%nuel%')
+                                            ->first();
+                                        if ($nuelUser) {
+                                            $set('product_adjustments_subtask_assigned_to', $nuelUser->id);
+                                        }
+                                        // Set current date as default due date
+                                        $set('product_adjustments_subtask_due_date', now()->format('Y-m-d'));
+                                    } elseif ($project && $project->name === 'Website Images') {
+                                        // Set Vinzent Perez as default assignee
+                                        $vinzentUser = User::where('name', 'Vinzent Perez')
+                                            ->orWhere('email', 'vinzent@ethos.community')
+                                            ->first();
+                                        if ($vinzentUser) {
+                                            $set('website_images_assigned_to', $vinzentUser->id);
+                                        }
+                                        // Set following day as default due date
+                                        $set('website_images_due_date', now()->addDay()->format('Y-m-d'));
+                                    }
+                                }
+                            }),
                         Forms\Components\Select::make('store')
                             ->label('Select Store')
                             ->options([
@@ -84,16 +179,6 @@ class TaskResource extends Resource
                             ->openable()
                             ->previewable()
                             ->columnSpanFull(),
-                        Forms\Components\Select::make('assigned_to')
-                            ->label('Assign To')
-                            ->relationship('assignedUser', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->placeholder('Select a user'),
-                        Forms\Components\DatePicker::make('due_date')
-                            ->label('Due Date')
-                            ->displayFormat('M d, Y')
-                            ->placeholder('Select due date'),
                         Forms\Components\Select::make('priority')
                             ->label('Priority')
                             ->options([
@@ -104,7 +189,8 @@ class TaskResource extends Resource
                             ])
                             ->placeholder('Select priority (optional)'),
                     ])
-                    ->columns(2),
+                    ->columns(2)
+                    ->visible(fn ($record) => empty($record?->parent_task_id)),
                 Forms\Components\Section::make('Product Additions')
                     ->schema([
                         Forms\Components\Toggle::make('add_products')
@@ -118,6 +204,19 @@ class TaskResource extends Resource
                             ->searchable()
                             ->preload()
                             ->placeholder('Select a user for the subtask')
+                            ->default(function ($get) {
+                                $projectId = $get('project_id');
+                                if ($projectId) {
+                                    $project = \App\Models\Project::find($projectId);
+                                    if ($project && $project->name === 'Product Additions') {
+                                        $graceUser = User::where('name', 'Grace Perez')
+                                            ->orWhere('email', 'grace@ethos.community')
+                                            ->first();
+                                        return $graceUser ? $graceUser->id : null;
+                                    }
+                                }
+                                return null;
+                            })
                             ->visible(function ($get) {
                                 return $get('add_products') === true;
                             }),
@@ -125,6 +224,16 @@ class TaskResource extends Resource
                             ->label('Subtask Due Date')
                             ->displayFormat('M d, Y')
                             ->placeholder('Select due date for the subtask')
+                            ->default(function ($get) {
+                                $projectId = $get('project_id');
+                                if ($projectId) {
+                                    $project = \App\Models\Project::find($projectId);
+                                    if ($project && $project->name === 'Product Additions') {
+                                        return now()->format('Y-m-d');
+                                    }
+                                }
+                                return null;
+                            })
                             ->visible(function ($get) {
                                 return $get('add_products') === true;
                             }),
@@ -133,6 +242,19 @@ class TaskResource extends Resource
                             ->helperText('Check if size grade or thread colors are needed for this product')
                             ->default(false)
                             ->live()
+                            ->afterStateUpdated(function ($state, $set) {
+                                if ($state === true) {
+                                    // Set Ephraim Garcia as default assignee
+                                    $ephraimUser = User::where('name', 'Ephraim Garcia')
+                                        ->orWhere('email', 'ephraim.ethos@gmail.com')
+                                        ->first();
+                                    if ($ephraimUser) {
+                                        $set('subtask_assigned_to', $ephraimUser->id);
+                                    }
+                                    // Set current date as default due date
+                                    $set('subtask_due_date', now()->format('Y-m-d'));
+                                }
+                            })
                             ->columnSpanFull(),
                         Forms\Components\Select::make('subtask_assigned_to')
                             ->label('Assign Subtask To')
@@ -140,6 +262,15 @@ class TaskResource extends Resource
                             ->searchable()
                             ->preload()
                             ->placeholder('Select a user for the subtask')
+                            ->default(function ($get) {
+                                if ($get('design_details') === true) {
+                                    $ephraimUser = User::where('name', 'Ephraim Garcia')
+                                        ->orWhere('email', 'ephraim.ethos@gmail.com')
+                                        ->first();
+                                    return $ephraimUser ? $ephraimUser->id : null;
+                                }
+                                return null;
+                            })
                             ->visible(function ($get) {
                                 return $get('design_details') === true;
                             }),
@@ -147,6 +278,12 @@ class TaskResource extends Resource
                             ->label('Subtask Due Date')
                             ->displayFormat('M d, Y')
                             ->placeholder('Select due date for the subtask')
+                            ->default(function ($get) {
+                                if ($get('design_details') === true) {
+                                    return now()->format('Y-m-d');
+                                }
+                                return null;
+                            })
                             ->visible(function ($get) {
                                 return $get('design_details') === true;
                             }),
@@ -155,6 +292,19 @@ class TaskResource extends Resource
                             ->helperText('Check if website images are needed for this product')
                             ->default(false)
                             ->live()
+                            ->afterStateUpdated(function ($state, $set) {
+                                if ($state === true) {
+                                    // Set Vinzent Perez as default assignee
+                                    $vinzentUser = User::where('name', 'Vinzent Perez')
+                                        ->orWhere('email', 'vinzent@ethos.community')
+                                        ->first();
+                                    if ($vinzentUser) {
+                                        $set('website_images_subtask_assigned_to', $vinzentUser->id);
+                                    }
+                                    // Set following day as default due date
+                                    $set('website_images_subtask_due_date', now()->addDay()->format('Y-m-d'));
+                                }
+                            })
                             ->columnSpanFull(),
                         Forms\Components\Select::make('website_images_subtask_assigned_to')
                             ->label('Assign Subtask To')
@@ -162,6 +312,15 @@ class TaskResource extends Resource
                             ->searchable()
                             ->preload()
                             ->placeholder('Select a user for the subtask')
+                            ->default(function ($get) {
+                                if ($get('website_images') === true) {
+                                    $vinzentUser = User::where('name', 'Vinzent Perez')
+                                        ->orWhere('email', 'vinzent@ethos.community')
+                                        ->first();
+                                    return $vinzentUser ? $vinzentUser->id : null;
+                                }
+                                return null;
+                            })
                             ->visible(function ($get) {
                                 return $get('website_images') === true;
                             }),
@@ -169,12 +328,22 @@ class TaskResource extends Resource
                             ->label('Subtask Due Date')
                             ->displayFormat('M d, Y')
                             ->placeholder('Select due date for the subtask')
+                            ->default(function ($get) {
+                                if ($get('website_images') === true) {
+                                    return now()->addDay()->format('Y-m-d');
+                                }
+                                return null;
+                            })
                             ->visible(function ($get) {
                                 return $get('website_images') === true;
                             }),
                     ])
                     ->columns(2)
-                    ->visible(function ($get) {
+                    ->visible(function ($get, $record) {
+                        // Hide for subtasks
+                        if (!empty($record?->parent_task_id)) {
+                            return false;
+                        }
                         $projectId = $get('project_id');
                         if (!$projectId) {
                             return false;
@@ -185,10 +354,6 @@ class TaskResource extends Resource
                     ->columnSpanFull(),
                 Forms\Components\Section::make('Product Adjustments')
                     ->schema([
-                        Forms\Components\Toggle::make('check_full_collection')
-                            ->label('Check Full Collection')
-                            ->default(false)
-                            ->columnSpanFull(),
                         Forms\Components\TextInput::make('eid')
                             ->label('EID')
                             ->maxLength(255)
@@ -203,6 +368,41 @@ class TaskResource extends Resource
                             ->label('Check Full Product')
                             ->default(false)
                             ->columnSpan(2),
+                        Forms\Components\Select::make('product_adjustments_subtask_assigned_to')
+                            ->label('Assigned To')
+                            ->options(User::pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Select a user')
+                            ->default(function ($get) {
+                                $projectId = $get('project_id');
+                                if ($projectId) {
+                                    $project = \App\Models\Project::find($projectId);
+                                    if ($project && $project->name === 'Product Adjustments') {
+                                        $nuelUser = User::where('name', 'Nuel Sarsonas')
+                                            ->orWhere('email', 'like', '%nuel%')
+                                            ->first();
+                                        return $nuelUser ? $nuelUser->id : null;
+                                    }
+                                }
+                                return null;
+                            })
+                            ->columnSpan(6),
+                        Forms\Components\DatePicker::make('product_adjustments_subtask_due_date')
+                            ->label('Due Date')
+                            ->displayFormat('M d, Y')
+                            ->placeholder('Select due date')
+                            ->default(function ($get) {
+                                $projectId = $get('project_id');
+                                if ($projectId) {
+                                    $project = \App\Models\Project::find($projectId);
+                                    if ($project && $project->name === 'Product Adjustments') {
+                                        return now()->format('Y-m-d');
+                                    }
+                                }
+                                return null;
+                            })
+                            ->columnSpan(6),
                         Forms\Components\Repeater::make('additional_eids')
                             ->label('Additional EIDs')
                             ->schema([
@@ -231,13 +431,86 @@ class TaskResource extends Resource
                             ->columnSpanFull(),
                     ])
                     ->columns(12)
-                    ->visible(function ($get) {
+                    ->visible(function ($get, $record) {
+                        // Hide for subtasks
+                        if (!empty($record?->parent_task_id)) {
+                            return false;
+                        }
                         $projectId = $get('project_id');
                         if (!$projectId) {
                             return false;
                         }
                         $project = \App\Models\Project::find($projectId);
                         return $project && $project->name === 'Product Adjustments';
+                    })
+                    ->columnSpanFull(),
+                Forms\Components\Section::make('Website Images')
+                    ->schema([
+                        Forms\Components\Select::make('website_images_assigned_to')
+                            ->label('Assigned To')
+                            ->options(User::pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('Select a user')
+                            ->default(function ($get) {
+                                $projectId = $get('project_id');
+                                if ($projectId) {
+                                    $project = \App\Models\Project::find($projectId);
+                                    if ($project && $project->name === 'Website Images') {
+                                        $vinzentUser = User::where('name', 'Vinzent Perez')
+                                            ->orWhere('email', 'vinzent@ethos.community')
+                                            ->first();
+                                        return $vinzentUser ? $vinzentUser->id : null;
+                                    }
+                                }
+                                return null;
+                            })
+                            ->columnSpan(6),
+                        Forms\Components\DatePicker::make('website_images_due_date')
+                            ->label('Deadline')
+                            ->displayFormat('M d, Y')
+                            ->placeholder('Select deadline')
+                            ->default(function ($get) {
+                                $projectId = $get('project_id');
+                                if ($projectId) {
+                                    $project = \App\Models\Project::find($projectId);
+                                    if ($project && $project->name === 'Website Images') {
+                                        return now()->addDay()->format('Y-m-d');
+                                    }
+                                }
+                                return null;
+                            })
+                            ->columnSpan(6),
+                        Forms\Components\Textarea::make('website_images_notes')
+                            ->label('Notes')
+                            ->rows(4)
+                            ->placeholder('Enter notes for website images')
+                            ->columnSpanFull(),
+                        FileUpload::make('website_images_attachments')
+                            ->label('File Upload')
+                            ->helperText('Upload PDF you\'d like website images for')
+                            ->multiple()
+                            ->acceptedFileTypes(['image/*', 'application/pdf'])
+                            ->maxSize(10240) // 10MB
+                            ->directory('tasks/website-images')
+                            ->disk('public')
+                            ->downloadable()
+                            ->openable()
+                            ->previewable()
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(12)
+                    ->visible(function ($get, $record) {
+                        // Hide for subtasks
+                        if (!empty($record?->parent_task_id)) {
+                            return false;
+                        }
+                        $projectId = $get('project_id');
+                        if (!$projectId) {
+                            return false;
+                        }
+                        $project = \App\Models\Project::find($projectId);
+                        return $project && $project->name === 'Website Images';
                     })
                     ->columnSpanFull(),
             ]);
@@ -251,6 +524,10 @@ class TaskResource extends Resource
                 $query->whereNotNull('parent_task_id')
                     ->with(['parentTask', 'assignedUser', 'creator']);
             })
+            ->recordUrl(function (Task $record): string {
+                // Always open the subtask view (since we're only showing subtasks)
+                return TaskResource::getUrl('view', ['record' => $record]);
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('parentTask.title')
                     ->label('Task Title')
@@ -262,9 +539,9 @@ class TaskResource extends Resource
                         $parentTask = $record->parentTask;
                         return $parentTask ? htmlspecialchars($parentTask->title) : 'Unknown Parent';
                     })
-                    ->url(function (Task $record): ?string {
-                        $parentTask = $record->parentTask;
-                        return $parentTask ? TaskResource::getUrl('view', ['record' => $parentTask]) : null;
+                    ->url(function (Task $record): string {
+                        // Link to the subtask page, not the parent task
+                        return TaskResource::getUrl('view', ['record' => $record]);
                     })
                     ->openUrlInNewTab(false)
                     ->wrap(),

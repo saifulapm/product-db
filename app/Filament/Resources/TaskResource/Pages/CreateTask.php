@@ -144,8 +144,19 @@ class CreateTask extends CreateRecord
             $subtasksCreated++;
         }
         
-        // Create subtask if "Website Images" is checked
-        if (!empty($data['website_images']) && $data['website_images'] === true) {
+        // Create subtask if "Website Images" is checked OR if project type is "Website Images"
+        $isWebsiteImagesProject = false;
+        if (!empty($this->record->project_id)) {
+            $project = \App\Models\Project::find($this->record->project_id);
+            $isWebsiteImagesProject = $project && $project->name === 'Website Images';
+        }
+        
+        // Check if Website Images subtask already exists
+        $websiteImagesSubtaskExists = Task::where('parent_task_id', $this->record->id)
+            ->where('title', 'like', 'Website Images%')
+            ->exists();
+        
+        if ((!empty($data['website_images']) && $data['website_images'] === true || $isWebsiteImagesProject) && !$websiteImagesSubtaskExists) {
             // Determine assigned user: use manual selection if provided, otherwise auto-assign to Vinzent
             $assignedTo = null;
             if (!empty($data['website_images_subtask_assigned_to'])) {
@@ -176,6 +187,8 @@ class CreateTask extends CreateRecord
                 'due_date' => $dueDateFormatted,
                 'created_by' => auth()->id(),
                 'priority' => $this->record->priority ?? 1,
+                'website_images_notes' => $data['website_images_notes'] ?? null,
+                'website_images_attachments' => $data['website_images_attachments'] ?? null,
                 'actions' => [[
                     'action' => 'created',
                     'user_id' => auth()->id(),

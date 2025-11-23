@@ -25,6 +25,21 @@ class ProjectResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
+    public static function getLabel(): ?string
+    {
+        return 'Task Type';
+    }
+
+    public static function getPluralLabel(): ?string
+    {
+        return 'Task Types';
+    }
+
+    public static function getSlug(): string
+    {
+        return 'task-types';
+    }
+
     public static function form(Form $form): Form
     {
         return $form

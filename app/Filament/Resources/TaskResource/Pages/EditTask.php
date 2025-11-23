@@ -13,12 +13,50 @@ use Carbon\Carbon;
 class EditTask extends EditRecord
 {
     protected static string $resource = TaskResource::class;
+    
+    protected static string $view = 'filament.resources.task-resource.pages.edit-task';
+
+    public function getBreadcrumbs(): array
+    {
+        $record = $this->getRecord();
+        $breadcrumbs = [];
+        
+        // Always start with Dashboard/Home
+        $breadcrumbs[TaskResource::getUrl('index')] = 'Tasks';
+        
+        // If this is a subtask, add parent task to breadcrumbs
+        if (!empty($record->parent_task_id)) {
+            $parentTask = $record->parentTask;
+            if ($parentTask) {
+                $breadcrumbs[TaskResource::getUrl('view', ['record' => $parentTask])] = $parentTask->title;
+            }
+            // Add current subtask view link, then edit
+            $breadcrumbs[TaskResource::getUrl('view', ['record' => $record])] = $record->title;
+            $breadcrumbs[] = 'Edit';
+        } else {
+            // For main tasks, add view link then edit
+            $breadcrumbs[TaskResource::getUrl('view', ['record' => $record])] = $record->title;
+            $breadcrumbs[] = 'Edit';
+        }
+        
+        return $breadcrumbs;
+    }
 
     protected function getHeaderActions(): array
     {
         return [
             Actions\DeleteAction::make(),
         ];
+    }
+
+    public function mount(int | string $record): void
+    {
+        parent::mount($record);
+        
+        // Load parent task relationship if this is a subtask
+        if (!empty($this->record->parent_task_id)) {
+            $this->record->load('parentTask');
+        }
     }
 
     protected function mutateFormDataBeforeFill(array $data): array
@@ -46,6 +84,8 @@ class EditTask extends EditRecord
         if ($websiteImagesSubtask) {
             $data['website_images_subtask_assigned_to'] = $websiteImagesSubtask->assigned_to;
             $data['website_images_subtask_due_date'] = $websiteImagesSubtask->due_date;
+            $data['website_images_notes'] = $websiteImagesSubtask->website_images_notes;
+            $data['website_images_attachments'] = $websiteImagesSubtask->website_images_attachments;
         }
         
         return $data;
@@ -281,7 +321,14 @@ class EditTask extends EditRecord
             ->where('title', 'like', 'Website Images%')
             ->first();
         
-        if (!empty($data['website_images']) && $data['website_images'] === true) {
+        // Check if project type is "Website Images"
+        $isWebsiteImagesProject = false;
+        if (!empty($record->project_id)) {
+            $project = \App\Models\Project::find($record->project_id);
+            $isWebsiteImagesProject = $project && $project->name === 'Website Images';
+        }
+        
+        if (!empty($data['website_images']) && $data['website_images'] === true || $isWebsiteImagesProject) {
             // Determine assigned user: use manual selection if provided, otherwise auto-assign to Vinzent
             $assignedTo = null;
             if (!empty($data['website_images_subtask_assigned_to'])) {
@@ -317,6 +364,8 @@ class EditTask extends EditRecord
                 'due_date' => $dueDateFormatted,
                 'created_by' => $record->created_by,
                 'priority' => $record->priority ?? 1,
+                'website_images_notes' => $data['website_images_notes'] ?? null,
+                'website_images_attachments' => $data['website_images_attachments'] ?? null,
             ];
             
             if ($websiteImagesSubtask) {
@@ -340,6 +389,14 @@ class EditTask extends EditRecord
                     $updateData['due_date'] = $dueDateFormatted;
                 } else {
                     $updateData['due_date'] = $websiteImagesSubtask->due_date;
+                }
+                
+                // Update website images notes and attachments if provided
+                if (isset($data['website_images_notes'])) {
+                    $updateData['website_images_notes'] = $data['website_images_notes'];
+                }
+                if (isset($data['website_images_attachments'])) {
+                    $updateData['website_images_attachments'] = $data['website_images_attachments'];
                 }
                 
                 $websiteImagesSubtask->update($updateData);

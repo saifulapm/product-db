@@ -1,77 +1,5 @@
 <x-filament-panels::page>
-    <style>
-        /* Full screen modal styles */
-        .fullscreen-calendar-modal {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            z-index: 99999 !important;
-            background: white !important;
-        }
-        .fullscreen-calendar-modal[data-theme="dark"] {
-            background: #111827 !important;
-        }
-        /* Hide Filament sidebar and header when modal is open */
-        body.calendar-fullscreen-open .fi-sidebar,
-        body.calendar-fullscreen-open .fi-topbar,
-        body.calendar-fullscreen-open .fi-main-ctn {
-            display: none !important;
-        }
-        body.calendar-fullscreen-open {
-            overflow: hidden !important;
-        }
-    </style>
-    
-    @if($isFullScreen)
-    <!-- Full Screen Calendar View -->
-    <div 
-        class="fullscreen-calendar-modal bg-white dark:bg-gray-900"
-        x-data="{ isFullScreen: @entangle('isFullScreen') }"
-        x-show="isFullScreen"
-        x-cloak
-        x-init="
-            document.body.classList.add('calendar-fullscreen-open');
-            $watch('isFullScreen', value => {
-                if (!value) {
-                    document.body.classList.remove('calendar-fullscreen-open');
-                }
-            });
-        "
-        x-effect="
-            if (isFullScreen) {
-                document.body.classList.add('calendar-fullscreen-open');
-            } else {
-                document.body.classList.remove('calendar-fullscreen-open');
-            }
-        "
-    >
-        <!-- Close Button -->
-        <div class="absolute top-4 right-4" style="z-index: 100000;">
-            <button
-                wire:click="exitFullScreen"
-                class="p-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-full transition-colors"
-                title="Exit Full Screen"
-            >
-                <svg class="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-
-        <!-- Calendar Content - Full Screen -->
-        <div class="h-full w-full flex flex-col p-6" style="height: 100vh; overflow-y: auto;">
-            @include('filament.resources.task-resource.pages.partials.calendar-content', ['isFullScreen' => true])
-        </div>
-    </div>
-    @endif
-    
-    <!-- Normal Calendar View -->
+    <!-- Calendar View -->
     <div class="space-y-6">
         <!-- Navigation, View Switcher and Filter -->
         <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
@@ -88,17 +16,6 @@
                     class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
                 >
                     Today
-                </button>
-                <button 
-                    wire:click="toggleFullScreen" 
-                    type="button"
-                    class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold shadow-lg flex items-center justify-center gap-2 transition-all border-2 border-green-700"
-                    style="min-width: 140px; font-size: 14px;"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                    </svg>
-                    <span class="font-bold">Full Screen</span>
                 </button>
             </div>
             <div class="flex items-center gap-4 flex-wrap">
@@ -172,9 +89,9 @@
                         </div>
                     </div>
                 @endforeach
-            </div>
-        </div>
-        @endif
+                                        </div>
+                                            </div>
+                                        @endif
 
         <!-- 3 Day View -->
         @if($viewType === '3day')
@@ -242,20 +159,4 @@
         </div>
         @endif
     </div>
-    
-    <script>
-        // Cleanup body class when modal closes - wait for Livewire to be available
-        document.addEventListener('livewire:init', () => {
-            Livewire.on('calendar-fullscreen-closed', () => {
-                document.body.classList.remove('calendar-fullscreen-open');
-            });
-        });
-        
-        // Fallback if Livewire is already loaded
-        if (typeof Livewire !== 'undefined') {
-            Livewire.on('calendar-fullscreen-closed', () => {
-                document.body.classList.remove('calendar-fullscreen-open');
-            });
-        }
-    </script>
 </x-filament-panels::page>

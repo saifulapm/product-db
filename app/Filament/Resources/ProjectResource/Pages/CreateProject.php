@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateProject extends CreateRecord
 {
     protected static string $resource = ProjectResource::class;
+
+    public function getTitle(): string
+    {
+        return 'Create Task Type';
+    }
 }
