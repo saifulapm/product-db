@@ -425,34 +425,73 @@ class ViewMockupsSubmission extends ViewRecord
         try {
             $record = MockupsSubmission::findOrFail($recordId);
             
-            // Check if email is available
-            if (empty($record->customer_email)) {
+            // Check if phone number is available
+            if (empty($record->customer_phone)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Customer email is not available'
+                    'message' => 'Customer phone number is not available'
                 ], 400);
             }
 
             $notes = request()->input('notes', '');
 
-            // TODO: Implement email sending logic here
-            // For now, just log the action
-            \Log::info('Sending mockup submission to client', [
+            // Initialize Twilio service
+            try {
+                $twilioService = new \App\Services\TwilioService();
+            } catch (\Exception $e) {
+                \Log::error('Twilio service initialization failed: ' . $e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'message' => 'SMS service is not configured. Please check your Twilio credentials.'
+                ], 500);
+            }
+
+            // Validate phone number
+            if (!$twilioService->isValidPhoneNumber($record->customer_phone)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid phone number format'
+                ], 400);
+            }
+
+            // Build SMS message
+            $message = "Hi {$record->customer_name},\n\n";
+            $message .= "Your mockup submission #{$record->tracking_number}";
+            if ($record->company_name) {
+                $message .= " for {$record->company_name}";
+            }
+            $message .= " is ready for review.\n\n";
+            
+            if (!empty($notes)) {
+                $message .= "Notes: {$notes}\n\n";
+            }
+            
+            $message .= "Please review and provide feedback. Thank you!";
+
+            // Send SMS
+            $twilioMessage = $twilioService->sendSMS($record->customer_phone, $message);
+
+            \Log::info('Mockup submission sent to client via SMS', [
                 'submission_id' => $record->id,
-                'customer_email' => $record->customer_email,
+                'customer_phone' => $record->customer_phone,
+                'customer_name' => $record->customer_name,
                 'tracking_number' => $record->tracking_number,
+                'twilio_message_sid' => $twilioMessage->sid,
                 'notes' => $notes
             ]);
 
-            // You can add email sending logic here using Laravel Mail
-            // Example:
-            // Mail::to($record->customer_email)->send(new MockupSubmissionMail($record, $notes));
-
             return response()->json([
                 'success' => true,
-                'message' => 'Submission sent to client successfully'
+                'message' => 'Submission sent to client successfully via SMS',
+                'twilio_message_sid' => $twilioMessage->sid
             ]);
             
+        } catch (\Twilio\Exceptions\TwilioException $e) {
+            \Log::error('Twilio error sending submission to client: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error sending SMS: ' . $e->getMessage()
+            ], 500);
         } catch (\Exception $e) {
             \Log::error('Error sending submission to client: ' . $e->getMessage());
             return response()->json([
