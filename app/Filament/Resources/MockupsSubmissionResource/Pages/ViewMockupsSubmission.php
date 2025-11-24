@@ -440,10 +440,19 @@ class ViewMockupsSubmission extends ViewRecord
                 $twilioService = new \App\Services\TwilioService();
             } catch (\Exception $e) {
                 \Log::error('Twilio service initialization failed: ' . $e->getMessage());
+                // Return success but log that SMS wasn't sent
+                \Log::info('SMS not sent - Twilio not configured', [
+                    'submission_id' => $record->id,
+                    'customer_phone' => $record->customer_phone,
+                    'customer_name' => $record->customer_name,
+                    'tracking_number' => $record->tracking_number,
+                    'notes' => $notes
+                ]);
+                
                 return response()->json([
-                    'success' => false,
-                    'message' => 'SMS service is not configured. Please check your Twilio credentials.'
-                ], 500);
+                    'success' => true,
+                    'message' => 'Submission logged successfully. Note: SMS service is not configured, so no SMS was sent.'
+                ]);
             }
 
             // Validate phone number
