@@ -462,6 +462,84 @@ class ViewMockupsSubmission extends ViewRecord
         }
     }
 
+    public static function importData($recordId)
+    {
+        try {
+            $record = MockupsSubmission::findOrFail($recordId);
+            $data = request()->json()->all();
+            
+            // Update customer information if provided
+            if (isset($data['customer_name'])) {
+                $record->customer_name = $data['customer_name'];
+            }
+            if (isset($data['customer_email'])) {
+                $record->customer_email = $data['customer_email'];
+            }
+            if (isset($data['customer_phone'])) {
+                $record->customer_phone = $data['customer_phone'];
+            }
+            if (isset($data['company_name'])) {
+                $record->company_name = $data['company_name'];
+            }
+            if (isset($data['website'])) {
+                $record->website = $data['website'];
+            }
+            if (isset($data['instagram'])) {
+                $record->instagram = $data['instagram'];
+            }
+            if (isset($data['notes'])) {
+                $record->notes = $data['notes'];
+            }
+            
+            // Handle products import
+            if (isset($data['products']) && is_array($data['products'])) {
+                $existingProducts = $record->products ?? [];
+                $importedProducts = [];
+                
+                foreach ($data['products'] as $index => $productData) {
+                    // Create product structure
+                    $product = [
+                        'product_name' => $productData['product_name'] ?? 'Product ' . ($index + 1),
+                        'style' => $productData['style'] ?? '',
+                        'color' => $productData['color'] ?? '',
+                        'minimums' => $productData['minimums'] ?? '',
+                        'pricing' => $productData['pricing'] ?? '',
+                        'notes' => $productData['notes'] ?? '',
+                        'status' => $productData['status'] ?? 'Pending',
+                        'front_pdf' => $productData['front_pdf'] ?? null,
+                        'back_pdf' => $productData['back_pdf'] ?? null,
+                    ];
+                    
+                    $importedProducts[] = $product;
+                }
+                
+                // If products array is provided, replace existing products
+                // Otherwise, merge with existing
+                if (isset($data['replace_products']) && $data['replace_products']) {
+                    $record->products = $importedProducts;
+                } else {
+                    // Merge with existing products
+                    $record->products = array_merge($existingProducts, $importedProducts);
+                }
+            }
+            
+            $record->save();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Data imported successfully',
+                'products_count' => count($record->products ?? [])
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error importing submission data: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error importing data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     protected function getHeaderActions(): array
     {
         return [
