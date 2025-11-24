@@ -36,4 +36,5 @@ Route::prefix('admin')
         Route::post('mockups/{record}/upload-product-image', [\App\Filament\Resources\MockupsSubmissionResource\Pages\ViewMockupsSubmission::class, 'uploadProductImage'])->name('mockups.upload-product-image');
         Route::post('mockups/{record}/add-comment', [\App\Filament\Resources\MockupsSubmissionResource\Pages\ViewMockupsSubmission::class, 'addComment'])->name('mockups.add-comment');
         Route::post('mockups/{record}/send-to-client', [\App\Filament\Resources\MockupsSubmissionResource\Pages\ViewMockupsSubmission::class, 'sendToClient'])->name('mockups.send-to-client');
+        Route::get('mockups/sms-templates', [\App\Filament\Resources\MockupsSubmissionResource\Pages\ViewMockupsSubmission::class, 'getSmsTemplates'])->name('mockups.sms-templates');
     });

@@ -433,7 +433,15 @@ class ViewMockupsSubmission extends ViewRecord
                 ], 400);
             }
 
+            $templateId = request()->input('template');
             $notes = request()->input('notes', '');
+            
+            if (empty($templateId)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Template is required'
+                ], 400);
+            }
 
             // Initialize Twilio service
             try {
@@ -446,6 +454,7 @@ class ViewMockupsSubmission extends ViewRecord
                     'customer_phone' => $record->customer_phone,
                     'customer_name' => $record->customer_name,
                     'tracking_number' => $record->tracking_number,
+                    'template_id' => $templateId,
                     'notes' => $notes
                 ]);
                 
@@ -463,19 +472,26 @@ class ViewMockupsSubmission extends ViewRecord
                 ], 400);
             }
 
-            // Build SMS message
-            $message = "Hi {$record->customer_name},\n\n";
-            $message .= "Your mockup submission #{$record->tracking_number}";
-            if ($record->company_name) {
-                $message .= " for {$record->company_name}";
-            }
-            $message .= " is ready for review.\n\n";
-            
-            if (!empty($notes)) {
-                $message .= "Notes: {$notes}\n\n";
+            // Get template from database
+            $template = \App\Models\SmsTemplate::find($templateId);
+            if (!$template) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Template not found'
+                ], 404);
             }
             
-            $message .= "Please review and provide feedback. Thank you!";
+            // Generate submission link - use absolute URL for SMS
+            $submissionLink = url(\App\Filament\Resources\MockupsSubmissionResource::getUrl('view', ['record' => $record]));
+            
+            // Build SMS message using template
+            $message = $template->render([
+                'customer_name' => $record->customer_name ?? 'Valued Customer',
+                'tracking_number' => $record->tracking_number ?? '',
+                'company_name' => $record->company_name ?? '',
+                'notes' => $notes,
+                'submission_link' => $submissionLink,
+            ]);
 
             // Send SMS
             $twilioMessage = $twilioService->sendSMS($record->customer_phone, $message);
@@ -485,6 +501,7 @@ class ViewMockupsSubmission extends ViewRecord
                 'customer_phone' => $record->customer_phone,
                 'customer_name' => $record->customer_name,
                 'tracking_number' => $record->tracking_number,
+                'template_id' => $templateId,
                 'twilio_message_sid' => $twilioMessage->sid,
                 'notes' => $notes
             ]);
@@ -506,6 +523,28 @@ class ViewMockupsSubmission extends ViewRecord
             return response()->json([
                 'success' => false,
                 'message' => 'Error sending submission: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get active SMS templates
+     */
+    public static function getSmsTemplates()
+    {
+        try {
+            $templates = \App\Models\SmsTemplate::orderBy('name')
+                ->get(['id', 'name', 'description', 'content']);
+            
+            return response()->json([
+                'success' => true,
+                'templates' => $templates
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching SMS templates: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'templates' => []
             ], 500);
         }
     }

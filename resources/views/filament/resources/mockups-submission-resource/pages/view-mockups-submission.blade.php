@@ -199,10 +199,31 @@
                     </div>
                 </div>
             </div>
-            <div x-data="{ showSendModal: false, notes: '' }">
+            <div x-data="{ 
+                showSendModal: false, 
+                selectedTemplate: '', 
+                notes: '', 
+                showNotes: false,
+                templates: [],
+                loadingTemplates: false,
+                async loadTemplates() {
+                    this.loadingTemplates = true;
+                    try {
+                        const response = await fetch('{{ route('mockups.sms-templates') }}');
+                        const data = await response.json();
+                        if (data.success) {
+                            this.templates = data.templates;
+                        }
+                    } catch (error) {
+                        console.error('Error loading templates:', error);
+                    } finally {
+                        this.loadingTemplates = false;
+                    }
+                }
+            }">
                 <button
                     type="button"
-                    x-on:click="showSendModal = true"
+                    x-on:click="showSendModal = true; selectedTemplate = ''; notes = ''; showNotes = false; loadTemplates()"
                     class="px-4 py-2 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 border border-primary-700 dark:border-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
@@ -230,36 +251,82 @@
                             
                             <div class="px-6 py-4">
                                 <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Notes
+                                    <!-- Template Selection -->
+                                    <div x-show="!showNotes">
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                            What template would you like to send?
                                         </label>
-                                        <textarea 
-                                            x-model="notes"
-                                            rows="6"
-                                            placeholder="Add any notes or comments about this submission..."
-                                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm resize-none"
-                                        ></textarea>
-                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                            These notes will be included when sending the submission to the client.
-                                        </p>
+                                        <div x-show="loadingTemplates" class="text-center py-4">
+                                            <div class="text-sm text-gray-500">Loading templates...</div>
+                                        </div>
+                                        <div x-show="!loadingTemplates && templates.length === 0" class="text-center py-4">
+                                            <div class="text-sm text-gray-500 mb-2">No templates available.</div>
+                                            <a href="{{ route('filament.admin.resources.sms-templates.create') }}" target="_blank" class="text-sm text-primary-600 hover:text-primary-700">Create a template</a>
+                                        </div>
+                                        <div x-show="!loadingTemplates && templates.length > 0" class="space-y-2 max-h-96 overflow-y-auto">
+                                            <template x-for="template in templates" :key="template.id">
+                                                <label class="flex items-start p-3 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors" :class="selectedTemplate == template.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : ''">
+                                                    <input type="radio" x-model="selectedTemplate" :value="template.id" class="mt-1 mr-3 text-primary-600 focus:ring-primary-500">
+                                                    <div class="flex-1">
+                                                        <div class="font-medium text-gray-900 dark:text-white" x-text="template.name"></div>
+                                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="template.description || 'No description'"></div>
+                                                    </div>
+                                                </label>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Notes Section (shown after template selection) -->
+                                    <div x-show="showNotes">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                Additional Notes
+                                            </label>
+                                            <textarea 
+                                                x-model="notes"
+                                                rows="6"
+                                                placeholder="Add any additional notes or comments..."
+                                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm resize-none"
+                                            ></textarea>
+                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                These notes will be included when sending the submission to the client.
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex justify-between gap-3">
                                 <button
                                     type="button"
-                                    x-on:click="showSendModal = false; notes = ''"
+                                    x-show="showNotes"
+                                    x-on:click="showNotes = false"
                                     class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    Cancel
+                                    Back
                                 </button>
-                                <button
-                                    type="button"
-                                    x-on:click="sendSubmissionToClient({{ $record->id }}, notes); showSendModal = false; notes = ''"
-                                    class="px-4 py-2 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 border border-primary-700 dark:border-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors">
-                                    Send
-                                </button>
+                                <div class="flex gap-3 ml-auto">
+                                    <button
+                                        type="button"
+                                        x-on:click="showSendModal = false; selectedTemplate = ''; notes = ''; showNotes = false"
+                                        class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        x-show="!showNotes"
+                                        x-on:click="if(selectedTemplate) { showNotes = true; } else { alert('Please select a template'); }"
+                                        :disabled="loadingTemplates || templates.length === 0"
+                                        class="px-4 py-2 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 border border-primary-700 dark:border-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                        Next
+                                    </button>
+                                    <button
+                                        type="button"
+                                        x-show="showNotes"
+                                        x-on:click="sendSubmissionToClient({{ $record->id }}, selectedTemplate, notes); showSendModal = false; selectedTemplate = ''; notes = ''; showNotes = false"
+                                        class="px-4 py-2 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 border border-primary-700 dark:border-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors">
+                                        Send
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -949,77 +1016,6 @@
             </button>
         </form>
 
-        <!-- Send Submission to Client Button at Bottom -->
-        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700" style="padding-bottom: 30px;">
-            <div x-data="{ showSendModal: false, notes: '' }">
-                <button
-                    type="button"
-                    x-on:click="showSendModal = true"
-                    class="px-6 py-3 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 border border-primary-700 dark:border-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                    </svg>
-                    <span>Send Submission to Client</span>
-                </button>
-
-                <!-- Filament-styled Modal -->
-                <div 
-                    x-show="showSendModal"
-                    x-cloak
-                    class="fixed inset-0 z-50 overflow-y-auto"
-                    style="display: none;"
-                    x-on:click.away="showSendModal = false"
-                >
-                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75" x-on:click="showSendModal = false"></div>
-                        
-                        <div class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white dark:bg-gray-800 rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                    Send Submission to Client
-                                </h3>
-                            </div>
-                            
-                            <div class="px-6 py-4">
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Notes
-                                        </label>
-                                        <textarea 
-                                            x-model="notes"
-                                            rows="6"
-                                            placeholder="Add any notes or comments about this submission..."
-                                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm resize-none"
-                                        ></textarea>
-                                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                            These notes will be included when sending the submission to the client.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    x-on:click="showSendModal = false; notes = ''"
-                                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                                    Cancel
-                                </button>
-                                <button
-                                    type="button"
-                                    x-on:click="sendSubmissionToClient({{ $record->id }}, notes); showSendModal = false; notes = ''"
-                                    class="px-4 py-2 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 border border-primary-700 dark:border-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors">
-                                    Send
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        </div>
-
         <script>
         // Handle chat form submission
         document.getElementById('chatForm')?.addEventListener('submit', function(e) {
@@ -1068,7 +1064,7 @@
         });
 
         // Send submission to client
-        function sendSubmissionToClient(recordId, notes) {
+        function sendSubmissionToClient(recordId, template, notes) {
             fetch('{{ route("mockups.send-to-client", ":id") }}'.replace(':id', recordId), {
                 method: 'POST',
                 headers: {
@@ -1076,6 +1072,7 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
                 },
                 body: JSON.stringify({
+                    template: template || '',
                     notes: notes || ''
                 })
             })
