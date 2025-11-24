@@ -16,8 +16,28 @@ class TwilioService
         $authToken = config('services.twilio.auth_token');
         $this->fromNumber = config('services.twilio.from');
 
+        // Log what we're getting for debugging
+        Log::debug('Twilio Service Initialization', [
+            'account_sid_set' => !empty($accountSid),
+            'auth_token_set' => !empty($authToken),
+            'from_number_set' => !empty($this->fromNumber),
+            'from_number_value' => $this->fromNumber,
+        ]);
+
         if (!$accountSid || !$authToken || !$this->fromNumber) {
-            throw new \Exception('Twilio credentials are not configured. Please set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM_NUMBER in your .env file.');
+            $missing = [];
+            if (!$accountSid) $missing[] = 'TWILIO_ACCOUNT_SID';
+            if (!$authToken) $missing[] = 'TWILIO_AUTH_TOKEN';
+            if (!$this->fromNumber) $missing[] = 'TWILIO_FROM_NUMBER';
+            
+            Log::error('Twilio credentials missing', [
+                'missing' => $missing,
+                'account_sid' => $accountSid ? 'SET' : 'MISSING',
+                'auth_token' => $authToken ? 'SET' : 'MISSING',
+                'from_number' => $this->fromNumber ?: 'MISSING',
+            ]);
+            
+            throw new \Exception('Twilio credentials are not configured. Missing: ' . implode(', ', $missing) . '. Please set these in your .env file and run: php artisan config:clear');
         }
 
         $this->client = new Client($accountSid, $authToken);
