@@ -1,6 +1,6 @@
 <div>
     <x-filament-panels::page>
-        <div style="padding-right: 0.5rem !important; margin-right: -1rem !important;">
+        <div>
             @php
                 $record = $this->getRecord();
             @endphp
