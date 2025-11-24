@@ -1,9 +1,7 @@
-<div>
-    <x-filament-panels::page>
-        <div>
-            @php
-                $record = $this->getRecord();
-            @endphp
+<x-filament-panels::page>
+    @php
+        $record = $this->getRecord();
+    @endphp
 
         <!-- Mockup Details Notes Container -->
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-6 mb-6">
@@ -1095,7 +1093,4 @@
             });
         }
         </script>
-        </div>
-        </div>
-    </x-filament-panels::page>
-</div>
+</x-filament-panels::page>
