@@ -10,6 +10,7 @@ class MockupsSubmission extends Model
 {
     protected $fillable = [
         'tracking_number',
+        'submission_date',
         'title',
         'customer_name',
         'customer_email',
@@ -28,6 +29,7 @@ class MockupsSubmission extends Model
     ];
 
     protected $casts = [
+        'submission_date' => 'date',
         'products' => 'array',
         'graphics' => 'array',
         'pdfs' => 'array',

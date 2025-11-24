@@ -41,6 +41,11 @@ class MockupsSubmissionResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->placeholder('Enter submission title'),
+                        Forms\Components\DatePicker::make('submission_date')
+                            ->label('Submission Date')
+                            ->default(now())
+                            ->displayFormat('M d, Y')
+                            ->native(false),
                         Forms\Components\Select::make('assigned_to')
                             ->label('Assigned To')
                             ->relationship('assignedUser', 'name')
@@ -57,7 +62,7 @@ class MockupsSubmissionResource extends Resource
                             ])
                             ->placeholder('Select priority (optional)'),
                     ])
-                    ->columns(3),
+                    ->columns(4),
                 Forms\Components\Section::make('Customer Information')
                     ->schema([
                         Forms\Components\Grid::make(2)
@@ -193,6 +198,11 @@ class MockupsSubmissionResource extends Resource
                     ->sortable()
                     ->weight('bold')
                     ->color('primary'),
+                Tables\Columns\TextColumn::make('submission_date')
+                    ->label('Submission Date')
+                    ->date('M d, Y')
+                    ->sortable()
+                    ->searchable(false),
                 Tables\Columns\TextColumn::make('customer_name')
                     ->label('Customer Name')
                     ->searchable()

@@ -73,8 +73,13 @@ class ListMockupsSubmissions extends ListRecords
             $inNoteSection = false;
             
             foreach ($lines as $line) {
+                $originalLine = $line;
                 $line = trim($line);
-                if (empty($line)) continue;
+                
+                // Skip empty lines unless we're collecting notes
+                if (empty($line) && !$inNoteSection) {
+                    continue;
+                }
                 
                 // Check if we're entering the products section
                 if (stripos($line, 'Products') !== false && stripos($line, ':') === false) {
@@ -83,14 +88,13 @@ class ListMockupsSubmissions extends ListRecords
                     continue;
                 }
                 
-                // Check if we're in the note section
-                if (stripos($line, 'Note:') !== false || stripos($line, 'Notes:') !== false) {
+                // Check if we're in the note section header
+                if (preg_match('/^Note:?\s*(.*)$/i', $line, $noteMatches)) {
                     $inNoteSection = true;
                     $inProductsSection = false;
                     // Check if there's content after "Note:"
-                    $parts = explode(':', $line, 2);
-                    if (isset($parts[1]) && !empty(trim($parts[1]))) {
-                        $data['notes'] = trim($parts[1]);
+                    if (!empty(trim($noteMatches[1] ?? ''))) {
+                        $data['notes'] = trim($noteMatches[1]);
                     }
                     continue;
                 }
@@ -119,7 +123,7 @@ class ListMockupsSubmissions extends ListRecords
                         }
                     }
                 } elseif ($inNoteSection) {
-                    // Collect note content
+                    // Collect note content (including empty lines)
                     if (empty($data['notes'])) {
                         $data['notes'] = $line;
                     } else {
@@ -155,6 +159,11 @@ class ListMockupsSubmissions extends ListRecords
                 }
             }
             
+            // Validate that we have at least customer name or email
+            if (empty($data['customer_name']) && empty($data['customer_email'])) {
+                throw new \Exception('Customer name or email is required');
+            }
+            
             // Generate tracking number
             $lastSubmission = MockupsSubmission::orderBy('tracking_number', 'desc')->first();
             $trackingNumber = $lastSubmission ? $lastSubmission->tracking_number + 1 : 1;
@@ -162,6 +171,7 @@ class ListMockupsSubmissions extends ListRecords
             // Create the submission
             $submission = MockupsSubmission::create([
                 'tracking_number' => $trackingNumber,
+                'submission_date' => today(), // Set to the date when data is pasted
                 'title' => 'Submission #' . $trackingNumber . ($data['company_name'] ? ' - ' . $data['company_name'] : ''),
                 'customer_name' => $data['customer_name'],
                 'customer_email' => $data['customer_email'],
@@ -169,7 +179,7 @@ class ListMockupsSubmissions extends ListRecords
                 'website' => $data['website'],
                 'company_name' => $data['company_name'],
                 'instagram' => $data['instagram'],
-                'notes' => $data['notes'] ?: $currentNote,
+                'notes' => $data['notes'],
                 'products' => $data['products'],
                 'created_by' => auth()->id(),
                 'is_completed' => false,
@@ -179,6 +189,7 @@ class ListMockupsSubmissions extends ListRecords
             
         } catch (\Exception $e) {
             \Log::error('Error parsing submission data: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return null;
         }
     }

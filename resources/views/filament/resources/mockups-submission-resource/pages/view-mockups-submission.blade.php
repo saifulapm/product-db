@@ -31,6 +31,12 @@
             
             <!-- Information Grid - 4 Columns Per Row -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <!-- Submission Date -->
+                <div>
+                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Submission Date</p>
+                    <p class="text-sm text-gray-900 dark:text-white">{{ $record->submission_date ? $record->submission_date->format('M d, Y') : ($record->created_at ? $record->created_at->format('M d, Y') : 'N/A') }}</p>
+                </div>
+
                 <!-- Customer Name -->
                 <div>
                     <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Customer Name</p>
