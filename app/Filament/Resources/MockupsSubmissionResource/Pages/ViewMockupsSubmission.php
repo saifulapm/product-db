@@ -439,15 +439,10 @@ class ViewMockupsSubmission extends ViewRecord
             try {
                 $twilioService = new \App\Services\TwilioService();
             } catch (\Exception $e) {
-                \Log::error('Twilio service initialization failed', [
-                    'error' => $e->getMessage(),
-                    'account_sid' => config('services.twilio.account_sid') ? 'SET' : 'MISSING',
-                    'auth_token' => config('services.twilio.auth_token') ? 'SET' : 'MISSING',
-                    'from_number' => config('services.twilio.from') ?: 'MISSING',
-                ]);
+                \Log::error('Twilio service initialization failed: ' . $e->getMessage());
                 return response()->json([
                     'success' => false,
-                    'message' => $e->getMessage()
+                    'message' => 'SMS service is not configured. Please check your Twilio credentials.'
                 ], 500);
             }
 

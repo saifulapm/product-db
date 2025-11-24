@@ -8,9 +8,9 @@
         <!-- Mockup Details Notes Container -->
         <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm p-6 mb-6">
             <!-- Header with ID, Send Button, and Status Button -->
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+            <div class="flex justify-between items-start mb-6">
                 <div>
-                    <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">
                         Mockup Submission : #{{ $record->tracking_number ?? 'N/A' }}
                     </h2>
                 </div>
@@ -21,7 +21,7 @@
                 <button 
                     type="button"
                     onclick="openStatusModal()"
-                    class="px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 w-full sm:w-auto {{ $isClosed ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-green-600 text-white hover:bg-green-700' }}">
+                    class="px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 {{ $isClosed ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-green-600 text-white hover:bg-green-700' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
                     </svg>
@@ -103,17 +103,17 @@
         <div class="border-t border-gray-200 dark:border-gray-700" style="margin-top: 20px; margin-bottom: 20px;"></div>
 
         <!-- Expand/Collapse Buttons, Upload PDF, and Send to Client -->
-        <div class="flex flex-col sm:flex-row gap-2 mb-4 items-stretch sm:items-center">
+        <div class="flex gap-2 mb-4 items-center">
             <button 
                 type="button"
                 onclick="expandAllProducts()"
-                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto">
+                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 Expand All
             </button>
             <button 
                 type="button"
                 onclick="collapseAllProducts()"
-                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full sm:w-auto">
+                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                 Collapse All
             </button>
             <div x-data="{ showModal: false }">
@@ -201,11 +201,11 @@
                     </div>
                 </div>
             </div>
-            <div x-data="{ showSendModal: false, notes: '' }" class="w-full sm:w-auto">
+            <div x-data="{ showSendModal: false, notes: '' }">
                 <button
                     type="button"
                     x-on:click="showSendModal = true"
-                    class="px-4 py-2 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 border border-primary-700 dark:border-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+                    class="px-4 py-2 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 border border-primary-700 dark:border-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                     </svg>
@@ -269,14 +269,14 @@
             </div>
             
             <!-- Status Filter -->
-            <div class="w-full sm:w-auto sm:ml-auto">
+            <div class="ml-auto">
                 <label for="statusFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Filter by Status
                 </label>
                 <select 
                     id="statusFilter"
                     onchange="filterProductsByStatus(this.value)"
-                    class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500">
                     <option value="">All Statuses</option>
                     <option value="Pending">Pending</option>
                     <option value="Approved">Approved</option>
@@ -333,7 +333,7 @@
                                     Pricing & Minimums
                                 </label>
                                 <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                                    <div class="flex flex-col sm:flex-row gap-4">
+                                    <div class="flex flex-row gap-4">
                                         <!-- Minimums Column (Left) -->
                                         <div class="flex-1">
                                             <h4 class="text-xs font-bold text-gray-900 dark:text-white mb-2 uppercase tracking-wide">MINIMUMS</h4>
@@ -483,7 +483,7 @@
                                 </div>
 
                                 <!-- Status and Notes Section -->
-                                <div class="w-full md:w-64 flex-shrink-0 flex flex-col space-y-4">
+                                <div class="md:w-64 flex-shrink-0 flex flex-col space-y-4">
                                     <!-- Status Dropdown -->
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -540,7 +540,7 @@
 
         <!-- Mockup Status Modal -->
         <div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
-        <div class="relative top-20 mx-auto p-5 border w-full max-w-sm sm:w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
             <div class="mt-3">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Change Mockup Status</h3>
                 <div class="flex gap-3 mb-4">
@@ -934,7 +934,7 @@
         </div>
 
         <!-- Chat Input Form -->
-        <form id="chatForm" class="flex flex-col sm:flex-row gap-2">
+        <form id="chatForm" class="flex gap-2">
             @csrf
             <textarea 
                 id="chatMessage"
@@ -946,18 +946,18 @@
             ></textarea>
             <button
                 type="submit"
-                class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm self-end w-full sm:w-auto">
+                class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium text-sm self-end">
                 Send
             </button>
         </form>
 
         <!-- Send Submission to Client Button at Bottom -->
         <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700" style="padding-bottom: 30px;">
-            <div x-data="{ showSendModal: false, notes: '' }" class="w-full">
+            <div x-data="{ showSendModal: false, notes: '' }">
                 <button
                     type="button"
                     x-on:click="showSendModal = true"
-                    class="px-6 py-3 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 border border-primary-700 dark:border-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+                    class="px-6 py-3 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 border border-primary-700 dark:border-primary-600 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 transition-colors flex items-center gap-2">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                     </svg>
