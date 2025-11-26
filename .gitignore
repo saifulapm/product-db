@@ -15,4 +15,6 @@ yarn-error.log
 /storage/*.key
 /vendor
 /node_modules
+database/database.sqlite
+database/*.sqlite
 

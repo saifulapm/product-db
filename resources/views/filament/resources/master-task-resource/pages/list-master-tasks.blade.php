@@ -282,6 +282,121 @@
             </div>
         </div>
         @endif
+
+        <!-- Incoming Shipments Section -->
+        <div class="mt-8">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Incoming Shipments</h2>
+                <a 
+                    href="{{ \App\Filament\Resources\IncomingShipmentResource::getUrl('create') }}"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Add Shipment
+                </a>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-900">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tracking #</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Carrier</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Supplier</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Expected Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Items</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            @forelse($this->getIncomingShipments() as $shipment)
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                        @if($shipment->tracking_number)
+                                            {{ $shipment->tracking_number }}
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $shipment->carrier ?? '—' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        {{ $shipment->supplier ?? '—' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @php
+                                            $statusColors = [
+                                                'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+                                                'in_transit' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+                                                'received' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+                                                'delayed' => 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+                                                'cancelled' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+                                            ];
+                                            $statusLabels = [
+                                                'pending' => 'Pending',
+                                                'in_transit' => 'In Transit',
+                                                'received' => 'Received',
+                                                'delayed' => 'Delayed',
+                                                'cancelled' => 'Cancelled',
+                                            ];
+                                            $color = $statusColors[$shipment->status] ?? $statusColors['pending'];
+                                            $label = $statusLabels[$shipment->status] ?? ucfirst($shipment->status);
+                                        @endphp
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $color }}">
+                                            {{ $label }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        @if($shipment->expected_date)
+                                            {{ $shipment->expected_date->format('M d, Y') }}
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                        @if($shipment->items && is_array($shipment->items) && count($shipment->items) > 0)
+                                            @php
+                                                $count = count($shipment->items);
+                                                $totalQty = array_sum(array_column($shipment->items, 'quantity'));
+                                                $uniqueStyles = count(array_unique(array_filter(array_column($shipment->items, 'style'))));
+                                            @endphp
+                                            {{ $count }} line(s) - {{ $uniqueStyles }} style(s) - {{ $totalQty }} pcs
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500">No items</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <a 
+                                            href="{{ $this->getViewShipmentUrl($shipment) }}"
+                                            class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300"
+                                        >
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                                        No incoming shipments yet. 
+                                        <a 
+                                            href="{{ \App\Filament\Resources\IncomingShipmentResource::getUrl('create') }}"
+                                            class="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300 ml-1"
+                                        >
+                                            Add your first shipment
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>

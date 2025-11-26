@@ -5,6 +5,7 @@ namespace App\Filament\Resources\MasterTaskResource\Pages;
 use App\Filament\Resources\MasterTaskResource;
 use App\Filament\Resources\TaskResource;
 use App\Models\Task;
+use App\Models\IncomingShipment;
 use Filament\Resources\Pages\Page;
 use Filament\Actions;
 use Illuminate\Contracts\Support\Htmlable;
@@ -353,5 +354,18 @@ class ListMasterTasks extends Page
                 ->success()
                 ->send();
         }
+    }
+    
+    public function getIncomingShipments()
+    {
+        return IncomingShipment::orderBy('expected_date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+    }
+    
+    public function getViewShipmentUrl(IncomingShipment $shipment): string
+    {
+        return \App\Filament\Resources\IncomingShipmentResource::getUrl('view', ['record' => $shipment]);
     }
 }
