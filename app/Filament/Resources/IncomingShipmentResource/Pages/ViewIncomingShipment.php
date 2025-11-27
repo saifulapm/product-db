@@ -1102,17 +1102,19 @@ class ViewIncomingShipment extends ViewRecord
                                 </table>
                                 <script>
                                     (function() {
-                                        function initPackingListSearch() {
+                                        function initPackingListFilters() {
                                             const searchInput = document.getElementById("packing-list-search-input");
+                                            const orderFilterInput = document.getElementById("packing-list-order-filter-input");
                                             const table = document.getElementById("packing-list-table");
                                             
-                                            if (!searchInput || !table) {
-                                                setTimeout(initPackingListSearch, 100);
+                                            if (!searchInput || !orderFilterInput || !table) {
+                                                setTimeout(initPackingListFilters, 100);
                                                 return;
                                             }
                                             
                                             function filterTable() {
                                                 const searchTerm = (searchInput.value || "").toLowerCase().trim();
+                                                const orderFilter = (orderFilterInput.value || "").toUpperCase().trim();
                                                 const rows = table.querySelectorAll("tbody tr");
                                                 let visibleCount = 0;
                                                 
@@ -1121,8 +1123,35 @@ class ViewIncomingShipment extends ViewRecord
                                                         return;
                                                     }
                                                     
-                                                    const text = row.textContent.toLowerCase();
-                                                    if (!searchTerm || text.includes(searchTerm)) {
+                                                    // Get row text for general search
+                                                    const rowText = row.textContent.toLowerCase();
+                                                    
+                                                    // Get order allocations from the Order Allocations column (6th column, index 5)
+                                                    // Column order: CTN#(0), Style(1), Color(2), Packing Way(3), Original Qty(4), Order Allocations(5)
+                                                    const cells = row.querySelectorAll("td");
+                                                    let hasMatchingOrder = true;
+                                                    
+                                                    if (orderFilter) {
+                                                        hasMatchingOrder = false;
+                                                        if (cells.length > 5) {
+                                                            const orderAllocationsCell = cells[5];
+                                                            // Get text content including from nested elements (badges, spans, etc.)
+                                                            const orderText = orderAllocationsCell.textContent.toUpperCase();
+                                                            // Also check innerHTML for order numbers in HTML attributes or nested elements
+                                                            const orderHtml = orderAllocationsCell.innerHTML.toUpperCase();
+                                                            
+                                                            // Check if order number appears in text or HTML
+                                                            if (orderText.includes(orderFilter) || orderHtml.includes(orderFilter)) {
+                                                                hasMatchingOrder = true;
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                    // Check if row matches both filters
+                                                    const matchesSearch = !searchTerm || rowText.includes(searchTerm);
+                                                    const matchesOrder = hasMatchingOrder;
+                                                    
+                                                    if (matchesSearch && matchesOrder) {
                                                         row.style.display = "";
                                                         visibleCount++;
                                                     } else {
@@ -1132,11 +1161,11 @@ class ViewIncomingShipment extends ViewRecord
                                                 
                                                 // Show/hide "no results" message
                                                 let noResults = document.getElementById("packing-list-no-results");
-                                                if (visibleCount === 0 && searchTerm) {
+                                                if (visibleCount === 0 && (searchTerm || orderFilter)) {
                                                     if (!noResults) {
                                                         noResults = document.createElement("tr");
                                                         noResults.id = "packing-list-no-results";
-                                                        noResults.innerHTML = \'<td colspan="9" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No items found matching your search.</td>\';
+                                                        noResults.innerHTML = \'<td colspan="9" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No items found matching your filters.</td>\';
                                                         table.querySelector("tbody").appendChild(noResults);
                                                     }
                                                     noResults.style.display = "";
@@ -1147,17 +1176,19 @@ class ViewIncomingShipment extends ViewRecord
                                             
                                             searchInput.addEventListener("input", filterTable);
                                             searchInput.addEventListener("keyup", filterTable);
+                                            orderFilterInput.addEventListener("input", filterTable);
+                                            orderFilterInput.addEventListener("keyup", filterTable);
                                             
                                             // Also filter on page load if there\'s a value
-                                            if (searchInput.value) {
+                                            if (searchInput.value || orderFilterInput.value) {
                                                 filterTable();
                                             }
                                         }
                                         
                                         if (document.readyState === "loading") {
-                                            document.addEventListener("DOMContentLoaded", initPackingListSearch);
+                                            document.addEventListener("DOMContentLoaded", initPackingListFilters);
                                         } else {
-                                            initPackingListSearch();
+                                            initPackingListFilters();
                                         }
                                     })();
                                 </script>
