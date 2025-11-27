@@ -980,6 +980,9 @@ class ViewIncomingShipment extends ViewRecord
                                         
                                         // Get order allocations per item
                                         $orderAllocations = $record->getOrderAllocationsByItem($this->pickLists ?? []);
+                                        
+                                        // Get box-by-box allocations for orders (auto-calculates multi-box splits)
+                                        $boxAllocations = $record->getBoxAllocationsForOrders($this->pickLists ?? []);
                                 
                                 // Break out of Filament's section padding and ensure full width
                                 $html = '<div style="width: 100%; margin: 0; padding: 0; overflow-x: auto;">
@@ -1029,23 +1032,51 @@ class ViewIncomingShipment extends ViewRecord
                                     $totalPicked += $pickedQty;
                                     $totalAvailable += $availableQty;
                                     
-                                    // Get order allocations for this item
+                                    // Get order allocations for this item with box breakdown
                                     $itemAllocations = $orderAllocations[$itemIndex] ?? [];
-                                    $totalAllocatedFromOrders = 0;
                                     $allocationsHtml = '';
                                     
                                     if (!empty($itemAllocations)) {
                                         $allocationsList = [];
+                                        
                                         foreach ($itemAllocations as $allocation) {
                                             $orderNum = htmlspecialchars($allocation['order_number']);
-                                            $qty = $allocation['quantity'];
-                                            $totalAllocatedFromOrders += $qty;
-                                            $allocationsList[] = '<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                                <span class="font-semibold">' . $orderNum . '</span>
-                                                <span>×</span>
-                                                <span>' . number_format($qty) . '</span>
-                                            </span>';
+                                            $totalQty = $allocation['quantity'];
+                                            
+                                            // Find box breakdown for this order/product combination
+                                            // Match by style, color, packing way, and carton
+                                            $boxBreakdown = [];
+                                            if (isset($boxAllocations[$orderNum])) {
+                                                foreach ($boxAllocations[$orderNum] as $boxAlloc) {
+                                                    // Match by item index (most accurate) or by style/color/packing way
+                                                    if ($boxAlloc['item_index'] == $itemIndex) {
+                                                        $boxBreakdown[] = [
+                                                            'carton' => $boxAlloc['carton'],
+                                                            'quantity' => $boxAlloc['quantity'],
+                                                        ];
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // If we have box breakdown, show it; otherwise show total
+                                            if (!empty($boxBreakdown)) {
+                                                $boxParts = [];
+                                                foreach ($boxBreakdown as $box) {
+                                                    $boxParts[] = 'Box ' . htmlspecialchars($box['carton']) . ': ' . number_format($box['quantity']);
+                                                }
+                                                $allocationsList[] = '<div class="inline-flex flex-col gap-0.5 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                    <span class="font-semibold">' . $orderNum . ' × ' . number_format($totalQty) . '</span>
+                                                    <span class="text-xs opacity-75">' . implode(', ', $boxParts) . '</span>
+                                                </div>';
+                                            } else {
+                                                $allocationsList[] = '<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                    <span class="font-semibold">' . $orderNum . '</span>
+                                                    <span>×</span>
+                                                    <span>' . number_format($totalQty) . '</span>
+                                                </span>';
+                                            }
                                         }
+                                        
                                         $allocationsHtml = '<div class="flex flex-wrap gap-1">' . implode('', $allocationsList) . '</div>';
                                     } else {
                                         $allocationsHtml = '<span class="text-gray-400 dark:text-gray-500 text-xs">—</span>';
