@@ -897,79 +897,8 @@ class ViewIncomingShipment extends ViewRecord
                             ->columnSpanFull(),
                     ]),
                 
-                // Box Assignments by Order Number Section
-                Infolists\Components\Section::make('Box Assignments by Order Number')
-                    ->description('Shows which boxes to pull from for each order number. Upload a pick list with order numbers in each row to see automatic box assignments.')
-                    ->columnSpanFull()
-                    ->visible(fn () => !empty($this->pickLists) && is_array($this->pickLists) && count($this->pickLists) > 0)
-                    ->schema([
-                        Infolists\Components\TextEntry::make('box_assignments_by_order')
-                            ->label('')
-                            ->html()
-                            ->formatStateUsing(function ($record) {
-                                $boxAllocations = $record->getBoxAllocationsForOrders($this->pickLists ?? []);
-                                
-                                if (empty($boxAllocations)) {
-                                    return new \Illuminate\Support\HtmlString('<p class="text-gray-500 px-6">No order numbers found in pick lists. Add order numbers to your pick list items (in a column or within descriptions) to see box assignments.</p>');
-                                }
-                                
-                                $html = '<div class="space-y-4">';
-                                
-                                // Sort orders alphabetically
-                                ksort($boxAllocations);
-                                
-                                foreach ($boxAllocations as $orderNumber => $allocations) {
-                                    $html .= '<div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800">';
-                                    $html .= '<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order: ' . htmlspecialchars($orderNumber) . '</h3>';
-                                    
-                                    // Group by box
-                                    $byBox = [];
-                                    foreach ($allocations as $allocation) {
-                                        $box = $allocation['carton'];
-                                        if (!isset($byBox[$box])) {
-                                            $byBox[$box] = [];
-                                        }
-                                        $byBox[$box][] = $allocation;
-                                    }
-                                    
-                                    // Sort boxes numerically
-                                    ksort($byBox, SORT_NUMERIC);
-                                    
-                                    $html .= '<div class="space-y-3">';
-                                    foreach ($byBox as $boxNum => $boxItems) {
-                                        $totalQty = array_sum(array_column($boxItems, 'quantity'));
-                                        $html .= '<div class="border-l-4 border-primary-500 pl-4 py-2 bg-gray-50 dark:bg-gray-900/50 rounded">';
-                                        $html .= '<div class="font-semibold text-gray-900 dark:text-white mb-2">Box ' . htmlspecialchars($boxNum) . ' - ' . number_format($totalQty) . ' pcs</div>';
-                                        $html .= '<div class="space-y-1 text-sm text-gray-600 dark:text-gray-400">';
-                                        
-                                        foreach ($boxItems as $item) {
-                                            $html .= '<div class="flex items-center gap-2">';
-                                            $html .= '<span class="font-medium">' . htmlspecialchars($item['style']) . '</span>';
-                                            $html .= '<span class="text-gray-400">•</span>';
-                                            $html .= '<span>' . htmlspecialchars($item['color']) . '</span>';
-                                            $html .= '<span class="text-gray-400">•</span>';
-                                            $html .= '<span>' . htmlspecialchars($item['packing_way']) . '</span>';
-                                            $html .= '<span class="ml-auto font-semibold text-primary-600 dark:text-primary-400">' . number_format($item['quantity']) . ' pcs</span>';
-                                            $html .= '</div>';
-                                        }
-                                        
-                                        $html .= '</div>';
-                                        $html .= '</div>';
-                                    }
-                                    
-                                    $html .= '</div>';
-                                    $html .= '</div>';
-                                }
-                                
-                                $html .= '</div>';
-                                
-                                return new \Illuminate\Support\HtmlString($html);
-                            })
-                            ->columnSpanFull(),
-                    ]),
-                
                 Infolists\Components\Section::make('Packing List Items - Available Stock')
-                    ->description('Tracks all inventory: Original quantities, order allocations (with box breakdown), allocated quantities, picked quantities, and remaining available stock. Updates automatically when items are marked as picked.')
+                    ->description('Tracks all inventory: Original quantities, order allocations (with box breakdown), allocated quantities, picked quantities, and remaining available stock. Use the search box to filter by any column, or filter by Order Number to see only items for specific orders. Updates automatically when items are marked as picked.')
                     ->columnSpanFull()
                     ->schema([
                         Infolists\Components\TextEntry::make('search_input')
@@ -1074,14 +1003,25 @@ class ViewIncomingShipment extends ViewRecord
                                 
                                 // Break out of Filament's section padding and ensure full width
                                 $html = '<div style="width: 100%; margin: 0; padding: 0; overflow-x: auto;">
-                                    <div class="mb-4 px-6">
-                                        <input 
-                                            type="text" 
-                                            id="packing-list-search-input"
-                                            placeholder="Search by CTN#, Style, Color, Packing Way, or Quantity..." 
-                                            class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
-                                            style="padding: 0.625rem 1rem; font-size: 0.875rem;"
-                                        />
+                                    <div class="mb-4 px-6 space-y-3">
+                                        <div>
+                                            <input 
+                                                type="text" 
+                                                id="packing-list-search-input"
+                                                placeholder="Search by CTN#, Style, Color, Packing Way, or Quantity..." 
+                                                class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                                style="padding: 0.625rem 1rem; font-size: 0.875rem;"
+                                            />
+                                        </div>
+                                        <div>
+                                            <input 
+                                                type="text" 
+                                                id="packing-list-order-filter-input"
+                                                placeholder="Filter by Order Number (e.g., BDR1399)..." 
+                                                class="w-full rounded-lg border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                                                style="padding: 0.625rem 1rem; font-size: 0.875rem;"
+                                            />
+                                        </div>
                                     </div>
                                     <table id="packing-list-table" class="w-full divide-y divide-gray-200 dark:divide-gray-700 border-x-0 border-y border-gray-200 dark:border-gray-700" style="width: 100%; table-layout: fixed; margin: 0;">
                                     <thead class="bg-gray-50 dark:bg-gray-900">
