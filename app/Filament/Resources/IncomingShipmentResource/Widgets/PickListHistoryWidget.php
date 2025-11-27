@@ -12,6 +12,9 @@ class PickListHistoryWidget extends Widget
     
     protected int | string | array $columnSpan = 'full';
     
+    // Poll the widget every 5 seconds to check for updates
+    protected static ?string $pollingInterval = '5s';
+    
     public ?IncomingShipment $shipment = null;
     
     public static function canView(): bool
