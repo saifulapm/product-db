@@ -50,11 +50,18 @@ class PickListHistoryWidget extends Widget
         }
         
         if (!$this->shipment) {
+            \Log::warning('PickListHistoryWidget: No shipment found');
             return [];
         }
         
         $this->shipment->refresh();
         $pickLists = $this->shipment->pick_lists ?? [];
+        
+        \Log::info('PickListHistoryWidget: Retrieved pick lists', [
+            'shipment_id' => $this->shipment->id,
+            'pick_lists_count' => is_array($pickLists) ? count($pickLists) : 0,
+            'pick_lists' => $pickLists,
+        ]);
         
         if (empty($pickLists) || !is_array($pickLists)) {
             return [];
@@ -152,9 +159,20 @@ class PickListHistoryWidget extends Widget
     
     protected function getViewData(): array
     {
+        $pickLists = $this->getPickLists();
+        
         return [
-            'pickLists' => $this->getPickLists(),
+            'pickLists' => $pickLists,
             'shipment' => $this->shipment,
+        ];
+    }
+    
+    protected function getListeners(): array
+    {
+        return [
+            'pick-list-updated' => '$refresh',
+            '$refresh' => '$refresh',
+            'refresh-widgets' => '$refresh',
         ];
     }
 }
