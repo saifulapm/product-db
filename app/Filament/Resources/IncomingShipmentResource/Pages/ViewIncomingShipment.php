@@ -438,6 +438,8 @@ class ViewIncomingShipment extends ViewRecord
                                 'items' => $parsedItems,
                                 'picked_items' => [],
                                 'uploaded_at' => now()->toDateTimeString(),
+                                'status' => 'pending', // pending, in_progress, completed
+                                'order_id' => null, // Link to Order model if needed
                             ];
                             
                             if ($fileToDelete && is_string($fileToDelete)) {
@@ -616,6 +618,8 @@ class ViewIncomingShipment extends ViewRecord
                         'items' => $parsedItems,
                         'picked_items' => [], // Track which items have been picked: [['shipment_item_index' => X, 'quantity_picked' => Y, 'item_index' => Z], ...]
                         'uploaded_at' => now()->toDateTimeString(),
+                        'status' => 'pending', // pending, in_progress, completed
+                        'order_id' => null, // Link to Order model if needed
                     ];
                     
                     // Clean up file
@@ -641,6 +645,48 @@ class ViewIncomingShipment extends ViewRecord
                     // Force reload the page to ensure widgets refresh
                     return redirect()->to(\App\Filament\Resources\IncomingShipmentResource::getUrl('view', ['record' => $this->record->id]));
                 }),
+            Actions\Action::make('mark_pick_list_complete')
+                ->label('Mark Pick List as Complete')
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
+                ->form([
+                    Forms\Components\Select::make('pick_list_index')
+                        ->label('Pick List')
+                        ->options(function () {
+                            $options = [];
+                            foreach ($this->pickLists as $index => $pickList) {
+                                $name = $pickList['name'] ?? 'Pick List ' . ($index + 1);
+                                $status = $pickList['status'] ?? 'pending';
+                                if ($status !== 'completed') {
+                                    $options[$index] = $name;
+                                }
+                            }
+                            return $options;
+                        })
+                        ->required()
+                        ->helperText('Select a pick list to mark as complete'),
+                ])
+                ->action(function (array $data) {
+                    $pickListIndex = $data['pick_list_index'] ?? null;
+                    
+                    if ($pickListIndex === null || !isset($this->pickLists[$pickListIndex])) {
+                        Notification::make()
+                            ->title('Error')
+                            ->body('Pick list not found.')
+                            ->danger()
+                            ->send();
+                        return;
+                    }
+                    
+                    $this->pickLists[$pickListIndex]['status'] = 'completed';
+                    $this->savePickLists();
+                    
+                    Notification::make()
+                        ->title('Pick list marked as complete')
+                        ->success()
+                        ->send();
+                })
+                ->visible(fn () => !empty($this->pickLists) && is_array($this->pickLists) && count($this->pickLists) > 0),
             Actions\Action::make('create_order')
                 ->label('Create Order from Shipment')
                 ->icon('heroicon-o-shopping-bag')
@@ -702,6 +748,137 @@ class ViewIncomingShipment extends ViewRecord
                             ->date('M d, Y'),
                     ])
                     ->columns(2),
+                
+                // Pick Lists Overview Section - Shows all pick lists and their status
+                Infolists\Components\Section::make('Pick Lists Overview')
+                    ->description('Manage multiple pick lists that split this bulk shipment into individual orders.')
+                    ->columnSpanFull()
+                    ->visible(fn () => !empty($this->pickLists) && is_array($this->pickLists) && count($this->pickLists) > 0)
+                    ->schema([
+                        Infolists\Components\TextEntry::make('pick_lists_overview')
+                            ->label('')
+                            ->html()
+                            ->formatStateUsing(function () {
+                                if (empty($this->pickLists) || !is_array($this->pickLists)) {
+                                    return new \Illuminate\Support\HtmlString('<p class="text-gray-500 px-6">No pick lists uploaded yet.</p>');
+                                }
+                                
+                                $html = '<div class="space-y-4">';
+                                
+                                foreach ($this->pickLists as $pickListIndex => $pickList) {
+                                    $pickListName = $pickList['name'] ?? 'Pick List ' . ($pickListIndex + 1);
+                                    $fileName = $pickList['filename'] ?? 'Unknown';
+                                    $uploadedAt = $pickList['uploaded_at'] ?? '';
+                                    $status = $pickList['status'] ?? 'pending'; // pending, in_progress, completed
+                                    $orderId = $pickList['order_id'] ?? null;
+                                    
+                                    // Calculate progress
+                                    $items = $pickList['items'] ?? [];
+                                    $pickedItems = $pickList['picked_items'] ?? [];
+                                    
+                                    $totalNeeded = 0;
+                                    foreach ($items as $item) {
+                                        $totalNeeded += $item['quantity'] ?? $item['quantity_required'] ?? 0;
+                                    }
+                                    
+                                    $totalPicked = 0;
+                                    foreach ($pickedItems as $picked) {
+                                        $totalPicked += $picked['quantity_picked'] ?? 0;
+                                    }
+                                    
+                                    $remaining = max(0, $totalNeeded - $totalPicked);
+                                    $progressPercent = $totalNeeded > 0 ? round(($totalPicked / $totalNeeded) * 100) : 0;
+                                    
+                                    // Format uploaded date
+                                    $uploadedAtFormatted = '';
+                                    if ($uploadedAt) {
+                                        try {
+                                            $uploadedAtFormatted = \Carbon\Carbon::parse($uploadedAt)->format('M d, Y g:i A');
+                                        } catch (\Exception $e) {
+                                            $uploadedAtFormatted = $uploadedAt;
+                                        }
+                                    }
+                                    
+                                    // Status badge color
+                                    $statusColor = match($status) {
+                                        'completed' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                                        'in_progress' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                                        default => 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+                                    };
+                                    
+                                    $statusLabel = match($status) {
+                                        'completed' => 'Completed',
+                                        'in_progress' => 'In Progress',
+                                        default => 'Pending',
+                                    };
+                                    
+                                    $pickListUrl = IncomingShipmentResource::getUrl('view-pick-list', [
+                                        'shipmentId' => $this->record->id,
+                                        'pickListIndex' => $pickListIndex,
+                                    ]);
+                                    
+                                    $html .= '
+                                        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                            <div class="flex items-start justify-between mb-4">
+                                                <div class="flex-1">
+                                                    <div class="flex items-center gap-3 mb-2">
+                                                        <a href="' . $pickListUrl . '" class="text-lg font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
+                                                            ' . htmlspecialchars($pickListName) . '
+                                                            <svg class="inline-block h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                            </svg>
+                                                        </a>
+                                                        <span class="px-2 py-1 text-xs font-medium rounded ' . $statusColor . '">
+                                                            ' . htmlspecialchars($statusLabel) . '
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                                        <div>File: ' . htmlspecialchars($fileName) . '</div>
+                                                        ' . ($uploadedAtFormatted ? '<div>Uploaded: ' . htmlspecialchars($uploadedAtFormatted) . '</div>' : '') . '
+                                                        ' . ($orderId ? '<div>Linked Order: #' . htmlspecialchars($orderId) . '</div>' : '') . '
+                                                    </div>
+                                                    <div class="flex items-center gap-4 text-sm mb-3">
+                                                        <span class="text-gray-600 dark:text-gray-400">
+                                                            <strong>' . number_format(count($items)) . '</strong> items
+                                                        </span>
+                                                        <span class="text-gray-600 dark:text-gray-400">
+                                                            <strong>' . number_format($totalNeeded) . '</strong> pcs needed
+                                                        </span>
+                                                        <span class="text-green-600 dark:text-green-400">
+                                                            <strong>' . number_format($totalPicked) . '</strong> pcs picked
+                                                        </span>
+                                                        <span class="text-orange-600 dark:text-orange-400">
+                                                            <strong>' . number_format($remaining) . '</strong> pcs remaining
+                                                        </span>
+                                                    </div>
+                                                    ' . ($totalNeeded > 0 ? '
+                                                    <div class="mt-3">
+                                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                                            <div class="bg-primary-600 h-2 rounded-full transition-all" style="width: ' . $progressPercent . '%"></div>
+                                                        </div>
+                                                        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">' . $progressPercent . '% complete</div>
+                                                    </div>
+                                                    ' : '') . '
+                                                </div>
+                                                <div class="ml-4 flex items-center gap-2">
+                                                    <a href="' . $pickListUrl . '" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors">
+                                                        View Pick List
+                                                        <svg class="ml-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                                        </svg>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ';
+                                }
+                                
+                                $html .= '</div>';
+                                
+                                return new \Illuminate\Support\HtmlString($html);
+                            })
+                            ->columnSpanFull(),
+                    ]),
                 
                 Infolists\Components\Section::make('Packing List Items - Available Stock')
                     ->description('Shows original quantities and remaining available stock after orders have been picked.')
