@@ -5,6 +5,7 @@ namespace App\Filament\Resources\IncomingShipmentResource\Widgets;
 use Filament\Widgets\Widget;
 use App\Models\IncomingShipment;
 use Filament\Notifications\Notification;
+use App\Filament\Resources\IncomingShipmentResource\Pages\ViewIncomingShipment;
 
 class PickListHistoryWidget extends Widget
 {
