@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\IncomingShipmentResource\Pages;
 
 use App\Filament\Resources\IncomingShipmentResource;
+use App\Models\SockStyle;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Notifications\Notification;
 
 class CreateIncomingShipment extends CreateRecord
 {
@@ -67,9 +69,117 @@ class CreateIncomingShipment extends CreateRecord
         ];
     }
 
+    public function bulkAddProducts(): Actions\Action
+    {
+        return Actions\Action::make('bulkAddProducts')
+            ->label('Bulk Add Products')
+            ->icon('heroicon-o-plus-circle')
+            ->color('success')
+            ->form([
+                Forms\Components\Select::make('product_ids')
+                    ->label('Select Products')
+                    ->options(function () {
+                        return SockStyle::orderBy('name')->pluck('name', 'id');
+                    })
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->required()
+                    ->placeholder('Search and select products')
+                    ->helperText('Select multiple products to add to the shipment')
+                    ->maxItems(100),
+            ])
+            ->action(function (array $data) {
+                $productIds = $data['product_ids'] ?? [];
+                
+                if (empty($productIds)) {
+                    Notification::make()
+                        ->title('No products selected')
+                        ->body('Please select at least one product.')
+                        ->warning()
+                        ->send();
+                    return;
+                }
+                
+                // Get current items from form
+                $currentItems = $this->form->getState()['items'] ?? [];
+                if (!is_array($currentItems)) {
+                    $currentItems = [];
+                }
+                
+                // Create new items from selected products
+                $newItems = [];
+                foreach ($productIds as $productId) {
+                    $product = SockStyle::find($productId);
+                    if (!$product) {
+                        continue;
+                    }
+                    
+                    // Parse the product name to extract style/color
+                    $name = $product->name;
+                    $packagingStyle = $product->packaging_style ?? '';
+                    
+                    // Remove packaging style from name if it's at the end
+                    $nameWithoutPackaging = $name;
+                    if (!empty($packagingStyle)) {
+                        $nameWithoutPackaging = preg_replace('/\s*-\s*' . preg_quote($packagingStyle, '/') . '$/i', '', $name);
+                    }
+                    
+                    // Try to split style and color
+                    $parts = explode(' - ', $nameWithoutPackaging);
+                    $style = '';
+                    $color = '';
+                    if (count($parts) >= 2) {
+                        $style = trim($parts[0]);
+                        $color = trim($parts[1]);
+                    } else {
+                        $style = trim($nameWithoutPackaging);
+                        $color = '';
+                    }
+                    
+                    $newItems[] = [
+                        'product_id' => $productId,
+                        'carton_number' => '',
+                        'style' => $style,
+                        'color' => $color,
+                        'packing_way' => $packagingStyle ?: 'Hook',
+                        'quantity' => 1,
+                    ];
+                }
+                
+                // Merge new items with existing items
+                $mergedItems = array_merge($currentItems, $newItems);
+                
+                // Update the form data
+                $formData = $this->form->getState();
+                $formData['items'] = $mergedItems;
+                
+                // Fill the form with updated data
+                $this->form->fill($formData);
+                
+                Notification::make()
+                    ->title('Products added')
+                    ->body(count($newItems) . ' product(s) added to the shipment.')
+                    ->success()
+                    ->send();
+            });
+    }
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['created_by'] = auth()->id();
+        
+        // Remove the _selected checkbox field and product_id from items before saving
+        if (isset($data['items']) && is_array($data['items'])) {
+            foreach ($data['items'] as &$item) {
+                if (isset($item['_selected'])) {
+                    unset($item['_selected']);
+                }
+                if (isset($item['product_id'])) {
+                    unset($item['product_id']);
+                }
+            }
+        }
         
         return $data;
     }
@@ -162,7 +272,7 @@ class CreateIncomingShipment extends CreateRecord
                 $lastCarton = $carton;
             }
             
-            $packingWay = !empty($packingWay) ? (strtolower($packingWay) === 'hook' ? 'hook' : $packingWay) : 'hook';
+            $packingWay = !empty($packingWay) ? (strtolower($packingWay) === 'hook' ? 'Hook' : $packingWay) : 'Hook';
             
             $items[] = [
                 'carton_number' => $carton,
@@ -286,7 +396,7 @@ class CreateIncomingShipment extends CreateRecord
                     $lastCarton = $carton;
                 }
                 
-                $packingWay = !empty($packingWay) ? (strtolower($packingWay) === 'hook' ? 'hook' : $packingWay) : 'hook';
+                $packingWay = !empty($packingWay) ? (strtolower($packingWay) === 'hook' ? 'Hook' : $packingWay) : 'Hook';
                 
                 $items[] = [
                     'carton_number' => $carton,

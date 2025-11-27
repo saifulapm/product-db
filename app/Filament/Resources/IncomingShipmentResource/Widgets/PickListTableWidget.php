@@ -91,12 +91,12 @@ class PickListTableWidget extends Widget
                     $parsed = \App\Models\Order::parseOrderDescription($item['description']);
                     $style = $parsed['style'] ?? '';
                     $color = $parsed['color'] ?? '';
-                    $packingWay = $parsed['packing_way'] ?? 'hook';
+                    $packingWay = $parsed['packing_way'] ?? 'Hook';
                     $quantityNeeded = $item['quantity_required'] ?? $item['quantity'] ?? 0;
                 } else {
                     $style = $item['style'] ?? '';
                     $color = $item['color'] ?? '';
-                    $packingWay = $item['packing_way'] ?? 'hook';
+                    $packingWay = $item['packing_way'] ?? 'Hook';
                     $quantityNeeded = $item['quantity'] ?? 0;
                 }
                 
@@ -135,7 +135,7 @@ class PickListTableWidget extends Widget
                     $normalizedPackingWay = strtolower(trim($packingWay));
                     
                     if (strpos($normalizedPackingWay, 'hook') !== false) {
-                        $normalizedPackingWay = 'hook';
+                        $normalizedPackingWay = 'Hook';
                     } elseif (strpos($normalizedPackingWay, 'sleeve') !== false || strpos($normalizedPackingWay, 'wrap') !== false) {
                         $normalizedPackingWay = 'sleeve wrap';
                     }
@@ -146,7 +146,7 @@ class PickListTableWidget extends Widget
                         $shipPackingWay = strtolower(trim($shipItem['packing_way'] ?? ''));
                         
                         if (strpos($shipPackingWay, 'hook') !== false) {
-                            $shipPackingWay = 'hook';
+                            $shipPackingWay = 'Hook';
                         } elseif (strpos($shipPackingWay, 'sleeve') !== false || strpos($shipPackingWay, 'wrap') !== false) {
                             $shipPackingWay = 'sleeve wrap';
                         }

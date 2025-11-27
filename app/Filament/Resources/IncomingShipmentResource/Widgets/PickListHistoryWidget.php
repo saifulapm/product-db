@@ -176,9 +176,9 @@ class PickListHistoryWidget extends Widget
     protected function getListeners(): array
     {
         return [
-            'pick-list-updated' => 'refreshWidget',
-            '$refresh' => 'refreshWidget',
-            'refresh-widgets' => 'refreshWidget',
+            'pick-list-updated' => '$refresh',
+            '$refresh' => '$refresh',
+            'refresh-widgets' => '$refresh',
         ];
     }
     

@@ -6,6 +6,8 @@
     $pickListName = $pickList['name'] ?? 'Pick List ' . ($pickListIndex + 1);
     $record = $record ?? null;
     $selectedItems = $selectedItems ?? [];
+    $fileName = $pickList['filename'] ?? null;
+    $uploadedAt = $pickList['uploaded_at'] ?? '';
 @endphp
 
 <div 
@@ -38,6 +40,36 @@
     }" 
     style="width: 100%; margin: 0; padding: 0; overflow-x: auto;"
 >
+    <!-- Uploaded File Info -->
+    @if($fileName)
+        <div class="mb-4 px-6 py-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <div>
+                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                            Uploaded File: <span class="text-blue-600 dark:text-blue-400">{{ $fileName }}</span>
+                        </div>
+                        @if($uploadedAt)
+                            @php
+                                try {
+                                    $uploadedAtFormatted = \Carbon\Carbon::parse($uploadedAt)->format('M d, Y g:i A');
+                                } catch (\Exception $e) {
+                                    $uploadedAtFormatted = $uploadedAt;
+                                }
+                            @endphp
+                            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                Uploaded: {{ $uploadedAtFormatted }}
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+    
     <!-- Bulk Actions Bar -->
     <div 
         id="bulk-actions-{{ $pickListIndex }}" 

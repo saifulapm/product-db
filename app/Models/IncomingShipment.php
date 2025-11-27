@@ -18,6 +18,7 @@ class IncomingShipment extends Model
         'status',
         'items',
         'pick_lists',
+        'delivered_items',
         'notes',
         'created_by',
     ];
@@ -27,6 +28,7 @@ class IncomingShipment extends Model
         'received_date' => 'date',
         'items' => 'array',
         'pick_lists' => 'array',
+        'delivered_items' => 'array',
     ];
 
     /**
@@ -550,5 +552,7 @@ class IncomingShipment extends Model
         ];
     }
 }
+
+
 
 

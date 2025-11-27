@@ -116,12 +116,12 @@ class CartonPickingGuideWidget extends Widget
                     $parsed = \App\Models\Order::parseOrderDescription($item['description']);
                     $style = $parsed['style'] ?? '';
                     $color = $parsed['color'] ?? '';
-                    $packingWay = $parsed['packing_way'] ?? 'hook';
+                    $packingWay = $parsed['packing_way'] ?? 'Hook';
                     $quantityNeeded = $item['quantity_required'] ?? $item['quantity'] ?? 0;
                 } else {
                     $style = $item['style'] ?? '';
                     $color = $item['color'] ?? '';
-                    $packingWay = $item['packing_way'] ?? 'hook';
+                    $packingWay = $item['packing_way'] ?? 'Hook';
                     $quantityNeeded = $item['quantity'] ?? 0;
                 }
                 

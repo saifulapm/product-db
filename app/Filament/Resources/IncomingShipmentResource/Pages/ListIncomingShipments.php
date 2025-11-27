@@ -288,8 +288,8 @@ class ListIncomingShipments extends ListRecords
             
             // Normalize packing way
             $packingWay = !empty($packingWay) 
-                ? (strtolower(trim($packingWay)) === 'hook' ? 'hook' : trim($packingWay)) 
-                : 'hook';
+                ? (strtolower(trim($packingWay)) === 'hook' ? 'Hook' : trim($packingWay)) 
+                : 'Hook';
             
             // Preserve full style text (may contain spaces, hyphens, etc.)
             $style = trim($style);
@@ -471,8 +471,8 @@ class ListIncomingShipments extends ListRecords
                 
                 // Normalize packing way
                 $packingWay = !empty($packingWay) 
-                    ? (strtolower(trim($packingWay)) === 'hook' ? 'hook' : trim($packingWay)) 
-                    : 'hook';
+                    ? (strtolower(trim($packingWay)) === 'hook' ? 'Hook' : trim($packingWay)) 
+                    : 'Hook';
                 
                 // Preserve full style and color text (may contain spaces, slashes, etc.)
                 $style = trim($style);

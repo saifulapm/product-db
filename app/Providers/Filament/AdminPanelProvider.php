@@ -71,6 +71,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Embroidery'),
                 NavigationGroup::make('Patches'),
                 NavigationGroup::make('Socks'),
+                NavigationGroup::make('Sock Pre Orders'),
                 NavigationGroup::make('Bottles'),
                 NavigationGroup::make('Towels'),
                 NavigationGroup::make('Operations'),
@@ -253,3 +254,4 @@ class AdminPanelProvider extends PanelProvider
             });
     }
 }
+

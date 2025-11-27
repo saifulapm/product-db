@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\IncomingShipmentResource\Pages;
 use App\Filament\Resources\IncomingShipmentResource\RelationManagers;
 use App\Models\IncomingShipment;
+use App\Models\SockStyle;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -21,8 +22,8 @@ class IncomingShipmentResource extends Resource
     protected static ?string $navigationLabel = 'Incoming Shipments';
     protected static ?string $modelLabel = 'Incoming Shipment';
     protected static ?string $pluralModelLabel = 'Incoming Shipments';
-    protected static ?string $navigationGroup = 'Socks';
-    protected static ?int $navigationSort = 4;
+    protected static ?string $navigationGroup = 'Sock Pre Orders';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
@@ -61,75 +62,6 @@ class IncomingShipmentResource extends Resource
                     ])
                     ->columns(2),
                 
-                Forms\Components\Section::make('Dates')
-                    ->schema([
-                        Forms\Components\DatePicker::make('expected_date')
-                            ->label('Expected Date')
-                            ->displayFormat('M d, Y')
-                            ->native(false),
-                        Forms\Components\DatePicker::make('received_date')
-                            ->label('Received Date')
-                            ->displayFormat('M d, Y')
-                            ->native(false),
-                    ])
-                    ->columns(2),
-                
-                Forms\Components\Section::make('Items')
-                    ->description('Enter items from the packing slip. Each row represents one line item.')
-                    ->schema([
-                        Forms\Components\Repeater::make('items')
-                            ->schema([
-                                Forms\Components\TextInput::make('carton_number')
-                                    ->label('CTN#')
-                                    ->maxLength(50)
-                                    ->placeholder('e.g., 1, 2, 3')
-                                    ->helperText('Carton number from packing slip'),
-                                Forms\Components\TextInput::make('style')
-                                    ->label('Style')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->placeholder('e.g., Ballet, Scallop, Crew, Double Stripe')
-                                    ->helperText('Sock style name'),
-                                Forms\Components\TextInput::make('color')
-                                    ->label('Color')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->placeholder('e.g., Black, Blush / Cherry, White')
-                                    ->helperText('Color or color combination'),
-                                Forms\Components\Select::make('packing_way')
-                                    ->label('Packing Way')
-                                    ->options([
-                                        'hook' => 'Hook',
-                                        'Sleeve Wrap' => 'Sleeve Wrap',
-                                    ])
-                                    ->default('hook')
-                                    ->required(),
-                                Forms\Components\TextInput::make('quantity')
-                                    ->label('#PC/CTN')
-                                    ->numeric()
-                                    ->default(1)
-                                    ->required()
-                                    ->helperText('Pieces per carton'),
-                            ])
-                            ->defaultItems(1)
-                            ->addActionLabel('Add Item')
-                            ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => 
-                                ($state['style'] ?? '') . 
-                                ($state['color'] ? ' - ' . $state['color'] : '') . 
-                                ($state['quantity'] ? ' (' . $state['quantity'] . ' pcs)' : '')
-                            )
-                            ->columns(5),
-                    ]),
-                
-                Forms\Components\Section::make('Notes')
-                    ->schema([
-                        Forms\Components\Textarea::make('notes')
-                            ->label('Notes')
-                            ->rows(4)
-                            ->maxLength(2000)
-                            ->placeholder('Enter any additional notes about this shipment...'),
-                    ]),
             ]);
     }
 
@@ -145,14 +77,6 @@ class IncomingShipmentResource extends Resource
                     ->default('—'),
                 Tables\Columns\TextColumn::make('tracking_number')
                     ->label('Tracking Number')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('carrier')
-                    ->label('Carrier')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('supplier')
-                    ->label('Supplier')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
@@ -175,26 +99,6 @@ class IncomingShipmentResource extends Resource
                         default => $state,
                     })
                     ->sortable(),
-                Tables\Columns\TextColumn::make('expected_date')
-                    ->label('Expected Date')
-                    ->date('M d, Y')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('received_date')
-                    ->label('Received Date')
-                    ->date('M d, Y')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('items')
-                    ->label('Items')
-                    ->formatStateUsing(function ($state) {
-                        if (empty($state) || !is_array($state)) {
-                            return 'No items';
-                        }
-                        $count = count($state);
-                        $totalQty = array_sum(array_column($state, 'quantity'));
-                        $uniqueStyles = count(array_unique(array_column($state, 'style')));
-                        return "{$count} line(s) - {$uniqueStyles} style(s) - {$totalQty} total pcs";
-                    })
-                    ->wrap(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime('M d, Y')
@@ -210,24 +114,6 @@ class IncomingShipmentResource extends Resource
                         'delayed' => 'Delayed',
                         'cancelled' => 'Cancelled',
                     ]),
-                Tables\Filters\Filter::make('expected_date')
-                    ->form([
-                        Forms\Components\DatePicker::make('expected_from')
-                            ->label('Expected From'),
-                        Forms\Components\DatePicker::make('expected_until')
-                            ->label('Expected Until'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['expected_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('expected_date', '>=', $date),
-                            )
-                            ->when(
-                                $data['expected_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('expected_date', '<=', $date),
-                            );
-                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -238,7 +124,7 @@ class IncomingShipmentResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('expected_date', 'desc');
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getRelations(): array
