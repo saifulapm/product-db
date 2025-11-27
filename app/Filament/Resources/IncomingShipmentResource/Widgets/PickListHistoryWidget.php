@@ -31,6 +31,24 @@ class PickListHistoryWidget extends Widget
     public function mount(): void
     {
         // Widget will get shipment from parent or route
+        // No parameters needed - Filament widgets don't support mount parameters
+    }
+    
+    public function getShipment(): ?IncomingShipment
+    {
+        // Get shipment from parent page component
+        $parent = $this->getParent();
+        if ($parent instanceof ViewIncomingShipment) {
+            return $parent->record;
+        }
+        
+        // Fallback: try to get from route parameter
+        $recordId = request()->route('record');
+        if ($recordId) {
+            return IncomingShipment::find($recordId);
+        }
+        
+        return null;
     }
     
     public function deletePickList(int $pickListIndex): void
