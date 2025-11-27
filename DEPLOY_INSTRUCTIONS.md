@@ -1,12 +1,12 @@
 # Deployment Instructions
 
-## To deploy changes to live server (cad.clickoapps.com)
+## To deploy changes to live server (design.ethos-merch.com)
 
 ### Option 1: SSH into the server and pull changes
 
 1. SSH into your live server:
    ```bash
-   ssh user@cad.clickoapps.com
+   ssh user@design.ethos-merch.com
    # or whatever your SSH connection string is
    ```
 
@@ -17,27 +17,40 @@
 
 3. Pull the latest changes:
    ```bash
-   git pull product-db main
-   # or if using origin:
    git pull origin main
    ```
 
-4. Clear Laravel caches:
+4. **Install new dependencies** (CRITICAL - includes PDF parser):
+   ```bash
+   composer install --optimize-autoloader --no-dev
+   ```
+
+5. **Run new migrations** (CRITICAL - creates new tables):
+   ```bash
+   php artisan migrate --force
+   ```
+
+6. Clear Laravel caches:
    ```bash
    php artisan config:clear
    php artisan cache:clear
    php artisan view:clear
    php artisan route:clear
+   php artisan route:cache
+   php artisan config:cache
    ```
 
-5. If needed, rebuild assets:
+7. If needed, rebuild assets:
    ```bash
    npm run build
    ```
 
 ### Option 2: If using a deployment script
 
-Run your deployment script on the server.
+Run your deployment script on the server, ensuring it includes:
+- `composer install --optimize-autoloader --no-dev`
+- `php artisan migrate --force`
+- Cache clearing commands
 
 ### Option 3: If using CI/CD
 
@@ -45,9 +58,23 @@ The changes should automatically deploy if you have CI/CD set up (GitHub Actions
 
 ---
 
-**Note:** The changes pushed to GitHub include:
-- Fixed file upload handling for color codes
-- Made CAD Download URL field optional (nullable)
+## Latest Changes (Nov 26, 2025)
 
-Make sure to pull these changes on the live server for them to take effect.
+**New Features:**
+- Incoming Shipments resource with packing list import (CSV, Excel, PDF)
+- Orders resource for splitting shipments into client orders
+- OrderItems for tracking allocations
+- Carton-level stock tracking
+
+**Database Changes:**
+- New tables: `incoming_shipments`, `orders`, `order_items`
+- Database default changed from SQLite to MySQL
+
+**Dependencies:**
+- Added `smalot/pdfparser` for PDF import support
+
+**IMPORTANT:** After pulling, you MUST:
+1. Run `composer install` to install the new PDF parser dependency
+2. Run `php artisan migrate --force` to create the new tables
+3. Clear all caches
 

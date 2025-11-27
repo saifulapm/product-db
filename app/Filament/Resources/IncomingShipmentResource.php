@@ -30,6 +30,11 @@ class IncomingShipmentResource extends Resource
             ->schema([
                 Forms\Components\Section::make('Shipment Information')
                     ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Shipment Name')
+                            ->maxLength(255)
+                            ->placeholder('e.g., BDR1399 Shipment, November Order, etc.')
+                            ->helperText('A descriptive name for this shipment'),
                         Forms\Components\TextInput::make('tracking_number')
                             ->label('Tracking Number')
                             ->maxLength(255)
@@ -132,6 +137,12 @@ class IncomingShipmentResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Name')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->default('—'),
                 Tables\Columns\TextColumn::make('tracking_number')
                     ->label('Tracking Number')
                     ->searchable()
@@ -243,6 +254,7 @@ class IncomingShipmentResource extends Resource
             'index' => Pages\ListIncomingShipments::route('/'),
             'create' => Pages\CreateIncomingShipment::route('/create'),
             'view' => Pages\ViewIncomingShipment::route('/{record}'),
+            'view-pick-list' => Pages\ViewPickList::route('/{shipmentId}/pick-list/{pickListIndex}'),
             'edit' => Pages\EditIncomingShipment::route('/{record}/edit'),
         ];
     }

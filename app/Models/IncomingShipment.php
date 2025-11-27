@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class IncomingShipment extends Model
 {
     protected $fillable = [
+        'name',
         'tracking_number',
         'carrier',
         'supplier',
@@ -16,6 +17,7 @@ class IncomingShipment extends Model
         'received_date',
         'status',
         'items',
+        'pick_lists',
         'notes',
         'created_by',
     ];
@@ -24,6 +26,7 @@ class IncomingShipment extends Model
         'expected_date' => 'date',
         'received_date' => 'date',
         'items' => 'array',
+        'pick_lists' => 'array',
     ];
 
     /**
@@ -79,10 +82,45 @@ class IncomingShipment extends Model
     }
 
     /**
-     * Get available quantities grouped by carton/item index.
-     * Returns array with item index, carton, style, color, packing_way, original qty, allocated qty, available qty
+     * Get picked quantities from pick lists by item index.
+     * This is called from the ViewIncomingShipment page component.
      */
-    public function getAvailableQuantitiesByCarton(): array
+    public function getPickedQuantitiesByIndex(array $pickLists = []): array
+    {
+        $pickedByIndex = [];
+        
+        if (empty($pickLists) || !is_array($pickLists)) {
+            return $pickedByIndex;
+        }
+        
+        // Iterate through all pick lists and their picked items
+        foreach ($pickLists as $pickList) {
+            $pickedItems = $pickList['picked_items'] ?? [];
+            if (empty($pickedItems) || !is_array($pickedItems)) {
+                continue;
+            }
+            
+            foreach ($pickedItems as $pickedItem) {
+                $itemIndex = $pickedItem['shipment_item_index'] ?? null;
+                $quantityPicked = $pickedItem['quantity_picked'] ?? 0;
+                
+                if ($itemIndex !== null && $quantityPicked > 0) {
+                    if (!isset($pickedByIndex[$itemIndex])) {
+                        $pickedByIndex[$itemIndex] = 0;
+                    }
+                    $pickedByIndex[$itemIndex] += $quantityPicked;
+                }
+            }
+        }
+        
+        return $pickedByIndex;
+    }
+
+    /**
+     * Get available quantities grouped by carton/item index.
+     * Returns array with item index, carton, style, color, packing_way, original qty, allocated qty, picked qty, available qty
+     */
+    public function getAvailableQuantitiesByCarton(array $pickLists = []): array
     {
         if (empty($this->items) || !is_array($this->items)) {
             return [];
@@ -98,6 +136,9 @@ class IncomingShipment extends Model
             ->get()
             ->keyBy('shipment_item_index');
 
+        // Get picked quantities from pick lists
+        $pickedByIndex = $this->getPickedQuantitiesByIndex($pickLists);
+
         foreach ($this->items as $index => $item) {
             $style = $item['style'] ?? '';
             $color = $item['color'] ?? '';
@@ -106,7 +147,12 @@ class IncomingShipment extends Model
             
             // Get allocated quantity for this specific item index
             $allocatedQty = $allocationsByIndex->get($index)->total_allocated ?? 0;
-            $availableQty = max(0, $originalQty - $allocatedQty);
+            
+            // Get picked quantity for this specific item index
+            $pickedQty = $pickedByIndex[$index] ?? 0;
+            
+            // Available = original - allocated - picked
+            $availableQty = max(0, $originalQty - $allocatedQty - $pickedQty);
             
             $result[] = [
                 'index' => $index,
@@ -116,6 +162,7 @@ class IncomingShipment extends Model
                 'packing_way' => $packingWay,
                 'original_quantity' => $originalQty,
                 'allocated_quantity' => $allocatedQty,
+                'picked_quantity' => $pickedQty,
                 'available_quantity' => $availableQty,
             ];
         }
@@ -125,25 +172,78 @@ class IncomingShipment extends Model
 
     /**
      * Get cartons that have available stock for a specific item.
+     * Returns only cartons with available quantity > 0, sorted by carton number.
      */
-    public function getAvailableCartonsForItem(string $style, string $color, string $packingWay, int $quantityNeeded): array
+    public function getAvailableCartonsForItem(string $style, string $color, string $packingWay, int $quantityNeeded, array $pickLists = []): array
     {
-        $availableItems = $this->getAvailableQuantitiesByCarton();
+        $availableItems = $this->getAvailableQuantitiesByCarton($pickLists);
         $matchingCartons = [];
+        $totalAvailable = 0;
+        
+        // Normalize inputs for comparison
+        $normalizedStyle = strtolower(trim($style));
+        $normalizedColor = strtolower(trim($color));
+        $normalizedPackingWay = strtolower(trim($packingWay));
+        
+        // Normalize packing way variations
+        if ($normalizedPackingWay === 'hook' || $normalizedPackingWay === 'sleeve wrap') {
+            // Already normalized
+        } elseif (strpos($normalizedPackingWay, 'hook') !== false) {
+            $normalizedPackingWay = 'hook';
+        } elseif (strpos($normalizedPackingWay, 'sleeve') !== false || strpos($normalizedPackingWay, 'wrap') !== false) {
+            $normalizedPackingWay = 'sleeve wrap';
+        }
         
         foreach ($availableItems as $item) {
-            if (strtolower(trim($item['style'])) === strtolower(trim($style)) &&
-                strtolower(trim($item['color'])) === strtolower(trim($color)) &&
-                strtolower(trim($item['packing_way'])) === strtolower(trim($packingWay)) &&
-                $item['available_quantity'] > 0) {
+            $itemStyle = strtolower(trim($item['style'] ?? ''));
+            $itemColor = strtolower(trim($item['color'] ?? ''));
+            $itemPackingWay = strtolower(trim($item['packing_way'] ?? ''));
+            
+            // Normalize item packing way
+            if (strpos($itemPackingWay, 'hook') !== false) {
+                $itemPackingWay = 'hook';
+            } elseif (strpos($itemPackingWay, 'sleeve') !== false || strpos($itemPackingWay, 'wrap') !== false) {
+                $itemPackingWay = 'sleeve wrap';
+            }
+            
+            // Clean up color - remove trailing dashes
+            $itemColor = trim($itemColor, ' -');
+            $normalizedColor = trim($normalizedColor, ' -');
+            
+            // Match with flexible comparison
+            $styleMatch = $itemStyle === $normalizedStyle || 
+                         (strpos($itemStyle, $normalizedStyle) !== false || strpos($normalizedStyle, $itemStyle) !== false);
+            $colorMatch = $itemColor === $normalizedColor || 
+                         (strpos($itemColor, $normalizedColor) !== false || strpos($normalizedColor, $itemColor) !== false);
+            $packingMatch = $itemPackingWay === $normalizedPackingWay;
+            
+            // Only include cartons with available quantity > 0
+            if ($styleMatch && $colorMatch && $packingMatch && ($item['available_quantity'] ?? 0) > 0) {
                 $matchingCartons[] = [
                     'carton_number' => $item['carton_number'],
                     'available_quantity' => $item['available_quantity'],
-                    'index' => $item['index'],
+                    'shipment_item_index' => $item['index'],
                 ];
+                $totalAvailable += $item['available_quantity'];
             }
         }
         
-        return $matchingCartons;
+        // Sort by carton number for consistent picking (lowest carton number first)
+        usort($matchingCartons, function($a, $b) {
+            // Try numeric comparison first
+            if (is_numeric($a['carton_number']) && is_numeric($b['carton_number'])) {
+                return (int)$a['carton_number'] <=> (int)$b['carton_number'];
+            }
+            // Fallback to string comparison
+            return strcmp($a['carton_number'], $b['carton_number']);
+        });
+
+        return [
+            'cartons' => $matchingCartons, // Only cartons with available stock
+            'total_available' => $totalAvailable,
+            'can_fulfill' => $totalAvailable >= $quantityNeeded,
+        ];
     }
 }
+
+

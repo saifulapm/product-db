@@ -303,6 +303,7 @@
                     <table class="w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-900">
                             <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tracking #</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Carrier</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Supplier</th>
@@ -315,6 +316,13 @@
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($this->getIncomingShipments() as $shipment)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-white">
+                                        @if($shipment->name)
+                                            {{ $shipment->name }}
+                                        @else
+                                            <span class="text-gray-400 dark:text-gray-500">—</span>
+                                        @endif
+                                    </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                         @if($shipment->tracking_number)
                                             {{ $shipment->tracking_number }}
@@ -381,7 +389,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                                         No incoming shipments yet. 
                                         <a 
                                             href="{{ \App\Filament\Resources\IncomingShipmentResource::getUrl('create') }}"

@@ -68,26 +68,66 @@ class Order extends Model
         // Remove BODYROK prefix if present
         $description = preg_replace('/^BODYROK\s+/i', '', trim($description));
         
-        // Split by " - "
+        // Remove any trailing quantity that might have been merged (e.g., "Hook 50" -> "Hook")
+        $description = preg_replace('/\s+\d+\s*(?:pcs|pieces|qty|quantity)?\s*$/i', '', $description);
+        
+        // Try splitting by " - " first
         $parts = explode(' - ', $description);
         
-        if (count($parts) < 3) {
-            return ['style' => '', 'color' => '', 'packing_way' => ''];
+        if (count($parts) >= 3) {
+            // Standard format: "Style Sock - Color - Packing Way"
+            $stylePart = trim($parts[0]);
+            $color = trim($parts[1]);
+            $packingWayRaw = trim($parts[2]);
+            
+            // Remove any trailing numbers from packing way (e.g., "Hook 50" -> "Hook")
+            $packingWay = preg_replace('/\s+\d+\s*$/i', '', $packingWayRaw);
+            $packingWay = trim($packingWay);
+        } elseif (count($parts) === 2) {
+            // Format might be: "Style Sock - Color Hook" or "Style Sock - Color Hook 50"
+            $stylePart = trim($parts[0]);
+            $colorAndPacking = trim($parts[1]);
+            
+            // Remove trailing quantity first
+            $colorAndPacking = preg_replace('/\s+\d+\s*(?:pcs|pieces|qty|quantity)?\s*$/i', '', $colorAndPacking);
+            
+            // Try to extract packing way from the end (Hook, Sleeve Wrap)
+            if (preg_match('/\s+(Hook|Sleeve\s*Wrap)$/i', $colorAndPacking, $matches)) {
+                $packingWay = strtolower(trim($matches[1])) === 'hook' ? 'hook' : trim($matches[1]);
+                $color = trim(preg_replace('/\s+(Hook|Sleeve\s*Wrap)$/i', '', $colorAndPacking));
+            } else {
+                // Fallback: assume hook if not found
+                $color = $colorAndPacking;
+                $packingWay = 'hook';
+            }
+        } else {
+            // Single part - try to extract what we can
+            $stylePart = trim($description);
+            $color = '';
+            $packingWay = 'hook';
+            
+            // Remove trailing quantity
+            $stylePart = preg_replace('/\s+\d+\s*(?:pcs|pieces|qty|quantity)?\s*$/i', '', $stylePart);
+            
+            // Try to find packing way at the end
+            if (preg_match('/\s+(Hook|Sleeve\s*Wrap)$/i', $stylePart, $matches)) {
+                $packingWay = strtolower(trim($matches[1])) === 'hook' ? 'hook' : trim($matches[1]);
+                $stylePart = trim(preg_replace('/\s+(Hook|Sleeve\s*Wrap)$/i', '', $stylePart));
+            }
         }
-        
-        $stylePart = trim($parts[0]);
-        $color = trim($parts[1]);
-        $packingWay = trim($parts[2]);
         
         // Remove "Sock" suffix from style if present
         $style = preg_replace('/\s+Sock$/i', '', $stylePart);
         
         // Normalize packing way (Hook -> hook, Sleeve Wrap -> Sleeve Wrap)
-        $packingWay = strtolower($packingWay) === 'hook' ? 'hook' : $packingWay;
+        $packingWay = strtolower($packingWay) === 'hook' ? 'hook' : trim($packingWay);
+        
+        // Clean up color - remove trailing dashes or spaces
+        $color = trim($color, ' -');
         
         return [
-            'style' => $style,
-            'color' => $color,
+            'style' => trim($style),
+            'color' => trim($color),
             'packing_way' => $packingWay,
         ];
     }
