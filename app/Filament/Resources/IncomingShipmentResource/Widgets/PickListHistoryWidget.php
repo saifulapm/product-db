@@ -48,23 +48,26 @@ class PickListHistoryWidget extends Widget
     
     public function getPickLists(): array
     {
-        if (!$this->shipment) {
-            $this->loadShipment();
-        }
+        // Always reload shipment to get latest data
+        $this->loadShipment();
         
         if (!$this->shipment) {
-            \Log::warning('PickListHistoryWidget: No shipment found');
             return [];
         }
         
+        // Refresh to get latest pick_lists from database
         $this->shipment->refresh();
         $pickLists = $this->shipment->pick_lists ?? [];
         
-        \Log::info('PickListHistoryWidget: Retrieved pick lists', [
-            'shipment_id' => $this->shipment->id,
-            'pick_lists_count' => is_array($pickLists) ? count($pickLists) : 0,
-            'pick_lists' => $pickLists,
-        ]);
+        // Handle JSON string if it's not already decoded (shouldn't happen with array cast, but just in case)
+        if (is_string($pickLists)) {
+            $decoded = json_decode($pickLists, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $pickLists = $decoded;
+            } else {
+                $pickLists = [];
+            }
+        }
         
         if (empty($pickLists) || !is_array($pickLists)) {
             return [];
