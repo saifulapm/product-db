@@ -1718,11 +1718,20 @@ class ViewIncomingShipment extends ViewRecord
                             // We have both description and quantity on same line
                             $parsed = \App\Models\Order::parseOrderDescription($line);
                             if (!empty($parsed['style'])) {
+                                // Try to extract order number from line
+                                $orderNumber = null;
+                                if (preg_match('/\b([A-Z]{2,}\d{3,})\b/i', $line, $orderMatches)) {
+                                    $orderNumber = strtoupper($orderMatches[1]);
+                                } elseif (preg_match('/order\s*[#:]?\s*([A-Z0-9-]+)/i', $line, $orderMatches)) {
+                                    $orderNumber = strtoupper(trim($orderMatches[1]));
+                                }
+                                
                                 $items[] = [
                                     'style' => $parsed['style'],
                                     'color' => $parsed['color'],
                                     'packing_way' => $parsed['packing_way'],
                                     'quantity' => $quantityFromLine,
+                                    'order_number' => $orderNumber,
                                 ];
                             } else {
                                 \Log::warning('Could not parse line with quantity', [
