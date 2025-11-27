@@ -11,13 +11,6 @@ class PickListHistoryWidget extends Widget
 {
     protected static string $view = 'filament.resources.incoming-shipment-resource.widgets.pick-list-history-widget';
     
-    public ?IncomingShipment $shipment = null;
-    
-    public function mount(IncomingShipment $shipment): void
-    {
-        $this->shipment = $shipment;
-    }
-    
     public function getPickLists(): array
     {
         $shipment = $this->getShipment();
@@ -33,6 +26,11 @@ class PickListHistoryWidget extends Widget
         }
         
         return $pickLists;
+    }
+    
+    public function mount(): void
+    {
+        // Widget will get shipment from parent or route
     }
     
     public function deletePickList(int $pickListIndex): void
