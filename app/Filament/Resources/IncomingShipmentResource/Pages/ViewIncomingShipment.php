@@ -118,12 +118,12 @@ class ViewIncomingShipment extends ViewRecord
         // Reload pick lists to ensure fresh data
         $this->loadPickLists();
         
-        // Refresh the component and force page reload to update available quantities
+        // Refresh the component to update available quantities
         $this->dispatch('pick-list-updated');
         $this->dispatch('$refresh');
         
         // Force reload the page to update the packing list table with new available quantities
-        return redirect()->to(\App\Filament\Resources\IncomingShipmentResource::getUrl('view', ['record' => $this->record->id]));
+        redirect()->to(\App\Filament\Resources\IncomingShipmentResource::getUrl('view', ['record' => $this->record->id]));
     }
     
     public function bulkMarkItemsAsPicked(int $pickListIndex, array $itemData): void
