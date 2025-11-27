@@ -934,7 +934,7 @@ class ViewIncomingShipment extends ViewRecord
                                                         if (!noResults) {
                                                             noResults = document.createElement("tr");
                                                             noResults.id = "packing-list-no-results";
-                                                            noResults.innerHTML = \'<td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No items found matching your search.</td>\';
+                                                            noResults.innerHTML = \'<td colspan="9" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No items found matching your search.</td>\';
                                                             table.querySelector("tbody").appendChild(noResults);
                                                         }
                                                         noResults.style.display = "";
@@ -1121,7 +1121,7 @@ class ViewIncomingShipment extends ViewRecord
                                                     if (!noResults) {
                                                         noResults = document.createElement("tr");
                                                         noResults.id = "packing-list-no-results";
-                                                        noResults.innerHTML = \'<td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No items found matching your search.</td>\';
+                                                        noResults.innerHTML = \'<td colspan="9" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No items found matching your search.</td>\';
                                                         table.querySelector("tbody").appendChild(noResults);
                                                     }
                                                     noResults.style.display = "";
