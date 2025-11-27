@@ -898,7 +898,7 @@ class ViewIncomingShipment extends ViewRecord
                     ]),
                 
                 Infolists\Components\Section::make('Packing List Items - Available Stock')
-                    ->description('Shows original quantities and remaining available stock after orders have been picked.')
+                    ->description('Tracks all inventory: Original quantities, order allocations (with box breakdown), allocated quantities, picked quantities, and remaining available stock. Updates automatically when items are marked as picked.')
                     ->columnSpanFull()
                     ->schema([
                         Infolists\Components\TextEntry::make('search_input')
@@ -1099,6 +1099,11 @@ class ViewIncomingShipment extends ViewRecord
                                         $allocationsHtml = '<span class="text-gray-400 dark:text-gray-500 text-xs">—</span>';
                                     }
                                     
+                                    // Calculate tracking status
+                                    $isFullyPicked = $availableQty === 0 && $originalQty > 0;
+                                    $isPartiallyPicked = $pickedQty > 0 && $availableQty > 0;
+                                    $hasAllocations = $allocatedQty > 0;
+                                    
                                     // Color code: red if empty, yellow if low, green if available
                                     $availableClass = $availableQty === 0 
                                         ? 'text-red-600 dark:text-red-400 font-semibold' 
@@ -1108,15 +1113,39 @@ class ViewIncomingShipment extends ViewRecord
                                     
                                     $pickedClass = $pickedQty > 0 ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-500 dark:text-gray-400';
                                     
-                                    $html .= '<tr class="packing-list-row hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                    // Add visual indicator for tracking status
+                                    $rowClass = '';
+                                    if ($isFullyPicked) {
+                                        $rowClass = 'bg-green-50 dark:bg-green-900/20';
+                                    } elseif ($isPartiallyPicked) {
+                                        $rowClass = 'bg-blue-50 dark:bg-blue-900/20';
+                                    }
+                                    
+                                    // Show tracking breakdown tooltip
+                                    $trackingInfo = [];
+                                    if ($originalQty > 0) {
+                                        $trackingInfo[] = 'Original: ' . number_format($originalQty);
+                                    }
+                                    if ($allocatedQty > 0) {
+                                        $trackingInfo[] = 'Allocated: ' . number_format($allocatedQty);
+                                    }
+                                    if ($pickedQty > 0) {
+                                        $trackingInfo[] = 'Picked: ' . number_format($pickedQty);
+                                    }
+                                    if ($availableQty >= 0) {
+                                        $trackingInfo[] = 'Available: ' . number_format($availableQty);
+                                    }
+                                    $trackingTooltip = htmlspecialchars(implode(' | ', $trackingInfo));
+                                    
+                                    $html .= '<tr class="packing-list-row hover:bg-gray-50 dark:hover:bg-gray-700/50 ' . $rowClass . '" title="' . $trackingTooltip . '">
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700 font-medium">' . htmlspecialchars($carton) . '</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">' . htmlspecialchars($style) . '</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">' . htmlspecialchars($color) . '</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">' . htmlspecialchars($packingWay) . '</td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right border-r border-gray-200 dark:border-gray-700">' . number_format($originalQty) . '</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right border-r border-gray-200 dark:border-gray-700 font-medium">' . number_format($originalQty) . '</td>
                                         <td class="px-4 py-3 text-sm border-r border-gray-200 dark:border-gray-700">' . $allocationsHtml . '</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right border-r border-gray-200 dark:border-gray-700">' . number_format($allocatedQty) . '</td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium border-r border-gray-200 dark:border-gray-700 ' . $pickedClass . '">' . number_format($pickedQty) . '</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium border-r border-gray-200 dark:border-gray-700 ' . $pickedClass . '">' . number_format($pickedQty) . ($isFullyPicked ? ' ✓' : '') . '</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium ' . $availableClass . '">' . number_format($availableQty) . '</td>
                                     </tr>';
                                 }
