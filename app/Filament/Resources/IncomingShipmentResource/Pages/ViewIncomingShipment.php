@@ -977,6 +977,9 @@ class ViewIncomingShipment extends ViewRecord
                                         
                                         // Get available quantities by carton (including picked items from pick lists)
                                         $availableQuantities = $record->getAvailableQuantitiesByCarton($this->pickLists ?? []);
+                                        
+                                        // Get order allocations per item
+                                        $orderAllocations = $record->getOrderAllocationsByItem($this->pickLists ?? []);
                                 
                                 // Break out of Filament's section padding and ensure full width
                                 $html = '<div style="width: 100%; margin: 0; padding: 0; overflow-x: auto;">
@@ -992,14 +995,15 @@ class ViewIncomingShipment extends ViewRecord
                                     <table id="packing-list-table" class="w-full divide-y divide-gray-200 dark:divide-gray-700 border-x-0 border-y border-gray-200 dark:border-gray-700" style="width: 100%; table-layout: fixed; margin: 0;">
                                     <thead class="bg-gray-50 dark:bg-gray-900">
                                         <tr>
-                                            <th style="width: 8%;" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">CTN#</th>
-                                            <th style="width: 20%;" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Style</th>
-                                            <th style="width: 20%;" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Color</th>
-                                            <th style="width: 15%;" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Packing Way</th>
-                                            <th style="width: 10%;" class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Original Qty</th>
-                                            <th style="width: 10%;" class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Allocated</th>
-                                            <th style="width: 10%;" class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Picked</th>
-                                            <th style="width: 13%;" class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Available</th>
+                                            <th style="width: 7%;" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">CTN#</th>
+                                            <th style="width: 18%;" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Style</th>
+                                            <th style="width: 18%;" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Color</th>
+                                            <th style="width: 12%;" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Packing Way</th>
+                                            <th style="width: 8%;" class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Original Qty</th>
+                                            <th style="width: 15%;" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Order Allocations</th>
+                                            <th style="width: 8%;" class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Allocated</th>
+                                            <th style="width: 7%;" class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-r border-gray-200 dark:border-gray-700">Picked</th>
+                                            <th style="width: 7%;" class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Available</th>
                                         </tr>
                                     </thead>
                                     <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">';
@@ -1010,6 +1014,7 @@ class ViewIncomingShipment extends ViewRecord
                                 $totalAvailable = 0;
                                 
                                 foreach ($availableQuantities as $item) {
+                                    $itemIndex = $item['index'];
                                     $carton = $item['carton_number'] ?: '—';
                                     $style = $item['style'] ?: '—';
                                     $color = $item['color'] ?: '—';
@@ -1023,6 +1028,28 @@ class ViewIncomingShipment extends ViewRecord
                                     $totalAllocated += $allocatedQty;
                                     $totalPicked += $pickedQty;
                                     $totalAvailable += $availableQty;
+                                    
+                                    // Get order allocations for this item
+                                    $itemAllocations = $orderAllocations[$itemIndex] ?? [];
+                                    $totalAllocatedFromOrders = 0;
+                                    $allocationsHtml = '';
+                                    
+                                    if (!empty($itemAllocations)) {
+                                        $allocationsList = [];
+                                        foreach ($itemAllocations as $allocation) {
+                                            $orderNum = htmlspecialchars($allocation['order_number']);
+                                            $qty = $allocation['quantity'];
+                                            $totalAllocatedFromOrders += $qty;
+                                            $allocationsList[] = '<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                <span class="font-semibold">' . $orderNum . '</span>
+                                                <span>×</span>
+                                                <span>' . number_format($qty) . '</span>
+                                            </span>';
+                                        }
+                                        $allocationsHtml = '<div class="flex flex-wrap gap-1">' . implode('', $allocationsList) . '</div>';
+                                    } else {
+                                        $allocationsHtml = '<span class="text-gray-400 dark:text-gray-500 text-xs">—</span>';
+                                    }
                                     
                                     // Color code: red if empty, yellow if low, green if available
                                     $availableClass = $availableQty === 0 
@@ -1039,6 +1066,7 @@ class ViewIncomingShipment extends ViewRecord
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">' . htmlspecialchars($color) . '</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">' . htmlspecialchars($packingWay) . '</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white text-right border-r border-gray-200 dark:border-gray-700">' . number_format($originalQty) . '</td>
+                                        <td class="px-4 py-3 text-sm border-r border-gray-200 dark:border-gray-700">' . $allocationsHtml . '</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400 text-right border-r border-gray-200 dark:border-gray-700">' . number_format($allocatedQty) . '</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium border-r border-gray-200 dark:border-gray-700 ' . $pickedClass . '">' . number_format($pickedQty) . '</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-right font-medium ' . $availableClass . '">' . number_format($availableQty) . '</td>
@@ -1050,6 +1078,7 @@ class ViewIncomingShipment extends ViewRecord
                                         <tr>
                                             <td colspan="4" class="px-4 py-3 text-right text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">Totals:</td>
                                             <td class="px-4 py-3 text-right text-sm text-gray-900 dark:text-white border-r border-gray-200 dark:border-gray-700">' . number_format($totalOriginal) . '</td>
+                                            <td class="px-4 py-3 text-sm border-r border-gray-200 dark:border-gray-700">—</td>
                                             <td class="px-4 py-3 text-right text-sm text-gray-500 dark:text-gray-400 border-r border-gray-200 dark:border-gray-700">' . number_format($totalAllocated) . '</td>
                                             <td class="px-4 py-3 text-right text-sm text-blue-600 dark:text-blue-400 border-r border-gray-200 dark:border-gray-700">' . number_format($totalPicked) . '</td>
                                             <td class="px-4 py-3 text-right text-sm text-green-600 dark:text-green-400">' . number_format($totalAvailable) . '</td>

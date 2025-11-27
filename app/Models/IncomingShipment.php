@@ -117,6 +117,110 @@ class IncomingShipment extends Model
     }
 
     /**
+     * Get order allocations per packing list item.
+     * Returns array keyed by shipment_item_index with order allocations.
+     * Format: [index => [['order_number' => 'BDR1399', 'quantity' => 50], ...]]
+     */
+    public function getOrderAllocationsByItem(array $pickLists = []): array
+    {
+        $allocationsByItem = [];
+        
+        if (empty($pickLists) || !is_array($pickLists)) {
+            return $allocationsByItem;
+        }
+        
+        if (empty($this->items) || !is_array($this->items)) {
+            return $allocationsByItem;
+        }
+        
+        // Extract order numbers from pick list names
+        // Format: "Order BDR1399" -> "BDR1399", "BDR1399" -> "BDR1399"
+        $extractOrderNumber = function($pickListName) {
+            // Remove "Order" prefix if present
+            $name = trim($pickListName);
+            $name = preg_replace('/^order\s+/i', '', $name);
+            return trim($name);
+        };
+        
+        // Normalize strings for comparison
+        $normalize = function($str) {
+            return strtolower(trim($str));
+        };
+        
+        // Normalize packing way variations
+        $normalizePackingWay = function($packingWay) {
+            $normalized = strtolower(trim($packingWay));
+            if ($normalized === 'hook' || $normalized === 'sleeve wrap') {
+                return $normalized;
+            }
+            if (strpos($normalized, 'hook') !== false) {
+                return 'hook';
+            }
+            if (strpos($normalized, 'sleeve') !== false || strpos($normalized, 'wrap') !== false) {
+                return 'sleeve wrap';
+            }
+            return $normalized;
+        };
+        
+        // Build lookup table for packing list items by style/color/packing way
+        foreach ($pickLists as $pickListIndex => $pickList) {
+            $orderNumber = $extractOrderNumber($pickList['name'] ?? '');
+            if (empty($orderNumber)) {
+                continue;
+            }
+            
+            $pickListItems = $pickList['items'] ?? [];
+            
+            foreach ($pickListItems as $pickListItem) {
+                $style = $normalize($pickListItem['style'] ?? '');
+                $color = $normalize($pickListItem['color'] ?? '');
+                $packingWay = $normalizePackingWay($pickListItem['packing_way'] ?? '');
+                $quantityNeeded = $pickListItem['quantity'] ?? $pickListItem['quantity_required'] ?? 0;
+                
+                if (empty($style) && empty($color)) {
+                    continue;
+                }
+                
+                // Find matching packing list items
+                foreach ($this->items as $shipmentItemIndex => $shipmentItem) {
+                    $shipmentStyle = $normalize($shipmentItem['style'] ?? '');
+                    $shipmentColor = $normalize($shipmentItem['color'] ?? '');
+                    $shipmentPackingWay = $normalizePackingWay($shipmentItem['packing_way'] ?? '');
+                    
+                    // Match by style and color (packing way is flexible)
+                    $styleMatch = empty($style) || empty($shipmentStyle) || $shipmentStyle === $style || strpos($shipmentStyle, $style) !== false || strpos($style, $shipmentStyle) !== false;
+                    $colorMatch = empty($color) || empty($shipmentColor) || $shipmentColor === $color || strpos($shipmentColor, $color) !== false || strpos($color, $shipmentColor) !== false;
+                    
+                    if ($styleMatch && $colorMatch) {
+                        if (!isset($allocationsByItem[$shipmentItemIndex])) {
+                            $allocationsByItem[$shipmentItemIndex] = [];
+                        }
+                        
+                        // Check if this order already has an allocation for this item
+                        $found = false;
+                        foreach ($allocationsByItem[$shipmentItemIndex] as &$allocation) {
+                            if ($allocation['order_number'] === $orderNumber) {
+                                $allocation['quantity'] += $quantityNeeded;
+                                $found = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!$found) {
+                            $allocationsByItem[$shipmentItemIndex][] = [
+                                'order_number' => $orderNumber,
+                                'quantity' => $quantityNeeded,
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+        
+        return $allocationsByItem;
+    }
+
+    /**
      * Get available quantities grouped by carton/item index.
      * Returns array with item index, carton, style, color, packing_way, original qty, allocated qty, picked qty, available qty
      */
