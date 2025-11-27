@@ -5,21 +5,56 @@ namespace App\Filament\Resources\IncomingShipmentResource\Widgets;
 use Filament\Widgets\Widget;
 use App\Models\IncomingShipment;
 use Filament\Notifications\Notification;
-use App\Filament\Resources\IncomingShipmentResource\Pages\ViewIncomingShipment;
 
 class PickListHistoryWidget extends Widget
 {
     protected static string $view = 'filament.resources.incoming-shipment-resource.widgets.pick-list-history-widget';
     
+    protected int | string | array $columnSpan = 'full';
+    
+    public ?IncomingShipment $shipment = null;
+    
+    public static function canView(): bool
+    {
+        $route = request()->route();
+        if (!$route) {
+            return false;
+        }
+        
+        $routeName = $route->getName();
+        return str_contains($routeName, 'incoming-shipments.view');
+    }
+    
+    public function mount(): void
+    {
+        $this->loadShipment();
+    }
+    
+    protected function loadShipment(): void
+    {
+        $recordId = request()->route('record');
+        if ($recordId) {
+            // Always reload from database to get latest pick lists
+            $this->shipment = IncomingShipment::find($recordId);
+            if ($this->shipment) {
+                // Refresh the model to ensure we have latest data
+                $this->shipment->refresh();
+            }
+        }
+    }
+    
     public function getPickLists(): array
     {
-        $shipment = $this->getShipment();
-        if (!$shipment) {
+        if (!$this->shipment) {
+            $this->loadShipment();
+        }
+        
+        if (!$this->shipment) {
             return [];
         }
         
-        $shipment->refresh();
-        $pickLists = $shipment->pick_lists ?? [];
+        $this->shipment->refresh();
+        $pickLists = $this->shipment->pick_lists ?? [];
         
         if (empty($pickLists) || !is_array($pickLists)) {
             return [];
@@ -28,33 +63,13 @@ class PickListHistoryWidget extends Widget
         return $pickLists;
     }
     
-    public function mount(): void
-    {
-        // Widget will get shipment from parent or route
-        // No parameters needed - Filament widgets don't support mount parameters
-    }
-    
-    public function getShipment(): ?IncomingShipment
-    {
-        // Get shipment from parent page component
-        $parent = $this->getParent();
-        if ($parent instanceof ViewIncomingShipment) {
-            return $parent->record;
-        }
-        
-        // Fallback: try to get from route parameter
-        $recordId = request()->route('record');
-        if ($recordId) {
-            return IncomingShipment::find($recordId);
-        }
-        
-        return null;
-    }
-    
     public function deletePickList(int $pickListIndex): void
     {
-        $shipment = $this->getShipment();
-        if (!$shipment) {
+        if (!$this->shipment) {
+            $this->loadShipment();
+        }
+        
+        if (!$this->shipment) {
             Notification::make()
                 ->title('Shipment not found')
                 ->danger()
@@ -62,8 +77,8 @@ class PickListHistoryWidget extends Widget
             return;
         }
         
-        $shipment->refresh();
-        $pickLists = $shipment->pick_lists ?? [];
+        $this->shipment->refresh();
+        $pickLists = $this->shipment->pick_lists ?? [];
         
         if (empty($pickLists) || !is_array($pickLists) || !isset($pickLists[$pickListIndex])) {
             Notification::make()
@@ -80,8 +95,8 @@ class PickListHistoryWidget extends Widget
         $pickLists = array_values($pickLists);
         
         // Save back to database
-        $shipment->pick_lists = $pickLists;
-        $shipment->save();
+        $this->shipment->pick_lists = $pickLists;
+        $this->shipment->save();
         
         Notification::make()
             ->title('Pick list deleted successfully')
@@ -89,13 +104,17 @@ class PickListHistoryWidget extends Widget
             ->send();
         
         // Refresh the widget
+        $this->loadShipment();
         $this->dispatch('$refresh');
     }
     
     public function updatePickListName(int $pickListIndex, string $newName): void
     {
-        $shipment = $this->getShipment();
-        if (!$shipment) {
+        if (!$this->shipment) {
+            $this->loadShipment();
+        }
+        
+        if (!$this->shipment) {
             Notification::make()
                 ->title('Shipment not found')
                 ->danger()
@@ -103,8 +122,8 @@ class PickListHistoryWidget extends Widget
             return;
         }
         
-        $shipment->refresh();
-        $pickLists = $shipment->pick_lists ?? [];
+        $this->shipment->refresh();
+        $pickLists = $this->shipment->pick_lists ?? [];
         
         if (empty($pickLists) || !is_array($pickLists) || !isset($pickLists[$pickListIndex])) {
             Notification::make()
@@ -118,8 +137,8 @@ class PickListHistoryWidget extends Widget
         $pickLists[$pickListIndex]['name'] = trim($newName);
         
         // Save back to database
-        $shipment->pick_lists = $pickLists;
-        $shipment->save();
+        $this->shipment->pick_lists = $pickLists;
+        $this->shipment->save();
         
         Notification::make()
             ->title('Pick list name updated')
@@ -127,6 +146,7 @@ class PickListHistoryWidget extends Widget
             ->send();
         
         // Refresh the widget
+        $this->loadShipment();
         $this->dispatch('$refresh');
     }
     
@@ -134,8 +154,7 @@ class PickListHistoryWidget extends Widget
     {
         return [
             'pickLists' => $this->getPickLists(),
-            'shipment' => $this->getShipment(),
+            'shipment' => $this->shipment,
         ];
     }
 }
-

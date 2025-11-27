@@ -1,5 +1,6 @@
 @php
     $pickLists = $this->getPickLists();
+    $shipment = $this->shipment;
 @endphp
 
 <x-filament-widgets::widget>
