@@ -28,16 +28,20 @@ class ListIncomingShipments extends ListRecords
                                 ->label('Shipment Name')
                                 ->maxLength(255)
                                 ->placeholder('e.g., BDR1399 Shipment, November Order, etc.')
-                                ->helperText('A descriptive name for this shipment'),
+                                ->helperText('A descriptive name for this shipment')
+                                ->extraAttributes(['id' => 'import_packing_list_name', 'name' => 'name']),
                             Forms\Components\TextInput::make('tracking_number')
                                 ->label('Tracking Number')
-                                ->maxLength(255),
+                                ->maxLength(255)
+                                ->extraAttributes(['id' => 'import_packing_list_tracking_number', 'name' => 'tracking_number']),
                             Forms\Components\TextInput::make('carrier')
                                 ->label('Carrier')
-                                ->maxLength(255),
+                                ->maxLength(255)
+                                ->extraAttributes(['id' => 'import_packing_list_carrier', 'name' => 'carrier']),
                             Forms\Components\TextInput::make('supplier')
                                 ->label('Supplier')
-                                ->maxLength(255),
+                                ->maxLength(255)
+                                ->extraAttributes(['id' => 'import_packing_list_supplier', 'name' => 'supplier']),
                             Forms\Components\Select::make('status')
                                 ->label('Status')
                                 ->options([
@@ -48,7 +52,8 @@ class ListIncomingShipments extends ListRecords
                                     'cancelled' => 'Cancelled',
                                 ])
                                 ->default('pending')
-                                ->required(),
+                                ->required()
+                                ->extraAttributes(['id' => 'import_packing_list_status', 'name' => 'status']),
                         ])
                         ->columns(2),
                     Forms\Components\Section::make('Packing List File')
@@ -65,7 +70,8 @@ class ListIncomingShipments extends ListRecords
                                 ->maxFiles(1)
                                 ->downloadable(false)
                                 ->openable(false)
-                                ->previewable(false),
+                                ->previewable(false)
+                                ->extraAttributes(['id' => 'import_packing_list_file', 'name' => 'file']),
                         ]),
                 ])
                 ->action(function (array $data) {

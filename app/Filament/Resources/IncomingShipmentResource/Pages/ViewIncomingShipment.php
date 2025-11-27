@@ -361,7 +361,11 @@ class ViewIncomingShipment extends ViewRecord
                                 ->label('Pick List Name')
                                 ->required()
                                 ->maxLength(255)
-                                ->placeholder('e.g., Order BDR1399'),
+                                ->placeholder('e.g., Order BDR1399')
+                                ->extraAttributes(fn ($livewire, $statePath) => [
+                                    'id' => 'bulk_upload_pick_list_name_' . md5($statePath ?? ''),
+                                    'name' => 'name'
+                                ]),
                             Forms\Components\FileUpload::make('file')
                                 ->label('Pick List File')
                                 ->acceptedFileTypes(['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/pdf'])
@@ -373,7 +377,11 @@ class ViewIncomingShipment extends ViewRecord
                                 ->maxFiles(1)
                                 ->downloadable(false)
                                 ->openable(false)
-                                ->previewable(false),
+                                ->previewable(false)
+                                ->extraAttributes(fn ($livewire, $statePath) => [
+                                    'id' => 'bulk_upload_pick_list_file_' . md5($statePath ?? ''),
+                                    'name' => 'file'
+                                ]),
                         ])
                         ->defaultItems(1)
                         ->addActionLabel('Add Another Pick List')
@@ -478,7 +486,8 @@ class ViewIncomingShipment extends ViewRecord
                         ->required()
                         ->maxLength(255)
                         ->placeholder('e.g., Order BDR1399, Client ABC Order, etc.')
-                        ->helperText('Give this pick list a name to identify it (e.g., order number or client name)'),
+                        ->helperText('Give this pick list a name to identify it (e.g., order number or client name)')
+                        ->extraAttributes(['id' => 'upload_pick_list_name', 'name' => 'pick_list_name']),
                     Forms\Components\FileUpload::make('pick_list_file')
                         ->label('Pick List File (CSV, Excel, or PDF)')
                         ->acceptedFileTypes(['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/pdf'])
@@ -491,7 +500,8 @@ class ViewIncomingShipment extends ViewRecord
                         ->maxFiles(1)
                         ->downloadable(false)
                         ->openable(false)
-                        ->previewable(false),
+                        ->previewable(false)
+                        ->extraAttributes(['id' => 'upload_pick_list_file', 'name' => 'pick_list_file']),
                 ])
                 ->action(function (array $data) {
                     // Safety check - ensure we have the required field
