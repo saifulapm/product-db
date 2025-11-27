@@ -71,8 +71,7 @@ class PickListHistoryWidget extends Widget
             ->success()
             ->send();
         
-        // Refresh the shipment
-        $this->shipment = $shipment->fresh();
+        // Refresh the widget
         $this->dispatch('$refresh');
     }
     
@@ -110,8 +109,7 @@ class PickListHistoryWidget extends Widget
             ->success()
             ->send();
         
-        // Refresh the shipment
-        $this->shipment = $shipment->fresh();
+        // Refresh the widget
         $this->dispatch('$refresh');
     }
     

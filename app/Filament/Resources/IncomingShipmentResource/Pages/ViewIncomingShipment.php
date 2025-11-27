@@ -22,6 +22,7 @@ class ViewIncomingShipment extends ViewRecord
     protected function getFooterWidgets(): array
     {
         return [
+            PickListHistoryWidget::class,
             // Widgets temporarily disabled
             // PickListReceivingWidget::class,
             // CartonPickingGuideWidget::class,
