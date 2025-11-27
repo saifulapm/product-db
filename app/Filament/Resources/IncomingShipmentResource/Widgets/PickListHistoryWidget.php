@@ -173,9 +173,17 @@ class PickListHistoryWidget extends Widget
     protected function getListeners(): array
     {
         return [
-            'pick-list-updated' => '$refresh',
-            '$refresh' => '$refresh',
-            'refresh-widgets' => '$refresh',
+            'pick-list-updated' => 'refreshWidget',
+            '$refresh' => 'refreshWidget',
+            'refresh-widgets' => 'refreshWidget',
         ];
+    }
+    
+    public function refreshWidget(): void
+    {
+        // Clear shipment to force reload
+        $this->shipment = null;
+        $this->loadShipment();
+        $this->dispatch('$refresh');
     }
 }
