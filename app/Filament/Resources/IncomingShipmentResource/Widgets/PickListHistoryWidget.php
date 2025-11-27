@@ -116,6 +116,7 @@ class PickListHistoryWidget extends Widget
     {
         return [
             'pickLists' => $this->getPickLists(),
+            'shipment' => $this->getShipment(),
         ];
     }
 }
