@@ -265,11 +265,18 @@ class IncomingShipment extends Model
         };
         
         // Get available quantities by carton (accounting for already picked items)
+        // This automatically recalculates based on current picked items
         $availableByCarton = $this->getAvailableQuantitiesByCarton($pickLists);
         
         // Group available items by style/color/packing way for easier lookup
+        // Only include items with available quantity > 0
         $availableByProduct = [];
         foreach ($availableByCarton as $item) {
+            // Only consider items that still have available quantity
+            if ($item['available_quantity'] <= 0) {
+                continue;
+            }
+            
             $key = $normalize($item['style']) . '|' . $normalize($item['color']) . '|' . $normalizePackingWay($item['packing_way']);
             if (!isset($availableByProduct[$key])) {
                 $availableByProduct[$key] = [];

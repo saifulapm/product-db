@@ -115,8 +115,15 @@ class ViewIncomingShipment extends ViewRecord
         // Save pick lists to database
         $this->savePickLists();
         
-        // Refresh the component
+        // Reload pick lists to ensure fresh data
+        $this->loadPickLists();
+        
+        // Refresh the component and force page reload to update available quantities
         $this->dispatch('pick-list-updated');
+        $this->dispatch('$refresh');
+        
+        // Force reload the page to update the packing list table with new available quantities
+        return redirect()->to(\App\Filament\Resources\IncomingShipmentResource::getUrl('view', ['record' => $this->record->id]));
     }
     
     public function bulkMarkItemsAsPicked(int $pickListIndex, array $itemData): void
@@ -256,6 +263,16 @@ class ViewIncomingShipment extends ViewRecord
         if ($markedCount > 0) {
             // Save pick lists to database
             $this->savePickLists();
+            
+            // Reload pick lists to ensure fresh data
+            $this->loadPickLists();
+            
+            // Refresh the component and force page reload to update available quantities
+            $this->dispatch('pick-list-updated');
+            $this->dispatch('$refresh');
+            
+            // Force reload the page to update the packing list table with new available quantities
+            return redirect()->to(\App\Filament\Resources\IncomingShipmentResource::getUrl('view', ['record' => $this->record->id]));
             
             // Clear selections
             foreach ($itemData as $data) {
