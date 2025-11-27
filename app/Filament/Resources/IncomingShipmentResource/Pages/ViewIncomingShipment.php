@@ -1668,11 +1668,20 @@ class ViewIncomingShipment extends ViewRecord
                             }
                             
                             if ($quantity > 0) {
+                                // Try to extract order number from description
+                                $orderNumber = null;
+                                if (preg_match('/\b([A-Z]{2,}\d{3,})\b/i', $description, $orderMatches)) {
+                                    $orderNumber = strtoupper($orderMatches[1]);
+                                } elseif (preg_match('/order\s*[#:]?\s*([A-Z0-9-]+)/i', $description, $orderMatches)) {
+                                    $orderNumber = strtoupper(trim($orderMatches[1]));
+                                }
+                                
                                 $items[] = [
                                     'style' => $parsed['style'],
                                     'color' => $parsed['color'],
                                     'packing_way' => $parsed['packing_way'],
                                     'quantity' => $quantity,
+                                    'order_number' => $orderNumber,
                                 ];
                             }
                         }
@@ -1734,11 +1743,20 @@ class ViewIncomingShipment extends ViewRecord
                             // Process the item
                             $parsed = \App\Models\Order::parseOrderDescription($currentDescription);
                             if (!empty($parsed['style'])) {
+                                // Try to extract order number from description
+                                $orderNumber = null;
+                                if (preg_match('/\b([A-Z]{2,}\d{3,})\b/i', $currentDescription, $orderMatches)) {
+                                    $orderNumber = strtoupper($orderMatches[1]);
+                                } elseif (preg_match('/order\s*[#:]?\s*([A-Z0-9-]+)/i', $currentDescription, $orderMatches)) {
+                                    $orderNumber = strtoupper(trim($orderMatches[1]));
+                                }
+                                
                                 $items[] = [
                                     'style' => $parsed['style'],
                                     'color' => $parsed['color'],
                                     'packing_way' => $parsed['packing_way'],
                                     'quantity' => $currentQuantity,
+                                    'order_number' => $orderNumber,
                                 ];
                             }
                             $currentDescription = '';
