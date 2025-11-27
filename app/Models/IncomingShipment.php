@@ -307,83 +307,113 @@ class IncomingShipment extends Model
             });
         }
         
-        // Process each pick list
+        // Collect all order numbers and sort them to process in order
+        $allOrderNumbers = [];
         foreach ($pickLists as $pickList) {
-            // Get order number from pick list name (fallback)
             $pickListOrderNumber = $extractOrderNumber($pickList['name'] ?? '');
-            
             $pickListItems = $pickList['items'] ?? [];
             
             foreach ($pickListItems as $pickListItem) {
-                // Get order number from item (preferred) or pick list name (fallback)
                 $orderNumber = !empty($pickListItem['order_number']) 
                     ? trim($pickListItem['order_number']) 
                     : $pickListOrderNumber;
                 
-                if (empty($orderNumber)) {
-                    continue;
+                if (!empty($orderNumber) && !in_array($orderNumber, $allOrderNumbers)) {
+                    $allOrderNumbers[] = $orderNumber;
                 }
+            }
+        }
+        
+        // Sort order numbers alphabetically/numerically (BDR1399 before BDR1400)
+        sort($allOrderNumbers, SORT_NATURAL);
+        
+        // Process each order number in sequence
+        foreach ($allOrderNumbers as $orderNumber) {
+            if (!isset($boxAllocations[$orderNumber])) {
+                $boxAllocations[$orderNumber] = [];
+            }
+            
+            // Process all pick lists for this order number
+            foreach ($pickLists as $pickList) {
+                $pickListOrderNumber = $extractOrderNumber($pickList['name'] ?? '');
+                $pickListItems = $pickList['items'] ?? [];
                 
-                if (!isset($boxAllocations[$orderNumber])) {
-                    $boxAllocations[$orderNumber] = [];
-                }
-                
-                $style = $normalize($pickListItem['style'] ?? '');
-                $color = $normalize($pickListItem['color'] ?? '');
-                $packingWay = $normalizePackingWay($pickListItem['packing_way'] ?? '');
-                $quantityNeeded = $pickListItem['quantity'] ?? $pickListItem['quantity_required'] ?? 0;
-                
-                if (empty($style) && empty($color) || $quantityNeeded <= 0) {
-                    continue;
-                }
-                
-                $productKey = $style . '|' . $color . '|' . $packingWay;
-                
-                if (!isset($availableByProduct[$productKey])) {
-                    continue;
-                }
-                
-                $availableBoxes = $availableByProduct[$productKey];
-                $remainingNeeded = $quantityNeeded;
-                
-                // Allocate across boxes, starting from the first available box
-                foreach ($availableBoxes as $box) {
-                    if ($remainingNeeded <= 0) {
-                        break;
-                    }
+                foreach ($pickListItems as $pickListItem) {
+                    // Get order number from item (preferred) or pick list name (fallback)
+                    $itemOrderNumber = !empty($pickListItem['order_number']) 
+                        ? trim($pickListItem['order_number']) 
+                        : $pickListOrderNumber;
                     
-                    $availableInBox = $box['available'];
-                    if ($availableInBox <= 0) {
+                    // Only process items for the current order number
+                    if ($itemOrderNumber !== $orderNumber) {
                         continue;
                     }
                     
-                    $quantityFromBox = min($remainingNeeded, $availableInBox);
+                    $style = $normalize($pickListItem['style'] ?? '');
+                    $color = $normalize($pickListItem['color'] ?? '');
+                    $packingWay = $normalizePackingWay($pickListItem['packing_way'] ?? '');
+                    $quantityNeeded = $pickListItem['quantity'] ?? $pickListItem['quantity_required'] ?? 0;
                     
-                    // Check if we already have an allocation for this order/box/product combination
-                    $found = false;
-                    foreach ($boxAllocations[$orderNumber] as &$allocation) {
-                        if ($allocation['carton'] === $box['carton'] &&
-                            $normalize($allocation['style']) === $style &&
-                            $normalize($allocation['color']) === $color &&
-                            $normalizePackingWay($allocation['packing_way']) === $packingWay) {
-                            $allocation['quantity'] += $quantityFromBox;
-                            $found = true;
+                    if (empty($style) && empty($color) || $quantityNeeded <= 0) {
+                        continue;
+                    }
+                    
+                    $productKey = $style . '|' . $color . '|' . $packingWay;
+                    
+                    if (!isset($availableByProduct[$productKey])) {
+                        continue;
+                    }
+                    
+                    $availableBoxes = $availableByProduct[$productKey];
+                    $remainingNeeded = $quantityNeeded;
+                    
+                    // Allocate across boxes, starting from the first available box
+                    foreach ($availableBoxes as $box) {
+                        if ($remainingNeeded <= 0) {
                             break;
                         }
+                        
+                        $availableInBox = $box['available'];
+                        if ($availableInBox <= 0) {
+                            continue;
+                        }
+                        
+                        $quantityFromBox = min($remainingNeeded, $availableInBox);
+                        
+                        // Check if we already have an allocation for this order/box/product combination
+                        $found = false;
+                        foreach ($boxAllocations[$orderNumber] as &$allocation) {
+                            if ($allocation['carton'] === $box['carton'] &&
+                                $normalize($allocation['style']) === $style &&
+                                $normalize($allocation['color']) === $color &&
+                                $normalizePackingWay($allocation['packing_way']) === $packingWay) {
+                                $allocation['quantity'] += $quantityFromBox;
+                                $found = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!$found) {
+                            $boxAllocations[$orderNumber][] = [
+                                'carton' => $box['carton'],
+                                'style' => $box['style'],
+                                'color' => $box['color'],
+                                'packing_way' => $box['packing_way'],
+                                'quantity' => $quantityFromBox,
+                                'item_index' => $box['index'],
+                            ];
+                        }
+                        
+                        $remainingNeeded -= $quantityFromBox;
+                        
+                        // Update available quantity in the lookup table for next order
+                        foreach ($availableByProduct[$productKey] as &$b) {
+                            if ($b['index'] === $box['index']) {
+                                $b['available'] -= $quantityFromBox;
+                                break;
+                            }
+                        }
                     }
-                    
-                    if (!$found) {
-                        $boxAllocations[$orderNumber][] = [
-                            'carton' => $box['carton'],
-                            'style' => $box['style'],
-                            'color' => $box['color'],
-                            'packing_way' => $box['packing_way'],
-                            'quantity' => $quantityFromBox,
-                            'item_index' => $box['index'],
-                        ];
-                    }
-                    
-                    $remainingNeeded -= $quantityFromBox;
                 }
             }
         }

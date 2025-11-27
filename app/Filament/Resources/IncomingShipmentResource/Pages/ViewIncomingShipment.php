@@ -992,6 +992,11 @@ class ViewIncomingShipment extends ViewRecord
                                     $allocationsHtml = '';
                                     
                                     if (!empty($itemAllocations)) {
+                                        // Sort allocations by order number (alphabetically/numerically)
+                                        usort($itemAllocations, function($a, $b) {
+                                            return strcmp($a['order_number'], $b['order_number']);
+                                        });
+                                        
                                         $allocationsList = [];
                                         
                                         foreach ($itemAllocations as $allocation) {
@@ -999,11 +1004,10 @@ class ViewIncomingShipment extends ViewRecord
                                             $totalQty = $allocation['quantity'];
                                             
                                             // Find box breakdown for this order/product combination
-                                            // Match by style, color, packing way, and carton
+                                            // Match by item index (most accurate)
                                             $boxBreakdown = [];
                                             if (isset($boxAllocations[$orderNum])) {
                                                 foreach ($boxAllocations[$orderNum] as $boxAlloc) {
-                                                    // Match by item index (most accurate) or by style/color/packing way
                                                     if ($boxAlloc['item_index'] == $itemIndex) {
                                                         $boxBreakdown[] = [
                                                             'carton' => $boxAlloc['carton'],
@@ -1013,15 +1017,34 @@ class ViewIncomingShipment extends ViewRecord
                                                 }
                                             }
                                             
-                                            // If we have box breakdown, show it; otherwise show total
+                                            // Sort boxes by carton number (ascending)
+                                            usort($boxBreakdown, function($a, $b) {
+                                                return (int)$a['carton'] <=> (int)$b['carton'];
+                                            });
+                                            
+                                            // If we have box breakdown, show PRIMARY box prominently
                                             if (!empty($boxBreakdown)) {
-                                                $boxParts = [];
-                                                foreach ($boxBreakdown as $box) {
-                                                    $boxParts[] = 'Box ' . htmlspecialchars($box['carton']) . ': ' . number_format($box['quantity']);
+                                                $primaryBox = $boxBreakdown[0];
+                                                $primaryBoxNum = htmlspecialchars($primaryBox['carton']);
+                                                $primaryBoxQty = number_format($primaryBox['quantity']);
+                                                
+                                                // Show additional boxes if needed
+                                                $additionalBoxes = [];
+                                                if (count($boxBreakdown) > 1) {
+                                                    for ($i = 1; $i < count($boxBreakdown); $i++) {
+                                                        $additionalBoxes[] = 'Box ' . htmlspecialchars($boxBreakdown[$i]['carton']) . ': ' . number_format($boxBreakdown[$i]['quantity']);
+                                                    }
                                                 }
-                                                $allocationsList[] = '<div class="inline-flex flex-col gap-0.5 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                                
+                                                $boxInfo = '';
+                                                if (!empty($additionalBoxes)) {
+                                                    $boxInfo = '<span class="text-xs opacity-75 block mt-0.5">Then: ' . implode(', ', $additionalBoxes) . '</span>';
+                                                }
+                                                
+                                                $allocationsList[] = '<div class="inline-flex flex-col gap-0.5 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-l-2 border-blue-500">
                                                     <span class="font-semibold">' . $orderNum . ' × ' . number_format($totalQty) . '</span>
-                                                    <span class="text-xs opacity-75">' . implode(', ', $boxParts) . '</span>
+                                                    <span class="text-xs font-bold text-blue-900 dark:text-blue-100">→ Pick from Box ' . $primaryBoxNum . ' (' . $primaryBoxQty . ' pcs)</span>
+                                                    ' . $boxInfo . '
                                                 </div>';
                                             } else {
                                                 $allocationsList[] = '<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
