@@ -164,14 +164,21 @@ class IncomingShipment extends Model
         
         // Build lookup table for packing list items by style/color/packing way
         foreach ($pickLists as $pickListIndex => $pickList) {
-            $orderNumber = $extractOrderNumber($pickList['name'] ?? '');
-            if (empty($orderNumber)) {
-                continue;
-            }
+            // Get order number from pick list name (fallback)
+            $pickListOrderNumber = $extractOrderNumber($pickList['name'] ?? '');
             
             $pickListItems = $pickList['items'] ?? [];
             
             foreach ($pickListItems as $pickListItem) {
+                // Get order number from item (preferred) or pick list name (fallback)
+                $orderNumber = !empty($pickListItem['order_number']) 
+                    ? trim($pickListItem['order_number']) 
+                    : $pickListOrderNumber;
+                
+                if (empty($orderNumber)) {
+                    continue;
+                }
+                
                 $style = $normalize($pickListItem['style'] ?? '');
                 $color = $normalize($pickListItem['color'] ?? '');
                 $packingWay = $normalizePackingWay($pickListItem['packing_way'] ?? '');
@@ -302,18 +309,25 @@ class IncomingShipment extends Model
         
         // Process each pick list
         foreach ($pickLists as $pickList) {
-            $orderNumber = $extractOrderNumber($pickList['name'] ?? '');
-            if (empty($orderNumber)) {
-                continue;
-            }
-            
-            if (!isset($boxAllocations[$orderNumber])) {
-                $boxAllocations[$orderNumber] = [];
-            }
+            // Get order number from pick list name (fallback)
+            $pickListOrderNumber = $extractOrderNumber($pickList['name'] ?? '');
             
             $pickListItems = $pickList['items'] ?? [];
             
             foreach ($pickListItems as $pickListItem) {
+                // Get order number from item (preferred) or pick list name (fallback)
+                $orderNumber = !empty($pickListItem['order_number']) 
+                    ? trim($pickListItem['order_number']) 
+                    : $pickListOrderNumber;
+                
+                if (empty($orderNumber)) {
+                    continue;
+                }
+                
+                if (!isset($boxAllocations[$orderNumber])) {
+                    $boxAllocations[$orderNumber] = [];
+                }
+                
                 $style = $normalize($pickListItem['style'] ?? '');
                 $color = $normalize($pickListItem['color'] ?? '');
                 $packingWay = $normalizePackingWay($pickListItem['packing_way'] ?? '');

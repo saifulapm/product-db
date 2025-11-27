@@ -897,6 +897,77 @@ class ViewIncomingShipment extends ViewRecord
                             ->columnSpanFull(),
                     ]),
                 
+                // Box Assignments by Order Number Section
+                Infolists\Components\Section::make('Box Assignments by Order Number')
+                    ->description('Shows which boxes to pull from for each order number. Upload a pick list with order numbers in each row to see automatic box assignments.')
+                    ->columnSpanFull()
+                    ->visible(fn () => !empty($this->pickLists) && is_array($this->pickLists) && count($this->pickLists) > 0)
+                    ->schema([
+                        Infolists\Components\TextEntry::make('box_assignments_by_order')
+                            ->label('')
+                            ->html()
+                            ->formatStateUsing(function ($record) {
+                                $boxAllocations = $record->getBoxAllocationsForOrders($this->pickLists ?? []);
+                                
+                                if (empty($boxAllocations)) {
+                                    return new \Illuminate\Support\HtmlString('<p class="text-gray-500 px-6">No order numbers found in pick lists. Add order numbers to your pick list items (in a column or within descriptions) to see box assignments.</p>');
+                                }
+                                
+                                $html = '<div class="space-y-4">';
+                                
+                                // Sort orders alphabetically
+                                ksort($boxAllocations);
+                                
+                                foreach ($boxAllocations as $orderNumber => $allocations) {
+                                    $html .= '<div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6 bg-white dark:bg-gray-800">';
+                                    $html .= '<h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order: ' . htmlspecialchars($orderNumber) . '</h3>';
+                                    
+                                    // Group by box
+                                    $byBox = [];
+                                    foreach ($allocations as $allocation) {
+                                        $box = $allocation['carton'];
+                                        if (!isset($byBox[$box])) {
+                                            $byBox[$box] = [];
+                                        }
+                                        $byBox[$box][] = $allocation;
+                                    }
+                                    
+                                    // Sort boxes numerically
+                                    ksort($byBox, SORT_NUMERIC);
+                                    
+                                    $html .= '<div class="space-y-3">';
+                                    foreach ($byBox as $boxNum => $boxItems) {
+                                        $totalQty = array_sum(array_column($boxItems, 'quantity'));
+                                        $html .= '<div class="border-l-4 border-primary-500 pl-4 py-2 bg-gray-50 dark:bg-gray-900/50 rounded">';
+                                        $html .= '<div class="font-semibold text-gray-900 dark:text-white mb-2">Box ' . htmlspecialchars($boxNum) . ' - ' . number_format($totalQty) . ' pcs</div>';
+                                        $html .= '<div class="space-y-1 text-sm text-gray-600 dark:text-gray-400">';
+                                        
+                                        foreach ($boxItems as $item) {
+                                            $html .= '<div class="flex items-center gap-2">';
+                                            $html .= '<span class="font-medium">' . htmlspecialchars($item['style']) . '</span>';
+                                            $html .= '<span class="text-gray-400">•</span>';
+                                            $html .= '<span>' . htmlspecialchars($item['color']) . '</span>';
+                                            $html .= '<span class="text-gray-400">•</span>';
+                                            $html .= '<span>' . htmlspecialchars($item['packing_way']) . '</span>';
+                                            $html .= '<span class="ml-auto font-semibold text-primary-600 dark:text-primary-400">' . number_format($item['quantity']) . ' pcs</span>';
+                                            $html .= '</div>';
+                                        }
+                                        
+                                        $html .= '</div>';
+                                        $html .= '</div>';
+                                    }
+                                    
+                                    $html .= '</div>';
+                                    $html .= '</div>';
+                                }
+                                
+                                $html .= '</div>';
+                                
+                                return new \Illuminate\Support\HtmlString($html);
+                            })
+                            ->columnSpanFull(),
+                    ]),
+                
                 Infolists\Components\Section::make('Packing List Items - Available Stock')
                     ->description('Tracks all inventory: Original quantities, order allocations (with box breakdown), allocated quantities, picked quantities, and remaining available stock. Updates automatically when items are marked as picked.')
                     ->columnSpanFull()
@@ -1389,7 +1460,7 @@ class ViewIncomingShipment extends ViewRecord
             return $items;
         }
         
-        // Map columns - look for style, color, quantity, description
+        // Map columns - look for style, color, quantity, description, order number
         $headerMap = [];
         foreach ($header as $index => $col) {
             $colLower = strtolower(trim($col));
@@ -1397,12 +1468,14 @@ class ViewIncomingShipment extends ViewRecord
                 $headerMap['style'] = $index;
             } elseif (preg_match('/color|colour/i', $colLower)) {
                 $headerMap['color'] = $index;
-            } elseif (preg_match('/quantity|qty|amount|#|pieces|pcs/i', $colLower)) {
+            } elseif (preg_match('/quantity|qty|amount|#|pieces|pcs|required/i', $colLower)) {
                 $headerMap['quantity'] = $index;
             } elseif (preg_match('/description|item.*description|product.*name/i', $colLower)) {
                 $headerMap['description'] = $index;
             } elseif (preg_match('/packing.*way|way.*packing/i', $colLower)) {
                 $headerMap['packing_way'] = $index;
+            } elseif (preg_match('/order|order.*number|order.*#|order.*num|order.*id/i', $colLower)) {
+                $headerMap['order_number'] = $index;
             }
         }
         
@@ -1430,6 +1503,8 @@ class ViewIncomingShipment extends ViewRecord
                 ? trim($row[$headerMap['quantity']]) : '';
             $packingWay = isset($headerMap['packing_way']) && isset($row[$headerMap['packing_way']]) 
                 ? trim($row[$headerMap['packing_way']]) : '';
+            $orderNumber = isset($headerMap['order_number']) && isset($row[$headerMap['order_number']]) 
+                ? trim($row[$headerMap['order_number']]) : '';
             
             // If we have a description, try to parse it
             if (!empty($description) && (empty($style) || empty($color))) {
@@ -1442,6 +1517,23 @@ class ViewIncomingShipment extends ViewRecord
                 }
                 if (empty($packingWay)) {
                     $packingWay = $parsed['packing_way'];
+                }
+            }
+            
+            // Try to extract order number from description if not in separate column
+            if (empty($orderNumber) && !empty($description)) {
+                // Look for patterns like "BDR1399", "Order BDR1399", "BDR-1399", etc.
+                if (preg_match('/\b([A-Z]{2,}\d{3,})\b/i', $description, $matches)) {
+                    $orderNumber = strtoupper($matches[1]);
+                } elseif (preg_match('/order\s*[#:]?\s*([A-Z0-9-]+)/i', $description, $matches)) {
+                    $orderNumber = strtoupper(trim($matches[1]));
+                }
+            }
+            
+            // Also try to extract from style column if it contains order info
+            if (empty($orderNumber) && !empty($style)) {
+                if (preg_match('/\b([A-Z]{2,}\d{3,})\b/i', $style, $matches)) {
+                    $orderNumber = strtoupper($matches[1]);
                 }
             }
             
@@ -1465,6 +1557,7 @@ class ViewIncomingShipment extends ViewRecord
                 'color' => trim($color),
                 'packing_way' => !empty($packingWay) ? trim($packingWay) : 'hook',
                 'quantity' => $quantity,
+                'order_number' => !empty($orderNumber) ? trim($orderNumber) : null,
             ];
         }
         
