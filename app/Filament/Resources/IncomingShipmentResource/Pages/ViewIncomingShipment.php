@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\IncomingShipmentResource\Pages;
 
 use App\Filament\Resources\IncomingShipmentResource;
+use App\Filament\Resources\IncomingShipmentResource\Widgets\PickListHistoryWidget;
 use App\Filament\Resources\IncomingShipmentResource\Widgets\PickListTableWidget;
 use App\Filament\Resources\IncomingShipmentResource\Widgets\CartonPickingGuideWidget;
 use App\Filament\Resources\IncomingShipmentResource\Widgets\PickListReceivingWidget;
