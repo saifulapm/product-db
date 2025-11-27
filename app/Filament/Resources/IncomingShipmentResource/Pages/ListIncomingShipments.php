@@ -60,7 +60,12 @@ class ListIncomingShipments extends ListRecords
                                 ->helperText('Upload CSV, Excel, or PDF file with columns: CTN#, STYLE, COLOR, PACKING WAY, #PC/CTN')
                                 ->disk('local')
                                 ->directory('imports')
-                                ->visibility('private'),
+                                ->visibility('private')
+                                ->multiple(false)
+                                ->maxFiles(1)
+                                ->downloadable(false)
+                                ->openable(false)
+                                ->previewable(false),
                         ]),
                 ])
                 ->action(function (array $data) {

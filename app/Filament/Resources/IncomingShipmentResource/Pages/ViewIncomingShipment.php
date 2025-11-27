@@ -368,7 +368,12 @@ class ViewIncomingShipment extends ViewRecord
                                 ->required()
                                 ->disk('local')
                                 ->directory('pick-lists')
-                                ->visibility('private'),
+                                ->visibility('private')
+                                ->multiple(false)
+                                ->maxFiles(1)
+                                ->downloadable(false)
+                                ->openable(false)
+                                ->previewable(false),
                         ])
                         ->defaultItems(1)
                         ->addActionLabel('Add Another Pick List')
@@ -481,7 +486,12 @@ class ViewIncomingShipment extends ViewRecord
                         ->helperText('Upload order/pick list file. The system will match items against this shipment and show which cartons to pick from.')
                         ->disk('local')
                         ->directory('pick-lists')
-                        ->visibility('private'),
+                        ->visibility('private')
+                        ->multiple(false)
+                        ->maxFiles(1)
+                        ->downloadable(false)
+                        ->openable(false)
+                        ->previewable(false),
                 ])
                 ->action(function (array $data) {
                     // Safety check - ensure we have the required field
