@@ -23,8 +23,15 @@ class PickListHistoryWidget extends Widget
     
     public function getHistory(): Collection
     {
-        $history = collect();
-        $historyEntries = $this->pickList['history'] ?? [];
+        try {
+            $history = collect();
+            
+            // Ensure pickList is an array
+            if (!is_array($this->pickList)) {
+                return collect([]);
+            }
+            
+            $historyEntries = $this->pickList['history'] ?? [];
         
         // Ensure historyEntries is an array
         if (!is_array($historyEntries)) {
@@ -143,6 +150,10 @@ class PickListHistoryWidget extends Widget
         
         // Sort by action_at descending (most recent first)
         return $history->sortByDesc('action_at')->values();
+        } catch (\Exception $e) {
+            \Log::error('PickListHistoryWidget::getHistory() Error: ' . $e->getMessage() . ' - ' . $e->getTraceAsString());
+            return collect([]);
+        }
     }
 }
 

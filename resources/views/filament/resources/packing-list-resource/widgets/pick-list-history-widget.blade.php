@@ -1,12 +1,17 @@
 <x-filament-widgets::widget>
+    @php
+        try {
+            $history = $this->getHistory();
+        } catch (\Exception $e) {
+            \Log::error('PickListHistoryWidget Error: ' . $e->getMessage());
+            $history = collect([]);
+        }
+    @endphp
+    
     <x-filament::section>
         <x-slot name="heading">
             Pick List History
         </x-slot>
-        
-        @php
-            $history = $this->getHistory();
-        @endphp
         
         @if($history->isEmpty())
             <div class="text-center py-8 text-gray-500 dark:text-gray-400">
