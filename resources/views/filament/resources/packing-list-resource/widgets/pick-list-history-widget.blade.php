@@ -73,7 +73,18 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    {{ isset($entry['user_name']) && !empty($entry['user_name']) ? $entry['user_name'] : 'System' }}
+                                    @php
+                                        // Defensive check - ensure user_name exists, fallback to System
+                                        $userName = 'System';
+                                        if (is_array($entry)) {
+                                            if (isset($entry['user_name']) && !empty($entry['user_name'])) {
+                                                $userName = (string)$entry['user_name'];
+                                            } elseif (isset($entry['picked_by_user_name']) && !empty($entry['picked_by_user_name'])) {
+                                                $userName = (string)$entry['picked_by_user_name'];
+                                            }
+                                        }
+                                    @endphp
+                                    {{ $userName }}
                                 </td>
                             </tr>
                         @endforeach
