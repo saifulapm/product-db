@@ -55,13 +55,21 @@ class PickListHistoryWidget extends Widget
                         'carton_number' => $picked['carton_number'] ?? '',
                         'action_at' => $picked['picked_at'] ?? now()->toIso8601String(),
                         'user_id' => $picked['picked_by_user_id'] ?? null,
-                        'user_name' => $picked['picked_by_user_name'] ?? $picked['user_name'] ?? 'System',
+                        'user_name' => !empty($picked['picked_by_user_name']) ? $picked['picked_by_user_name'] : (!empty($picked['user_name']) ? $picked['user_name'] : 'System'),
                     ]);
                 }
             }
         } else {
             // Use history entries
             foreach ($historyEntries as $entry) {
+                // Normalize user_name - prioritize user_name, then picked_by_user_name, then default to 'System'
+                $userName = 'System';
+                if (!empty($entry['user_name'])) {
+                    $userName = $entry['user_name'];
+                } elseif (!empty($entry['picked_by_user_name'])) {
+                    $userName = $entry['picked_by_user_name'];
+                }
+                
                 $history->push([
                     'action' => $entry['action'] ?? 'picked',
                     'item_description' => $entry['item_description'] ?? '',
@@ -69,7 +77,7 @@ class PickListHistoryWidget extends Widget
                     'carton_number' => $entry['carton_number'] ?? '',
                     'action_at' => $entry['action_at'] ?? now()->toIso8601String(),
                     'user_id' => $entry['user_id'] ?? null,
-                    'user_name' => $entry['user_name'] ?? $entry['picked_by_user_name'] ?? 'System',
+                    'user_name' => $userName,
                 ]);
             }
         }

@@ -73,7 +73,7 @@
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                    {{ isset($entry['user_name']) ? $entry['user_name'] : (isset($entry['picked_by_user_name']) ? $entry['picked_by_user_name'] : 'System') }}
+                                    {{ $entry['user_name'] ?? 'System' }}
                                 </td>
                             </tr>
                         @endforeach
