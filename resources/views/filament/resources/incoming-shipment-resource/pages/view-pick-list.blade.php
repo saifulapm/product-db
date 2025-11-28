@@ -5,13 +5,33 @@
         
         // Create a map of picked quantities by item index
         $pickedByItemIndex = [];
+        // Map of item index to shipment item index for unpicking
+        $itemIndexToShipmentIndex = [];
+        // Map of item index to carton numbers for picked items
+        $pickedCartonsByItemIndex = [];
         foreach ($pickedItems as $picked) {
             $idx = $picked['item_index'] ?? null;
+            $shipIdx = $picked['shipment_item_index'] ?? null;
+            $cartonNumber = $picked['carton_number'] ?? '';
+            $quantityPicked = $picked['quantity_picked'] ?? 0;
+            
             if ($idx !== null) {
                 if (!isset($pickedByItemIndex[$idx])) {
                     $pickedByItemIndex[$idx] = 0;
+                    $pickedCartonsByItemIndex[$idx] = [];
                 }
-                $pickedByItemIndex[$idx] += $picked['quantity_picked'] ?? 0;
+                $pickedByItemIndex[$idx] += $quantityPicked;
+                // Store the shipment item index for unpicking
+                if ($shipIdx !== null && !isset($itemIndexToShipmentIndex[$idx])) {
+                    $itemIndexToShipmentIndex[$idx] = $shipIdx;
+                }
+                // Store carton number if available
+                if (!empty($cartonNumber) && $quantityPicked > 0) {
+                    if (!isset($pickedCartonsByItemIndex[$idx][$cartonNumber])) {
+                        $pickedCartonsByItemIndex[$idx][$cartonNumber] = 0;
+                    }
+                    $pickedCartonsByItemIndex[$idx][$cartonNumber] += $quantityPicked;
+                }
             }
         }
         
@@ -49,6 +69,26 @@
                         "
                     >
                         Mark Selected as Picked
+                    </x-filament::button>
+                    <x-filament::button
+                        color="warning"
+                        size="sm"
+                        x-on:click="
+                            const selected = Object.keys(selectedItems).filter(k => selectedItems[k] === true);
+                            if (selected.length > 0) {
+                                const itemData = selected.map(k => {
+                                    const parts = k.split('_');
+                                    return {
+                                        itemIndex: parseInt(parts[0]),
+                                        shipmentItemIndex: parseInt(parts[1]),
+                                        quantity: parseInt(parts[2])
+                                    };
+                                });
+                                @this.call('bulkUnpickItems', itemData);
+                            }
+                        "
+                    >
+                        Unpick Selected
                     </x-filament::button>
                     <x-filament::button
                         color="danger"
@@ -223,9 +263,39 @@
                                 $pickGuidance = '';
                                 $rowClass = '';
                                 
+                                // Get picked cartons for this item
+                                $pickedCartons = $pickedCartonsByItemIndex[$itemIndex] ?? [];
+                                
                                 if ($quantityRemaining === 0) {
                                     $rowClass = 'bg-blue-50/50 dark:bg-blue-900/10';
-                                    $pickGuidance = '<span class="text-blue-600 dark:text-blue-400 font-semibold">✓ Fully Picked</span>';
+                                    if (!empty($pickedCartons)) {
+                                        $cartonList = collect($pickedCartons)->map(function($qty, $ctn) {
+                                            return 'Carton #' . $ctn;
+                                        })->implode(', ');
+                                        $pickGuidance = '<span class="text-blue-600 dark:text-blue-400 font-semibold">Fully Picked from ' . $cartonList . '</span>';
+                                    } else {
+                                        $pickGuidance = '<span class="text-blue-600 dark:text-blue-400 font-semibold">Fully Picked</span>';
+                                    }
+                                } elseif ($quantityPicked > 0 && !empty($pickedCartons)) {
+                                    // Partially picked - show picked cartons
+                                    $cartonList = collect($pickedCartons)->map(function($qty, $ctn) {
+                                        return 'CTN#' . $ctn . ' (' . number_format($qty) . ' pcs)';
+                                    })->implode(', ');
+                                    
+                                    if (!empty($availableCartons['cartons'])) {
+                                        $firstCarton = $availableCartons['cartons'][0];
+                                        $pickGuidance = '<span class="text-green-600 dark:text-green-400 font-semibold">✓ Picked from: ' . $cartonList . ' • Pick remaining from: <strong>CTN#' . $firstCarton['carton_number'] . '</strong> (' . number_format($firstCarton['available_quantity']) . ' pcs available)';
+                                        
+                                        if ($quantityRemaining > $firstCarton['available_quantity'] && count($availableCartons['cartons']) > 1) {
+                                            $additional = collect(array_slice($availableCartons['cartons'], 1))
+                                                ->map(fn($c) => 'CTN#' . $c['carton_number'] . ' (' . number_format($c['available_quantity']) . ' pcs)')
+                                                ->implode(', ');
+                                            $pickGuidance .= ' • Also check: ' . $additional;
+                                        }
+                                        $pickGuidance .= '</span>';
+                                    } else {
+                                        $pickGuidance = '<span class="text-green-600 dark:text-green-400 font-semibold">✓ Picked from: ' . $cartonList . '</span>';
+                                    }
                                 } elseif (!empty($availableCartons['cartons'])) {
                                     $firstCarton = $availableCartons['cartons'][0];
                                     $pickGuidance = '<span class="text-green-600 dark:text-green-400 font-semibold">✓ Pick from: <strong>CTN#' . $firstCarton['carton_number'] . '</strong> (' . number_format($firstCarton['available_quantity']) . ' pcs available)';
@@ -278,6 +348,9 @@
                                     {!! $pickGuidance !!}
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
+                                    @php
+                                        $unpickShipmentIndex = $itemIndexToShipmentIndex[$itemIndex] ?? $matchingShipmentIndex;
+                                    @endphp
                                     @if($quantityRemaining > 0 && $matchingShipmentIndex !== null)
                                         <x-filament::button
                                             color="success"
@@ -286,6 +359,17 @@
                                         >
                                             Mark as Picked
                                         </x-filament::button>
+                                    @elseif($quantityRemaining === 0 && $quantityPicked > 0 && $unpickShipmentIndex !== null)
+                                        <div class="flex gap-2 items-center">
+                                            <span class="text-xs text-green-600 dark:text-green-400 font-medium">✓ Picked</span>
+                                            <x-filament::button
+                                                color="warning"
+                                                size="xs"
+                                                wire:click="unpickItem({{ $itemIndex }}, {{ $unpickShipmentIndex }}, {{ $quantityPicked }})"
+                                            >
+                                                Unpick
+                                            </x-filament::button>
+                                        </div>
                                     @elseif($quantityRemaining === 0)
                                         <span class="text-xs text-green-600 dark:text-green-400 font-medium">✓ Picked</span>
                                     @endif
@@ -303,11 +387,11 @@
                                 {{ number_format(array_sum($pickedByItemIndex)) }}
                             </td>
                             <td class="px-4 py-3 text-right text-sm text-orange-600 dark:text-orange-400">
-                                {{ number_format(collect($pickListItems)->sum(function($item, $idx) use ($pickedByItemIndex) {
+                                {{ number_format(collect($pickListItems)->map(function($item, $idx) use ($pickedByItemIndex) {
                                     $qty = $item['quantity'] ?? $item['quantity_required'] ?? 0;
                                     $picked = $pickedByItemIndex[$idx] ?? 0;
                                     return max(0, $qty - $picked);
-                                })) }}
+                                })->sum()) }}
                             </td>
                             <td colspan="2"></td>
                         </tr>
@@ -316,5 +400,11 @@
             </div>
         @endif
     </div>
+    
+    <!-- Pick List History Widget -->
+    @livewire(\App\Filament\Resources\PackingListResource\Widgets\PickListHistoryWidget::class, [
+        'pickList' => $this->pickList,
+        'shipment' => $this->shipment,
+    ], key('pick-list-history-widget'))
 </x-filament-panels::page>
 

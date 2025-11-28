@@ -6,7 +6,6 @@
                 <div class="flex gap-2 flex-wrap">
                     {{ $this->addProductAction() }}
                     {{ $this->bulkAddProductsAction() }}
-                    {{ $this->uploadPackingListAction() }}
                 </div>
             </div>
         </x-slot>

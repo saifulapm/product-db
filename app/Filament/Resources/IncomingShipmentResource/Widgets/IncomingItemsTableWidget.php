@@ -943,7 +943,6 @@ class IncomingItemsTableWidget extends Widget implements HasActions, HasForms
         return [
             $this->addProductAction(),
             $this->bulkAddProductsAction(),
-            $this->uploadPackingListAction(),
             $this->bulkEditItemsAction(),
             $this->bulkUpdateQuantityAction(),
             $this->bulkUpdateCartonAction(),
