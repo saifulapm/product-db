@@ -55,7 +55,7 @@ class PickListHistoryWidget extends Widget
                         'carton_number' => $picked['carton_number'] ?? '',
                         'action_at' => $picked['picked_at'] ?? now()->toIso8601String(),
                         'user_id' => $picked['picked_by_user_id'] ?? null,
-                        'user_name' => $picked['picked_by_user_name'] ?? 'System',
+                        'user_name' => $picked['picked_by_user_name'] ?? $picked['user_name'] ?? 'System',
                     ]);
                 }
             }
@@ -69,7 +69,7 @@ class PickListHistoryWidget extends Widget
                     'carton_number' => $entry['carton_number'] ?? '',
                     'action_at' => $entry['action_at'] ?? now()->toIso8601String(),
                     'user_id' => $entry['user_id'] ?? null,
-                    'user_name' => $entry['user_name'] ?? 'System',
+                    'user_name' => $entry['user_name'] ?? $entry['picked_by_user_name'] ?? 'System',
                 ]);
             }
         }
