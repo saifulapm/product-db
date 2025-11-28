@@ -26,14 +26,32 @@ class PickListHistoryWidget extends Widget
         $history = collect();
         $historyEntries = $this->pickList['history'] ?? [];
         
+        // Ensure historyEntries is an array
+        if (!is_array($historyEntries)) {
+            $historyEntries = [];
+        }
+        
         // If no history entries exist, try to create them from picked_items (backward compatibility)
         if (empty($historyEntries)) {
             $pickedItems = $this->pickList['picked_items'] ?? [];
             $pickListItems = $this->pickList['items'] ?? [];
             
+            // Ensure arrays
+            if (!is_array($pickedItems)) {
+                $pickedItems = [];
+            }
+            if (!is_array($pickListItems)) {
+                $pickListItems = [];
+            }
+            
             foreach ($pickedItems as $picked) {
+                // Ensure $picked is an array
+                if (!is_array($picked)) {
+                    continue;
+                }
+                
                 $itemIndex = $picked['item_index'] ?? null;
-                $item = $pickListItems[$itemIndex] ?? null;
+                $item = isset($pickListItems[$itemIndex]) && is_array($pickListItems[$itemIndex]) ? $pickListItems[$itemIndex] : null;
                 
                 if ($item) {
                     // Get item details
@@ -48,39 +66,64 @@ class PickListHistoryWidget extends Widget
                         $packingWay = $item['packing_way'] ?? 'hook';
                     }
                     
+                    // Safely get user_name
+                    $userName = 'System';
+                    if (isset($picked['picked_by_user_name']) && !empty($picked['picked_by_user_name'])) {
+                        $userName = (string)$picked['picked_by_user_name'];
+                    } elseif (isset($picked['user_name']) && !empty($picked['user_name'])) {
+                        $userName = (string)$picked['user_name'];
+                    }
+                    
                     $history->push([
                         'action' => 'picked',
                         'item_description' => trim(($style ?: '') . ' - ' . ($color ?: '') . ' - ' . ($packingWay ?: 'hook')),
-                        'quantity' => $picked['quantity_picked'] ?? 0,
-                        'carton_number' => $picked['carton_number'] ?? '',
-                        'action_at' => $picked['picked_at'] ?? now()->toIso8601String(),
-                        'user_id' => $picked['picked_by_user_id'] ?? null,
-                        'user_name' => !empty($picked['picked_by_user_name']) ? $picked['picked_by_user_name'] : (!empty($picked['user_name']) ? $picked['user_name'] : 'System'),
+                        'quantity' => isset($picked['quantity_picked']) ? (int)($picked['quantity_picked']) : 0,
+                        'carton_number' => isset($picked['carton_number']) ? (string)$picked['carton_number'] : '',
+                        'action_at' => isset($picked['picked_at']) ? (string)$picked['picked_at'] : now()->toIso8601String(),
+                        'user_id' => isset($picked['picked_by_user_id']) ? $picked['picked_by_user_id'] : null,
+                        'user_name' => $userName,
                     ]);
                 }
             }
         } else {
             // Use history entries
             foreach ($historyEntries as $entry) {
+                // Ensure $entry is an array
+                if (!is_array($entry)) {
+                    continue;
+                }
+                
                 // Normalize user_name - prioritize user_name, then picked_by_user_name, then default to 'System'
                 $userName = 'System';
-                if (!empty($entry['user_name'])) {
-                    $userName = $entry['user_name'];
-                } elseif (!empty($entry['picked_by_user_name'])) {
-                    $userName = $entry['picked_by_user_name'];
+                if (isset($entry['user_name']) && !empty($entry['user_name'])) {
+                    $userName = (string)$entry['user_name'];
+                } elseif (isset($entry['picked_by_user_name']) && !empty($entry['picked_by_user_name'])) {
+                    $userName = (string)$entry['picked_by_user_name'];
                 }
                 
                 $history->push([
-                    'action' => $entry['action'] ?? 'picked',
-                    'item_description' => $entry['item_description'] ?? '',
-                    'quantity' => $entry['quantity'] ?? 0,
-                    'carton_number' => $entry['carton_number'] ?? '',
-                    'action_at' => $entry['action_at'] ?? now()->toIso8601String(),
-                    'user_id' => $entry['user_id'] ?? null,
+                    'action' => isset($entry['action']) ? (string)$entry['action'] : 'picked',
+                    'item_description' => isset($entry['item_description']) ? (string)$entry['item_description'] : '',
+                    'quantity' => isset($entry['quantity']) ? (int)$entry['quantity'] : 0,
+                    'carton_number' => isset($entry['carton_number']) ? (string)$entry['carton_number'] : '',
+                    'action_at' => isset($entry['action_at']) ? (string)$entry['action_at'] : now()->toIso8601String(),
+                    'user_id' => isset($entry['user_id']) ? $entry['user_id'] : null,
                     'user_name' => $userName,
                 ]);
             }
         }
+        
+        // Ensure all entries have user_name set
+        $history = $history->map(function ($entry) {
+            if (!is_array($entry)) {
+                return $entry;
+            }
+            // Ensure user_name is always set
+            if (!isset($entry['user_name']) || empty($entry['user_name'])) {
+                $entry['user_name'] = 'System';
+            }
+            return $entry;
+        });
         
         // Sort by action_at descending (most recent first)
         return $history->sortByDesc('action_at')->values();
