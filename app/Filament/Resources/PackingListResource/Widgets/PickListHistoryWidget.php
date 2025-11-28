@@ -113,16 +113,32 @@ class PickListHistoryWidget extends Widget
             }
         }
         
-        // Ensure all entries have user_name set
+        // Ensure all entries have user_name set and remove any picked_by_user_name references
         $history = $history->map(function ($entry) {
             if (!is_array($entry)) {
                 return $entry;
             }
-            // Ensure user_name is always set
-            if (!isset($entry['user_name']) || empty($entry['user_name'])) {
-                $entry['user_name'] = 'System';
+            
+            // Normalize user_name - ensure it's always set and remove picked_by_user_name
+            $userName = 'System';
+            if (isset($entry['user_name']) && !empty($entry['user_name'])) {
+                $userName = (string)$entry['user_name'];
+            } elseif (isset($entry['picked_by_user_name']) && !empty($entry['picked_by_user_name'])) {
+                $userName = (string)$entry['picked_by_user_name'];
             }
-            return $entry;
+            
+            // Create a clean entry array with only the fields we need
+            $cleanEntry = [
+                'action' => isset($entry['action']) ? (string)$entry['action'] : 'picked',
+                'item_description' => isset($entry['item_description']) ? (string)$entry['item_description'] : '',
+                'quantity' => isset($entry['quantity']) ? (int)$entry['quantity'] : 0,
+                'carton_number' => isset($entry['carton_number']) ? (string)$entry['carton_number'] : '',
+                'action_at' => isset($entry['action_at']) ? (string)$entry['action_at'] : now()->toIso8601String(),
+                'user_id' => isset($entry['user_id']) ? $entry['user_id'] : null,
+                'user_name' => $userName, // Always set, never picked_by_user_name
+            ];
+            
+            return $cleanEntry;
         });
         
         // Sort by action_at descending (most recent first)
