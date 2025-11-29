@@ -47,11 +47,6 @@ class IncomingShipmentResource extends Resource
                             ->dehydrated(false)
                             ->default(fn ($record) => $record?->created_at ?? now())
                             ->visible(fn ($record) => $record !== null),
-                        Forms\Components\Textarea::make('description')
-                            ->label('Description')
-                            ->rows(3)
-                            ->placeholder('Optional description for this shipment')
-                            ->columnSpanFull(),
                         Forms\Components\Select::make('carrier')
                             ->label('Shipping Provider')
                             ->options([
@@ -66,17 +61,11 @@ class IncomingShipmentResource extends Resource
                             ->label('Tracking Number')
                             ->maxLength(255)
                             ->placeholder('Enter tracking number'),
-                        Forms\Components\Select::make('status')
-                            ->label('Status')
-                            ->options([
-                                'shipped' => 'Shipped',
-                                'shipped_track' => 'Shipped with Tracking',
-                                'partially_received' => 'Partially Received',
-                                'received' => 'Received',
-                            ])
-                            ->default('shipped')
-                            ->required()
-                            ->native(false),
+                        Forms\Components\Textarea::make('description')
+                            ->label('Notes')
+                            ->rows(3)
+                            ->placeholder('Optional notes for this shipment')
+                            ->columnSpanFull(),
                         Forms\Components\Hidden::make('items')
                             ->default([]),
                     ])
