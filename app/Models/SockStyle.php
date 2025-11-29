@@ -11,6 +11,7 @@ class SockStyle extends Model
 
     protected $fillable = [
         'name',
+        'eid',
         'packaging_style',
         'is_active',
     ];

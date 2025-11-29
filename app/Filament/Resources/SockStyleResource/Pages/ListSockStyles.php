@@ -80,6 +80,7 @@ class ListSockStyles extends ListRecords
                             
                             SockStyle::create([
                                 'name' => $uniqueName,
+                                'eid' => null, // EiD can be added later
                                 'packaging_style' => $packagingStyle,
                                 'is_active' => true,
                             ]);
@@ -103,7 +104,7 @@ class ListSockStyles extends ListRecords
                         ->label('CSV File')
                         ->acceptedFileTypes(['text/csv'])
                         ->required()
-                        ->helperText('Upload a CSV file with columns: Product Name, Packaging Style')
+                        ->helperText('Upload a CSV file with columns: Product Name, Ethos ID (EiD), Packaging Style')
                         ->disk('local')
                         ->directory('temp-csv-imports')
                         ->visibility('private')
@@ -163,6 +164,7 @@ class ListSockStyles extends ListRecords
                         
                         SockStyle::create([
                             'name' => $item['name'],
+                            'eid' => $item['eid'] ?? null,
                             'packaging_style' => $item['packaging_style'] ?? null,
                             'is_active' => true,
                         ]);
@@ -202,9 +204,11 @@ class ListSockStyles extends ListRecords
             $colTrimmed = trim($col);
             $colLower = strtolower($colTrimmed);
             
-            // Map headers: Product Name, Packaging Style
+            // Map headers: Product Name, EiD/Ethos ID, Packaging Style
             if (preg_match('/product.*name|name/i', $colTrimmed)) {
                 $headerMap['name'] = $index;
+            } elseif (preg_match('/ethos.*id|eid/i', $colLower)) {
+                $headerMap['eid'] = $index;
             } elseif (preg_match('/packaging.*style|packaging/i', $colLower)) {
                 $headerMap['packaging_style'] = $index;
             }
@@ -228,6 +232,9 @@ class ListSockStyles extends ListRecords
                 'name' => isset($headerMap['name']) && isset($row[$headerMap['name']]) 
                     ? trim($row[$headerMap['name']]) 
                     : '',
+                'eid' => isset($headerMap['eid']) && isset($row[$headerMap['eid']]) 
+                    ? trim($row[$headerMap['eid']]) 
+                    : null,
                 'packaging_style' => isset($headerMap['packaging_style']) && isset($row[$headerMap['packaging_style']]) 
                     ? trim($row[$headerMap['packaging_style']]) 
                     : null,

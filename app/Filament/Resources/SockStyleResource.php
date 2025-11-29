@@ -37,6 +37,11 @@ class SockStyleResource extends Resource
                             ->unique(ignoreRecord: true)
                             ->placeholder('e.g., Athletic Crew - Black, Dress Socks - Navy')
                             ->helperText('Include style and color in the product name'),
+                        Forms\Components\TextInput::make('eid')
+                            ->label('Ethos ID (EiD)')
+                            ->maxLength(255)
+                            ->placeholder('e.g., EID-12345')
+                            ->helperText('Enter the Ethos ID for this product'),
                         Forms\Components\Select::make('packaging_style')
                             ->label('Packaging Style')
                             ->options([
@@ -62,6 +67,21 @@ class SockStyleResource extends Resource
                     ->color('primary')
                     ->url(fn ($record) => SockStyleResource::getUrl('view', ['record' => $record]))
                     ->openUrlInNewTab(false),
+                Tables\Columns\TextColumn::make('eid')
+                    ->label('Ethos ID (EiD)')
+                    ->searchable()
+                    ->sortable()
+                    ->placeholder('—'),
+                Tables\Columns\TextColumn::make('packaging_style')
+                    ->label('Packaging Style')
+                    ->sortable()
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Hook' => 'info',
+                        'Sleeve Wrap' => 'success',
+                        'Elastic Loop' => 'warning',
+                        default => 'gray',
+                    }),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime()
