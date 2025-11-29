@@ -106,6 +106,11 @@ class CreateIncomingShipment extends CreateRecord
             $data['name'] = $this->generateNextShipmentNumber();
         }
         
+        // Track when tracking number is first added
+        if (!empty($data['tracking_number'])) {
+            $data['tracking_added_at'] = now();
+        }
+        
         // Set status to 'shipped' when shipment is created
         // If tracking number is provided, set to 'shipped_track'
         if (empty($data['status'])) {

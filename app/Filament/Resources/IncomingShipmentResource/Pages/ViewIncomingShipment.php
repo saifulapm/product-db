@@ -21,6 +21,7 @@ class ViewIncomingShipment extends ViewRecord
     {
         return [
             IncomingShipmentResource\Widgets\ShipmentContentsWidget::class,
+            IncomingShipmentResource\Widgets\ShipmentTimelineWidget::class,
         ];
     }
 }

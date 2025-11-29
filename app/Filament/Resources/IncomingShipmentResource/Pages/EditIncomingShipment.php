@@ -181,24 +181,69 @@ class EditIncomingShipment extends EditRecord
     
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        // Track when tracking number is first added
+        if (!empty($data['tracking_number']) && empty($this->record->tracking_added_at)) {
+            $data['tracking_added_at'] = now();
+        }
+        
         // Update status to 'shipped_track' if tracking number is added and status is 'shipped'
         if (!empty($data['tracking_number']) && $this->record->status === 'shipped') {
             $data['status'] = 'shipped_track';
         }
         
-        // Remove the _selected checkbox field, product_id, and is_saved flag from items before saving
+        // Track when items are received
         if (isset($data['items']) && is_array($data['items'])) {
-            foreach ($data['items'] as &$item) {
+            $hasReceivedItems = false;
+            $receiveHistory = $this->record->receive_history ?? [];
+            
+            foreach ($data['items'] as $index => $item) {
+                // Remove UI-only fields
                 if (isset($item['_selected'])) {
-                    unset($item['_selected']);
+                    unset($data['items'][$index]['_selected']);
                 }
                 if (isset($item['product_id'])) {
-                    unset($item['product_id']);
+                    unset($data['items'][$index]['product_id']);
                 }
                 if (isset($item['is_saved'])) {
-                    unset($item['is_saved']); // Don't save UI flag to database
+                    unset($data['items'][$index]['is_saved']);
+                }
+                
+                // Check if received_qty changed
+                $oldItem = $this->record->items[$index] ?? null;
+                $oldReceivedQty = $oldItem['received_qty'] ?? 0;
+                $newReceivedQty = (int)($item['received_qty'] ?? 0);
+                
+                if ($newReceivedQty > 0 && $newReceivedQty != $oldReceivedQty) {
+                    $hasReceivedItems = true;
+                    
+                    // Track first receive time
+                    if (empty($this->record->first_received_at)) {
+                        $data['first_received_at'] = now();
+                    }
+                    
+                    // Add to receive history
+                    $receiveHistory[] = [
+                        'item_index' => $index,
+                        'carton_number' => $item['carton_number'] ?? '',
+                        'order_number' => $item['order_number'] ?? '',
+                        'eid' => $item['eid'] ?? '',
+                        'product_name' => ($item['style'] ?? '') . ' - ' . ($item['color'] ?? ''),
+                        'quantity' => $item['quantity'] ?? 0,
+                        'received_qty' => $newReceivedQty,
+                        'previous_received_qty' => $oldReceivedQty,
+                        'received_at' => now()->toDateTimeString(),
+                        'received_by' => auth()->id(),
+                    ];
                 }
             }
+            
+            $data['receive_history'] = $receiveHistory;
+            
+            // Calculate and update status based on received quantities
+            $tempRecord = clone $this->record;
+            $tempRecord->items = $data['items'];
+            $calculatedStatus = $tempRecord->calculateStatusFromReceivedQuantities();
+            $data['status'] = $calculatedStatus;
         }
         
         return $data;
@@ -208,6 +253,7 @@ class EditIncomingShipment extends EditRecord
     {
         return [
             IncomingShipmentResource\Widgets\ShipmentContentsWidget::class,
+            IncomingShipmentResource\Widgets\ShipmentTimelineWidget::class,
         ];
     }
 

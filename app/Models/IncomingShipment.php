@@ -25,12 +25,70 @@ class IncomingShipment extends Model
     ];
 
     protected $casts = [
+        'shipment_date' => 'date',
         'expected_date' => 'date',
         'received_date' => 'date',
         'items' => 'array',
         'pick_lists' => 'array',
         'delivered_items' => 'array',
+        'tracking_added_at' => 'datetime',
+        'first_received_at' => 'datetime',
+        'receive_history' => 'array',
     ];
+
+    /**
+     * Calculate the shipment status based on received quantities.
+     * 
+     * @return string Status: 'received', 'partially_received', or current status
+     */
+    public function calculateStatusFromReceivedQuantities(): string
+    {
+        $items = $this->items ?? [];
+        
+        if (empty($items)) {
+            return $this->status ?? 'shipped';
+        }
+
+        $totalQuantity = 0;
+        $totalReceived = 0;
+        $hasAnyReceived = false;
+        $allReceived = true;
+
+        foreach ($items as $item) {
+            $quantity = (int)($item['quantity'] ?? 0);
+            $receivedQty = (int)($item['received_qty'] ?? 0);
+            
+            $totalQuantity += $quantity;
+            $totalReceived += $receivedQty;
+            
+            if ($receivedQty > 0) {
+                $hasAnyReceived = true;
+            }
+            
+            if ($receivedQty < $quantity) {
+                $allReceived = false;
+            }
+        }
+
+        // If no items have been received, keep current status (unless it's already received/partially_received)
+        if (!$hasAnyReceived) {
+            $currentStatus = $this->status ?? 'shipped';
+            // Don't change from shipped/shipped_track if nothing received
+            if (in_array($currentStatus, ['shipped', 'shipped_track'])) {
+                return $currentStatus;
+            }
+            // If status was received/partially_received but now nothing received, reset to shipped
+            return 'shipped';
+        }
+
+        // If all items are fully received
+        if ($allReceived && $totalReceived >= $totalQuantity) {
+            return 'received';
+        }
+
+        // If some items are received but not all
+        return 'partially_received';
+    }
 
     /**
      * Get the user who created this shipment.

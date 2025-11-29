@@ -52,6 +52,16 @@ class IncomingShipmentResource extends Resource
                             ->rows(3)
                             ->placeholder('Optional description for this shipment')
                             ->columnSpanFull(),
+                        Forms\Components\Select::make('carrier')
+                            ->label('Shipping Provider')
+                            ->options([
+                                'UPS' => 'UPS',
+                                'FedEx' => 'FedEx',
+                                'USPS' => 'USPS',
+                                'DHL' => 'DHL',
+                            ])
+                            ->searchable()
+                            ->native(false),
                         Forms\Components\TextInput::make('tracking_number')
                             ->label('Tracking Number')
                             ->maxLength(255)
@@ -60,11 +70,13 @@ class IncomingShipmentResource extends Resource
                             ->label('Status')
                             ->options([
                                 'shipped' => 'Shipped',
-                                'shipped_track' => 'Shipped - Track',
+                                'shipped_track' => 'Shipped with Tracking',
+                                'partially_received' => 'Partially Received',
                                 'received' => 'Received',
                             ])
                             ->default('shipped')
-                            ->required(),
+                            ->required()
+                            ->native(false),
                         Forms\Components\Hidden::make('items')
                             ->default([]),
                     ])
@@ -89,12 +101,14 @@ class IncomingShipmentResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         'shipped' => 'gray',
                         'shipped_track' => 'info',
+                        'partially_received' => 'warning',
                         'received' => 'success',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'shipped' => 'Shipped',
-                        'shipped_track' => 'Shipped - Track',
+                        'shipped_track' => 'Shipped with Tracking',
+                        'partially_received' => 'Partially Received',
                         'received' => 'Received',
                         default => $state,
                     }),
@@ -103,12 +117,14 @@ class IncomingShipmentResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->url(function ($record) {
-                        if ($record->status === 'shipped_track' && !empty($record->tracking_number)) {
+                        if (!empty($record->tracking_number)) {
                             return static::getTrackingUrl($record->tracking_number, strtolower($record->carrier ?? ''));
                         }
                         return null;
                     })
-                    ->openUrlInNewTab(),
+                    ->openUrlInNewTab()
+                    ->color('primary')
+                    ->icon('heroicon-o-arrow-top-right-on-square'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime('M d, Y')

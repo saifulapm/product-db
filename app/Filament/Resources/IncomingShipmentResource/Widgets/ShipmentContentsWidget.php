@@ -254,9 +254,14 @@ class ShipmentContentsWidget extends Widget
             return;
         }
 
+        // Track receive history
+        $receiveHistory = $this->record->receive_history ?? [];
+        $oldItems = $this->record->items ?? [];
+        $hasReceivedItems = false;
+
         // Convert items back to form format
         $formItems = [];
-        foreach ($this->items as $item) {
+        foreach ($this->items as $index => $item) {
             $productName = $item['product_name'] ?? '';
             $style = '';
             $color = '';
@@ -280,6 +285,28 @@ class ShipmentContentsWidget extends Widget
                 }
             }
             
+            $oldItem = $oldItems[$index] ?? null;
+            $oldReceivedQty = (int)($oldItem['received_qty'] ?? 0);
+            $newReceivedQty = (int)($item['received_qty'] ?? 0);
+            
+            // Track receive history if received_qty changed
+            if ($newReceivedQty > 0 && $newReceivedQty != $oldReceivedQty) {
+                $hasReceivedItems = true;
+                
+                $receiveHistory[] = [
+                    'item_index' => $index,
+                    'carton_number' => $item['carton_number'] ?? '',
+                    'order_number' => $item['order_number'] ?? '',
+                    'eid' => $item['eid'] ?? '',
+                    'product_name' => $productName,
+                    'quantity' => (int)($item['quantity'] ?? 0),
+                    'received_qty' => $newReceivedQty,
+                    'previous_received_qty' => $oldReceivedQty,
+                    'received_at' => now()->toDateTimeString(),
+                    'received_by' => auth()->id(),
+                ];
+            }
+            
             $formItems[] = [
                 'carton_number' => $item['carton_number'] ?? '',
                 'order_number' => $item['order_number'] ?? '',
@@ -293,12 +320,59 @@ class ShipmentContentsWidget extends Widget
             ];
         }
 
-        // Save directly to record
-        $this->record->items = $formItems;
-        $this->record->save();
+        // Update record directly in database without mutating reactive prop
+        $updateData = ['items' => $formItems];
         
-        // Refresh the record
-        $this->record->refresh();
+        // Track first receive time
+        if ($hasReceivedItems && empty($this->record->first_received_at)) {
+            $updateData['first_received_at'] = now();
+        }
+        
+        // Update receive history
+        if ($hasReceivedItems) {
+            $updateData['receive_history'] = $receiveHistory;
+        }
+        
+        // Calculate and update status based on received quantities
+        $tempRecord = clone $this->record;
+        $tempRecord->items = $formItems;
+        $calculatedStatus = $tempRecord->calculateStatusFromReceivedQuantities();
+        $updateData['status'] = $calculatedStatus;
+        
+        // Update the record directly using the model (not the reactive prop)
+        IncomingShipment::where('id', $this->record->id)->update($updateData);
+        
+        // Reload items from database to reflect changes (without mutating reactive prop)
+        $freshRecord = IncomingShipment::find($this->record->id);
+        if ($freshRecord) {
+            // Update items array from fresh database record without mutating reactive prop
+            $savedItems = $freshRecord->items ?? [];
+            if (is_array($savedItems)) {
+                $this->items = [];
+                foreach ($savedItems as $item) {
+                    $style = $item['style'] ?? '';
+                    $color = $item['color'] ?? '';
+                    $productName = '';
+                    if (!empty($style) && !empty($color)) {
+                        $productName = $style . ' - ' . $color;
+                    } elseif (!empty($style)) {
+                        $productName = $style;
+                    } elseif (!empty($color)) {
+                        $productName = $color;
+                    }
+
+                    $this->items[] = [
+                        'carton_number' => $item['carton_number'] ?? '',
+                        'order_number' => $item['order_number'] ?? '',
+                        'eid' => $item['eid'] ?? '',
+                        'product_name' => $productName,
+                        'quantity' => $item['quantity'] ?? 0,
+                        'received_qty' => $item['received_qty'] ?? 0,
+                        'is_saved' => true,
+                    ];
+                }
+            }
+        }
     }
 
     public function updated($propertyName): void
