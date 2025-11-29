@@ -65,16 +65,16 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make('Tasks'),
-                NavigationGroup::make('Mockups'),
                 NavigationGroup::make('Design Tools'),
+                NavigationGroup::make('Mockups'),
                 NavigationGroup::make('In House Print'),
                 NavigationGroup::make('Embroidery'),
+                NavigationGroup::make('Headwear'),
                 NavigationGroup::make('Patches'),
                 NavigationGroup::make('Socks'),
                 NavigationGroup::make('Sock Pre Orders'),
                 NavigationGroup::make('Bottles'),
                 NavigationGroup::make('Towels'),
-                NavigationGroup::make('Operations'),
                 NavigationGroup::make('Customer Service'),
                 NavigationGroup::make('Data'),
                 NavigationGroup::make('Admin'),
