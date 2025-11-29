@@ -200,5 +200,22 @@ class Task extends Model
         static::deleting(function (Task $task) {
             $task->subtasks()->delete();
         });
+
+        // Send notification when task is assigned to a user
+        static::saved(function (Task $task) {
+            // Check if assigned_to was changed or if this is a new task with assigned_to set
+            $shouldNotify = ($task->wasChanged('assigned_to') || $task->wasRecentlyCreated) && $task->assigned_to;
+            
+            if ($shouldNotify) {
+                $assignedUser = $task->assignedUser;
+                if ($assignedUser && $assignedUser->id !== $task->created_by) {
+                    // Load parent task relationship if this is a subtask
+                    if ($task->parent_task_id) {
+                        $task->load('parentTask');
+                    }
+                    $assignedUser->notify(new \App\Notifications\TaskAssignedNotification($task));
+                }
+            }
+        });
     }
 }
