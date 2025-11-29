@@ -29,7 +29,3 @@ return new class extends Migration
         Schema::dropIfExists('sock_styles');
     }
 };
-
-        Schema::dropIfExists('sock_styles');
-    }
-};

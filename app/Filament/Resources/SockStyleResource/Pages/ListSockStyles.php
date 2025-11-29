@@ -15,6 +15,7 @@ class ListSockStyles extends ListRecords
 {
     protected static string $resource = SockStyleResource::class;
 
+
     protected function getHeaderActions(): array
     {
         return [
