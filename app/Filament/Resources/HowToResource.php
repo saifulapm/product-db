@@ -22,6 +22,11 @@ class HowToResource extends Resource
     protected static ?string $navigationLabel = 'How To\'s';
     
     protected static ?string $navigationGroup = 'Customer Service';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('how-tos.view');
+    }
     
     protected static ?int $navigationSort = 3;
 

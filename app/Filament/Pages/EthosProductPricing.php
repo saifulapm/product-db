@@ -21,6 +21,11 @@ class EthosProductPricing extends Page
 
     protected static ?string $slug = 'ethos/product-pricing';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('product-pricing.view');
+    }
+
     protected static string $view = 'filament.pages.ethos-product-pricing';
     
     #[Url]

@@ -20,6 +20,11 @@ class LoginInfoResource extends Resource
 
     protected static ?string $navigationGroup = 'Customer Service';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('login-info.view');
+    }
+
     protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form

@@ -28,10 +28,10 @@ class ReferenceImageResource extends Resource
     protected static ?string $navigationGroup = 'Embroidery';
     
     protected static ?int $navigationSort = 1;
-    
+
     public static function shouldRegisterNavigation(): bool
     {
-        return false;
+        return auth()->check() && auth()->user()->hasPermission('reference-images.view');
     }
 
     public static function form(Form $form): Form

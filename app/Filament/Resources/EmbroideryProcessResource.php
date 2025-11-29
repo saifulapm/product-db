@@ -20,6 +20,11 @@ class EmbroideryProcessResource extends Resource
 
     protected static ?string $navigationGroup = 'Embroidery';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('embroidery-process.view');
+    }
+
     protected static ?int $navigationSort = -1;
 
     public static function form(Form $form): Form

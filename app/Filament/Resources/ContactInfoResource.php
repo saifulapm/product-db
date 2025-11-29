@@ -24,6 +24,11 @@ class ContactInfoResource extends Resource
     protected static ?string $navigationLabel = 'Contact Information';
     
     protected static ?string $navigationGroup = 'Customer Service';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('contact-info.view');
+    }
     
     protected static ?int $navigationSort = 0;
 

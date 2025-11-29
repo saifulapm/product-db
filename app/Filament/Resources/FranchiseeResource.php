@@ -23,6 +23,11 @@ class FranchiseeResource extends Resource
 
     protected static ?string $navigationGroup = 'Data';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('franchisees.view');
+    }
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form

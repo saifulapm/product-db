@@ -22,6 +22,11 @@ class PackagingResource extends Resource
     protected static ?string $modelLabel = 'Packaging';
     protected static ?string $pluralModelLabel = 'Packaging';
     protected static ?string $navigationGroup = 'Socks';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('packaging.view');
+    }
     protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form

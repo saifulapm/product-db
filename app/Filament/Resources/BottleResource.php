@@ -19,6 +19,11 @@ class BottleResource extends Resource
     protected static ?string $modelLabel = 'Bottle';
     protected static ?string $pluralModelLabel = 'Bottles';
     protected static ?string $navigationGroup = 'Bottles';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('bottles.view');
+    }
     protected static ?int $navigationSort = 0;
 
     public static function form(Form $form): Form

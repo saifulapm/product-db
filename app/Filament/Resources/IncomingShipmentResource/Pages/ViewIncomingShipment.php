@@ -20,7 +20,7 @@ class ViewIncomingShipment extends ViewRecord
     protected function getFooterWidgets(): array
     {
         return [
-            IncomingShipmentResource\Widgets\IncomingItemsTableWidget::class,
+            IncomingShipmentResource\Widgets\ShipmentContentsWidget::class,
         ];
     }
 }

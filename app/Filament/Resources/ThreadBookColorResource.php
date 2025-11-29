@@ -23,6 +23,11 @@ class ThreadBookColorResource extends Resource
     protected static ?string $modelLabel = 'Thread Book Color';
     protected static ?string $pluralModelLabel = 'Thread Book Colors';
     protected static ?string $navigationGroup = 'Socks';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('thread-book-colors.view');
+    }
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form

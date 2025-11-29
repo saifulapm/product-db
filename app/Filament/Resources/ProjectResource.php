@@ -23,6 +23,11 @@ class ProjectResource extends Resource
 
     protected static ?string $navigationGroup = 'Tasks';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('tasks.types.view');
+    }
+
     protected static ?int $navigationSort = 4;
 
     public static function getLabel(): ?string

@@ -60,12 +60,12 @@ class ImportProductDb extends Command
                     $data = $this->mapProductData($product);
                     
                     // Check if product already exists
-                    $existing = DB::table('products')->where('supplier_code', $data['supplier_code'])->first();
+                    $existing = DB::table('products')->where('sku', $data['sku'])->first();
                     
                     if ($existing) {
                         // Update existing product
                         DB::table('products')
-                            ->where('supplier_code', $data['supplier_code'])
+                            ->where('sku', $data['sku'])
                             ->update($data);
                         $updated++;
                     } else {
@@ -105,7 +105,7 @@ class ImportProductDb extends Command
     {
         return [
             'name' => $product['name'] ?? '',
-            'supplier_code' => $product['sku'] ?? '',
+            'sku' => $product['sku'] ?? '',
             'status' => 'supplier_product',
             'product_type' => $product['product_type'] ?? null,
             'supplier' => $product['supplier'] ?? 'ASC',
@@ -118,8 +118,8 @@ class ImportProductDb extends Command
             'model_size' => $product['model_size'] ?? null,
             'minimums' => $product['minimums'] ?? null,
             'starting_from_price' => $product['starting_from_price'] ? (string)$product['starting_from_price'] : null,
-            'cost_price' => $product['cost'] ?? 0,
-            'retail_price' => $product['price'] ?? 0,
+            'cost' => $product['cost'] ?? 0,
+            'price' => $product['price'] ?? 0,
             'parent_product' => $product['parent_product'] ?? null,
             'hs_code' => $product['hs_code'] ?? null,
             'how_it_fits' => $product['specifications'] ?? null,

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\IncomingShipmentResource\Pages;
 
 use App\Filament\Resources\IncomingShipmentResource;
-use App\Models\SockStyle;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Forms;
@@ -21,6 +20,11 @@ class EditIncomingShipment extends EditRecord
             Actions\ViewAction::make(),
             Actions\DeleteAction::make(),
         ];
+    }
+
+    protected function getFormActions(): array
+    {
+        return []; // Hide default form actions - buttons are in the widget at bottom
     }
     
     public function bulkDeleteItems(): void
@@ -57,101 +61,6 @@ class EditIncomingShipment extends EditRecord
             ->send();
     }
     
-    public function bulkAddProducts(): Actions\Action
-    {
-        return Actions\Action::make('bulkAddProducts')
-            ->label('Bulk Add Products')
-            ->icon('heroicon-o-plus-circle')
-            ->color('success')
-            ->form([
-                Forms\Components\Select::make('product_ids')
-                    ->label('Select Products')
-                    ->options(function () {
-                        return SockStyle::orderBy('name')->pluck('name', 'id');
-                    })
-                    ->multiple()
-                    ->searchable()
-                    ->preload()
-                    ->required()
-                    ->placeholder('Search and select products')
-                    ->helperText('Select multiple products to add to the shipment')
-                    ->maxItems(100),
-            ])
-            ->action(function (array $data) {
-                $productIds = $data['product_ids'] ?? [];
-                
-                if (empty($productIds)) {
-                    Notification::make()
-                        ->title('No products selected')
-                        ->body('Please select at least one product.')
-                        ->warning()
-                        ->send();
-                    return;
-                }
-                
-                // Get current items from form
-                $currentItems = $this->form->getState()['items'] ?? [];
-                if (!is_array($currentItems)) {
-                    $currentItems = [];
-                }
-                
-                // Create new items from selected products
-                $newItems = [];
-                foreach ($productIds as $productId) {
-                    $product = SockStyle::find($productId);
-                    if (!$product) {
-                        continue;
-                    }
-                    
-                    // Parse the product name to extract style/color
-                    $name = $product->name;
-                    $packagingStyle = $product->packaging_style ?? '';
-                    
-                    // Remove packaging style from name if it's at the end
-                    $nameWithoutPackaging = $name;
-                    if (!empty($packagingStyle)) {
-                        $nameWithoutPackaging = preg_replace('/\s*-\s*' . preg_quote($packagingStyle, '/') . '$/i', '', $name);
-                    }
-                    
-                    // Try to split style and color
-                    $parts = explode(' - ', $nameWithoutPackaging);
-                    $style = '';
-                    $color = '';
-                    if (count($parts) >= 2) {
-                        $style = trim($parts[0]);
-                        $color = trim($parts[1]);
-                    } else {
-                        $style = trim($nameWithoutPackaging);
-                        $color = '';
-                    }
-                    
-                    $newItems[] = [
-                        'product_id' => $productId,
-                        'carton_number' => '',
-                        'style' => $style,
-                        'color' => $color,
-                        'packing_way' => $packagingStyle ?: 'Hook',
-                        'quantity' => 1,
-                    ];
-                }
-                
-                // Merge new items with existing items
-                $mergedItems = array_merge($currentItems, $newItems);
-                
-                // Update the form data
-                $formData = $this->form->getState();
-                $formData['items'] = $mergedItems;
-                
-                // Fill the form with updated data
-                $this->form->fill($formData);
-                
-                Notification::make()
-                    ->title('Products added')
-                    ->body(count($newItems) . ' product(s) added to the shipment.')
-                    ->success()
-                    ->send();
-            });
-    }
     
     protected function parseCsvFile(string $filePath): array
     {
@@ -272,7 +181,12 @@ class EditIncomingShipment extends EditRecord
     
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        // Remove the _selected checkbox field and product_id from items before saving
+        // Update status to 'shipped_track' if tracking number is added and status is 'shipped'
+        if (!empty($data['tracking_number']) && $this->record->status === 'shipped') {
+            $data['status'] = 'shipped_track';
+        }
+        
+        // Remove the _selected checkbox field, product_id, and is_saved flag from items before saving
         if (isset($data['items']) && is_array($data['items'])) {
             foreach ($data['items'] as &$item) {
                 if (isset($item['_selected'])) {
@@ -280,6 +194,9 @@ class EditIncomingShipment extends EditRecord
                 }
                 if (isset($item['product_id'])) {
                     unset($item['product_id']);
+                }
+                if (isset($item['is_saved'])) {
+                    unset($item['is_saved']); // Don't save UI flag to database
                 }
             }
         }
@@ -290,7 +207,7 @@ class EditIncomingShipment extends EditRecord
     protected function getFooterWidgets(): array
     {
         return [
-            IncomingShipmentResource\Widgets\IncomingItemsTableWidget::class,
+            IncomingShipmentResource\Widgets\ShipmentContentsWidget::class,
         ];
     }
 
@@ -298,6 +215,33 @@ class EditIncomingShipment extends EditRecord
     {
         return [
             'refresh' => '$refresh',
+            'update-shipment-items' => 'updateShipmentItems',
+            'save-shipment-form' => 'handleSave',
         ];
+    }
+
+    public function updateShipmentItems($items): void
+    {
+        $formData = $this->form->getState();
+        $formData['items'] = $items;
+        $this->form->fill($formData);
+    }
+
+    public function handleSave(): void
+    {
+        // Ensure form is filled with latest data from the sync
+        $this->form->fill($this->form->getState());
+        
+        // Call the parent save method which handles validation and persistence
+        try {
+            $this->save();
+        } catch (\Exception $e) {
+            // If save fails, dispatch an error notification
+            \Filament\Notifications\Notification::make()
+                ->title('Error saving shipment')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 }

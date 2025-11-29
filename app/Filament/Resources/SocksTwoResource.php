@@ -21,6 +21,11 @@ class SocksTwoResource extends Resource
     protected static ?string $modelLabel = 'Hat';
     protected static ?string $pluralModelLabel = 'Hats';
     protected static ?string $navigationGroup = 'Headwear';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('headwear.view');
+    }
     protected static ?int $navigationSort = 1;
     protected static ?string $slug = 'socks-2';
 

@@ -18,6 +18,11 @@ class PoSubmission extends Page
     protected static ?int $navigationSort = 3;
     
     protected static string $view = 'filament.pages.po-submission';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('fabric-calculator.view');
+    }
     
     protected function getHeaderWidgets(): array
     {

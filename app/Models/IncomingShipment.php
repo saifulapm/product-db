@@ -10,6 +10,7 @@ class IncomingShipment extends Model
 {
     protected $fillable = [
         'name',
+        'description',
         'tracking_number',
         'carrier',
         'supplier',

@@ -30,6 +30,11 @@ class Permissions extends Page implements HasTable
 
     protected static string $view = 'filament.pages.permissions';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('permissions.view');
+    }
+
     public function table(Table $table): Table
     {
         return $table

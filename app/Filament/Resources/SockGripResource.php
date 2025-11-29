@@ -22,6 +22,11 @@ class SockGripResource extends Resource
     protected static ?string $modelLabel = 'Grip';
     protected static ?string $pluralModelLabel = 'Grips';
     protected static ?string $navigationGroup = 'Socks';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('sock-grips.view');
+    }
     protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form

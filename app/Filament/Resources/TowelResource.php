@@ -20,6 +20,11 @@ class TowelResource extends Resource
 
     protected static ?string $navigationGroup = 'Towels';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('towels.view');
+    }
+
     protected static ?int $navigationSort = 0;
 
     public static function form(Form $form): Form

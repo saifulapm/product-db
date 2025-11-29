@@ -38,6 +38,9 @@
                                         Product
                                     </th>
                                     <th class="px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">
+                                        EiD
+                                    </th>
+                                    <th class="px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">
                                         CTN#
                                     </th>
                                     <th class="px-4 py-3 text-start text-sm font-semibold text-gray-950 dark:text-white">
@@ -68,6 +71,9 @@
                                             @else
                                                 <span class="text-gray-950 dark:text-white">{{ $item['product_name'] ?? 'N/A' }}</span>
                                             @endif
+                                        </td>
+                                        <td class="px-4 py-3 text-sm text-gray-950 dark:text-white">
+                                            {{ $item['eid'] ?? '—' }}
                                         </td>
                                         <td class="px-4 py-3 text-sm text-gray-950 dark:text-white">
                                             {{ $item['carton_number'] ?? '—' }}

@@ -19,6 +19,11 @@ class Calendar extends Page
     protected static ?int $navigationSort = 3;
 
     protected static string $view = 'filament.resources.task-resource.pages.calendar';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('tasks.calendar.view');
+    }
     
     public $currentDate;
     

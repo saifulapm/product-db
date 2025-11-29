@@ -22,7 +22,10 @@ class DstFileResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
-    protected static bool $shouldRegisterNavigation = false;
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('dst-files.view');
+    }
 
     public static function form(Form $form): Form
     {

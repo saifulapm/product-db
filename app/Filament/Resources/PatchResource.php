@@ -22,6 +22,11 @@ class PatchResource extends Resource
 
     protected static ?string $navigationGroup = 'Patches';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('patches.view');
+    }
+
     protected static ?int $navigationSort = 0;
 
     public static function form(Form $form): Form

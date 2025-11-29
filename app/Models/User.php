@@ -79,14 +79,28 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Check if user has a specific permission.
+     * Super-admin users automatically have all permissions.
      */
     public function hasPermission(string $permission): bool
     {
+        // Super-admin users have all permissions
+        if ($this->hasRole('super-admin')) {
+            return true;
+        }
+        
         return $this->roles()
             ->whereHas('permissions', function ($query) use ($permission) {
                 $query->where('slug', $permission);
             })
             ->exists();
+    }
+    
+    /**
+     * Check if user is a super admin.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super-admin');
     }
 
     /**

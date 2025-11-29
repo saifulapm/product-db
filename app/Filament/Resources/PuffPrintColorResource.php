@@ -22,6 +22,11 @@ class PuffPrintColorResource extends Resource
     protected static ?string $modelLabel = 'Puff Print Color';
     protected static ?string $pluralModelLabel = 'Puff Print';
     protected static ?string $navigationGroup = 'In House Print';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('puff-print.view');
+    }
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form

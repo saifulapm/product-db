@@ -52,6 +52,11 @@ class ProductResource extends Resource
 
     protected static ?string $navigationGroup = 'Design Tools';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('products.view');
+    }
+
     protected static ?int $navigationSort = 0;
 
     public static function form(Form $form): Form

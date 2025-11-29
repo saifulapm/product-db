@@ -26,6 +26,11 @@ class UserResource extends Resource
     protected static ?string $navigationGroup = 'Admin';
     protected static ?int $navigationSort = 10;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('users.view');
+    }
+
     public static function form(Form $form): Form
     {
         return $form

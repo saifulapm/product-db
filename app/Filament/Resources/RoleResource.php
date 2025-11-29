@@ -22,7 +22,10 @@ class RoleResource extends Resource
     protected static ?string $modelLabel = 'Role';
     protected static ?string $pluralModelLabel = 'Roles';
     protected static ?string $navigationGroup = 'Admin';
-    protected static bool $shouldRegisterNavigation = false; // Hide from navigation
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('roles.view');
+    }
 
     public static function form(Form $form): Form
     {

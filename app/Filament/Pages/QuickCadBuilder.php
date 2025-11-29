@@ -16,6 +16,11 @@ class QuickCadBuilder extends Page
     protected static ?int $navigationSort = 1;
     
     protected static string $view = 'filament.pages.quick-cad-builder';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('quick-cad-builder.view');
+    }
     
     protected function getHeaderWidgets(): array
     {

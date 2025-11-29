@@ -97,6 +97,10 @@ class IncomingItemsTableWidget extends Widget implements HasActions, HasForms
                                 if (!empty($packagingStyle)) {
                                     $set('packing_way', $packagingStyle);
                                 }
+                                
+                                if (!empty($product->eid)) {
+                                    $set('eid', $product->eid);
+                                }
                             }
                         }
                     }),
@@ -230,6 +234,7 @@ class IncomingItemsTableWidget extends Widget implements HasActions, HasForms
                         'carton_number' => '',
                         'style' => $style,
                         'color' => $color,
+                        'eid' => $product->eid ?? '',
                         'packing_way' => $packagingStyle ?: 'Hook',
                         'quantity' => 1,
                     ];
@@ -387,7 +392,7 @@ class IncomingItemsTableWidget extends Widget implements HasActions, HasForms
             return $items;
         }
         
-        // Normalize header and map columns: Product, Carton, Quantity
+        // Normalize header and map columns: Product, EiD, Carton, Quantity
         $headerMap = [];
         foreach ($header as $index => $col) {
             $colTrimmed = trim($col);
@@ -395,6 +400,8 @@ class IncomingItemsTableWidget extends Widget implements HasActions, HasForms
             
             if (preg_match('/^product$/i', $colTrimmed)) {
                 $headerMap['product'] = $index;
+            } elseif (preg_match('/ethos.*id|eid/i', $colLower)) {
+                $headerMap['eid'] = $index;
             } elseif (preg_match('/^carton$/i', $colTrimmed) || preg_match('/^ctn#?$/i', $colTrimmed)) {
                 $headerMap['carton'] = $index;
             } elseif (preg_match('/^quantity$/i', $colTrimmed) || preg_match('/^qty$/i', $colTrimmed)) {
@@ -460,11 +467,21 @@ class IncomingItemsTableWidget extends Widget implements HasActions, HasForms
                 ? $this->extractQuantity($row[$headerMap['quantity']]) 
                 : 1;
             
+            // Get EiD from CSV if present, otherwise use product's EiD
+            $eid = '';
+            if (isset($headerMap['eid']) && isset($row[$headerMap['eid']])) {
+                $eid = trim($row[$headerMap['eid']]);
+            }
+            if (empty($eid) && !empty($product->eid)) {
+                $eid = $product->eid;
+            }
+            
             $item = [
                 'product_id' => $product->id,
                 'carton_number' => $cartonNumber,
                 'style' => $style,
                 'color' => $color,
+                'eid' => $eid,
                 'packing_way' => $packagingStyle ?: 'Hook',
                 'quantity' => $quantity,
             ];
@@ -785,6 +802,10 @@ class IncomingItemsTableWidget extends Widget implements HasActions, HasForms
                                             if (!empty($packagingStyle)) {
                                                 $set('packing_way', $packagingStyle);
                                             }
+                                            
+                                            if (!empty($product->eid)) {
+                                                $set('eid', $product->eid);
+                                            }
                                         }
                                     }
                                 }),
@@ -795,6 +816,10 @@ class IncomingItemsTableWidget extends Widget implements HasActions, HasForms
                                 ->label('Quantity')
                                 ->numeric()
                                 ->required(),
+                            Forms\Components\Hidden::make('style'),
+                            Forms\Components\Hidden::make('color'),
+                            Forms\Components\Hidden::make('eid'),
+                            Forms\Components\Hidden::make('packing_way'),
                             Forms\Components\Hidden::make('index'),
                             Forms\Components\Hidden::make('style'),
                             Forms\Components\Hidden::make('color'),
@@ -988,6 +1013,10 @@ class IncomingItemsTableWidget extends Widget implements HasActions, HasForms
             if ($productId) {
                 $product = SockStyle::find($productId);
                 $productName = $product?->name ?? 'N/A';
+                // Add EiD if not already in item
+                if (!isset($item['eid']) && !empty($product->eid)) {
+                    $item['eid'] = $product->eid;
+                }
             }
             
             $enrichedItems[] = array_merge($item, [

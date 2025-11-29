@@ -22,6 +22,11 @@ class FaqResource extends Resource
     protected static ?string $navigationLabel = 'FAQs';
     
     protected static ?string $navigationGroup = 'Customer Service';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('faqs.view');
+    }
     
     protected static ?int $navigationSort = 2;
 

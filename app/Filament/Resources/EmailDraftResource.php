@@ -24,6 +24,11 @@ class EmailDraftResource extends Resource
     protected static ?string $navigationLabel = 'Email Drafts';
     
     protected static ?string $navigationGroup = 'Customer Service';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('email-drafts.view');
+    }
     
     protected static ?int $navigationSort = 1;
 

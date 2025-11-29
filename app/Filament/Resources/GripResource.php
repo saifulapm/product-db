@@ -24,7 +24,10 @@ class GripResource extends Resource
     protected static ?string $pluralModelLabel = 'Grips';
     protected static ?string $navigationGroup = 'Socks';
     protected static ?int $navigationSort = 3;
-    protected static bool $shouldRegisterNavigation = false;
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('grips.view');
+    }
 
     public static function form(Form $form): Form
     {

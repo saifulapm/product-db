@@ -22,6 +22,11 @@ class SockCustomizationMethodResource extends Resource
     protected static ?string $modelLabel = 'Customization Method';
     protected static ?string $pluralModelLabel = 'Customization Methods';
     protected static ?string $navigationGroup = 'Socks';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('customization-methods.view');
+    }
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form

@@ -22,6 +22,11 @@ class DtfInHousePrintResource extends Resource
     protected static ?string $modelLabel = 'DTF In House Print';
     protected static ?string $pluralModelLabel = 'DTF In House Prints';
     protected static ?string $navigationGroup = 'In House Print';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('dtf-in-house-print.view');
+    }
     protected static ?int $navigationSort = 1;
     
     protected static bool $shouldRegisterNavigation = false;

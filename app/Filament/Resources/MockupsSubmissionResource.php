@@ -23,6 +23,11 @@ class MockupsSubmissionResource extends Resource
 
     protected static ?string $navigationGroup = 'Mockups';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('mockups.submissions.view');
+    }
+
     protected static ?int $navigationSort = 1;
 
     public static function getSlug(): string

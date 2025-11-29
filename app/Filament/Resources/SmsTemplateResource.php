@@ -20,6 +20,11 @@ class SmsTemplateResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     
     protected static ?string $navigationGroup = 'Admin';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('sms-templates.view');
+    }
     
     protected static ?int $navigationSort = 100;
 

@@ -24,6 +24,11 @@ class SockResource extends Resource
     protected static ?string $modelLabel = 'Sock';
     protected static ?string $pluralModelLabel = 'Socks';
     protected static ?string $navigationGroup = 'Socks';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('socks.styles.view');
+    }
     protected static ?int $navigationSort = 0;
 
     public static function form(Form $form): Form

@@ -86,12 +86,14 @@ class AdminPanelProvider extends PanelProvider
                     ->group('Patches')
                     ->icon('heroicon-o-squares-2x2')
                     ->url(fn (): string => \App\Filament\Resources\PatchResource::getUrl())
-                    ->sort(0),
+                    ->sort(0)
+                    ->visible(fn (): bool => auth()->check() && auth()->user()->hasPermission('patches.view')),
                 NavigationItem::make('Submissions')
                     ->group('Mockups')
                     ->icon('heroicon-o-photo')
                     ->url(fn (): string => \App\Filament\Resources\MockupsSubmissionResource::getUrl('index'))
-                    ->sort(1),
+                    ->sort(1)
+                    ->visible(fn (): bool => auth()->check() && auth()->user()->hasPermission('mockups.submissions.view')),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')

@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\IncomingShipmentResource\Pages;
 use App\Filament\Resources\IncomingShipmentResource\RelationManagers;
 use App\Models\IncomingShipment;
-use App\Models\SockStyle;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -25,6 +24,11 @@ class IncomingShipmentResource extends Resource
     protected static ?string $navigationGroup = 'Sock Pre Orders';
     protected static ?int $navigationSort = 2;
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('incoming-shipments.view');
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -36,29 +40,33 @@ class IncomingShipmentResource extends Resource
                             ->maxLength(255)
                             ->placeholder('e.g., BDR1399 Shipment, November Order, etc.')
                             ->helperText('A descriptive name for this shipment'),
+                        Forms\Components\DateTimePicker::make('created_at')
+                            ->label('Date Created')
+                            ->displayFormat('M d, Y g:i A')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->default(fn ($record) => $record?->created_at ?? now())
+                            ->visible(fn ($record) => $record !== null),
+                        Forms\Components\Textarea::make('description')
+                            ->label('Description')
+                            ->rows(3)
+                            ->placeholder('Optional description for this shipment')
+                            ->columnSpanFull(),
                         Forms\Components\TextInput::make('tracking_number')
                             ->label('Tracking Number')
                             ->maxLength(255)
                             ->placeholder('Enter tracking number'),
-                        Forms\Components\TextInput::make('carrier')
-                            ->label('Carrier')
-                            ->maxLength(255)
-                            ->placeholder('e.g., UPS, FedEx, DHL'),
-                        Forms\Components\TextInput::make('supplier')
-                            ->label('Supplier')
-                            ->maxLength(255)
-                            ->placeholder('Enter supplier name'),
                         Forms\Components\Select::make('status')
                             ->label('Status')
                             ->options([
-                                'pending' => 'Pending',
-                                'in_transit' => 'In Transit',
+                                'shipped' => 'Shipped',
+                                'shipped_track' => 'Shipped - Track',
                                 'received' => 'Received',
-                                'delayed' => 'Delayed',
-                                'cancelled' => 'Cancelled',
                             ])
-                            ->default('pending')
+                            ->default('shipped')
                             ->required(),
+                        Forms\Components\Hidden::make('items')
+                            ->default([]),
                     ])
                     ->columns(2),
                 
@@ -75,30 +83,32 @@ class IncomingShipmentResource extends Resource
                     ->sortable()
                     ->weight('bold')
                     ->default('—'),
-                Tables\Columns\TextColumn::make('tracking_number')
-                    ->label('Tracking Number')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'in_transit' => 'info',
+                        'shipped' => 'gray',
+                        'shipped_track' => 'info',
                         'received' => 'success',
-                        'delayed' => 'danger',
-                        'cancelled' => 'gray',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'pending' => 'Pending',
-                        'in_transit' => 'In Transit',
+                        'shipped' => 'Shipped',
+                        'shipped_track' => 'Shipped - Track',
                         'received' => 'Received',
-                        'delayed' => 'Delayed',
-                        'cancelled' => 'Cancelled',
                         default => $state,
+                    }),
+                Tables\Columns\TextColumn::make('tracking_number')
+                    ->label('Tracking Number')
+                    ->searchable()
+                    ->sortable()
+                    ->url(function ($record) {
+                        if ($record->status === 'shipped_track' && !empty($record->tracking_number)) {
+                            return static::getTrackingUrl($record->tracking_number, strtolower($record->carrier ?? ''));
+                        }
+                        return null;
                     })
-                    ->sortable(),
+                    ->openUrlInNewTab(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime('M d, Y')
@@ -125,6 +135,26 @@ class IncomingShipmentResource extends Resource
                 ]),
             ])
             ->defaultSort('created_at', 'desc');
+    }
+
+    public static function getTrackingUrl(string $trackingNumber, string $carrier = ''): string
+    {
+        $carrier = strtolower(trim($carrier));
+        
+        // Common tracking URL patterns
+        if (strpos($carrier, 'ups') !== false) {
+            return 'https://www.ups.com/track?tracknum=' . urlencode($trackingNumber);
+        } elseif (strpos($carrier, 'fedex') !== false || strpos($carrier, 'fed') !== false) {
+            return 'https://www.fedex.com/fedextrack/?trknbr=' . urlencode($trackingNumber);
+        } elseif (strpos($carrier, 'dhl') !== false) {
+            return 'https://www.dhl.com/en/express/tracking.html?AWB=' . urlencode($trackingNumber);
+        } elseif (strpos($carrier, 'usps') !== false || strpos($carrier, 'us postal') !== false) {
+            return 'https://tools.usps.com/go/TrackConfirmAction?qtc_tLabels1=' . urlencode($trackingNumber);
+        }
+        
+        // Default: try to detect carrier from tracking number format or use generic search
+        // For now, return a generic tracking search URL
+        return 'https://www.google.com/search?q=' . urlencode($trackingNumber . ' tracking');
     }
 
     public static function getRelations(): array

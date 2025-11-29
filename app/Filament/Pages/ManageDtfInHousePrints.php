@@ -26,6 +26,11 @@ class ManageDtfInHousePrints extends Page
     protected static ?int $navigationSort = 0;
     
     protected static string $view = 'filament.pages.manage-dtf-in-house-prints';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('dtf-in-house-print.view');
+    }
     
     protected static string $routePath = 'dtf-in-house-prints';
     
