@@ -64,6 +64,8 @@ class RolePermissionSeeder extends Seeder
             
             // Sock Pre Orders Group
             ['name' => 'View Incoming Shipments', 'slug' => 'incoming-shipments.view', 'resource' => 'sock-pre-orders', 'action' => 'incoming-shipments.view'],
+            ['name' => 'Create Incoming Shipments', 'slug' => 'incoming-shipments.create', 'resource' => 'sock-pre-orders', 'action' => 'incoming-shipments.create'],
+            ['name' => 'Update Incoming Shipments', 'slug' => 'incoming-shipments.update', 'resource' => 'sock-pre-orders', 'action' => 'incoming-shipments.update'],
             ['name' => 'View Packing Lists', 'slug' => 'packing-lists.view', 'resource' => 'sock-pre-orders', 'action' => 'packing-lists.view'],
             
             // Bottles Group
@@ -130,7 +132,7 @@ class RolePermissionSeeder extends Seeder
                     'headwear.view',
                     'patches.view',
                     'socks.styles.view', 'thread-book-colors.view', 'packaging.view', 'sock-grips.view', 'customization-methods.view', 'grips.view',
-                    'incoming-shipments.view', 'packing-lists.view',
+                    'incoming-shipments.view', 'incoming-shipments.create', 'incoming-shipments.update', 'packing-lists.view',
                     'bottles.view',
                     'towels.view',
                     'email-drafts.view', 'faqs.view', 'contact-info.view', 'login-info.view', 'how-tos.view',
@@ -157,7 +159,7 @@ class RolePermissionSeeder extends Seeder
                     'headwear.view',
                     'patches.view',
                     'socks.styles.view', 'thread-book-colors.view', 'packaging.view', 'sock-grips.view',
-                    'incoming-shipments.view',
+                    'incoming-shipments.view', 'incoming-shipments.create', 'incoming-shipments.update',
                     'bottles.view',
                     'towels.view',
                     'admin.access',
