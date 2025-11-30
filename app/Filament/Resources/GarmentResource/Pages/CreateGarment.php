@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\GarmentResource\Pages;
 
 use App\Filament\Resources\GarmentResource;
+use App\Filament\Resources\GarmentResource\Widgets\CubicDimensionsWidget;
 use App\Filament\Resources\GarmentResource\Widgets\GarmentMeasurementsWidget;
 use App\Filament\Resources\GarmentResource\Widgets\VariantEntryWidget;
 use App\Filament\Resources\GarmentResource\Widgets\VariantsSummaryWidget;
@@ -16,6 +17,7 @@ class CreateGarment extends CreateRecord
     protected $listeners = [
         'sync-variants-to-form' => 'syncVariantsToForm',
         'sync-measurements-to-form' => 'syncMeasurementsToForm',
+        'sync-cubic-dimensions-to-form' => 'syncCubicDimensionsToForm',
         'save-garment-form' => 'handleSave',
     ];
 
@@ -32,6 +34,14 @@ class CreateGarment extends CreateRecord
         // Convert measurements from widget to form format
         $formData = $this->form->getState();
         $formData['measurements'] = $measurements;
+        $this->form->fill($formData);
+    }
+
+    public function syncCubicDimensionsToForm($cubicDimensions): void
+    {
+        // Convert cubic dimensions from widget to form format
+        $formData = $this->form->getState();
+        $formData['cubic_dimensions'] = $cubicDimensions;
         $this->form->fill($formData);
     }
 
@@ -61,6 +71,7 @@ class CreateGarment extends CreateRecord
             GarmentMeasurementsWidget::class,
             VariantsSummaryWidget::class,
             VariantEntryWidget::class,
+            CubicDimensionsWidget::class,
         ];
     }
 
@@ -103,6 +114,21 @@ class CreateGarment extends CreateRecord
             });
             // Re-index array
             $data['measurements'] = array_values($data['measurements']);
+        }
+
+        // Ensure cubic_dimensions are included in save data
+        if (!isset($data['cubic_dimensions'])) {
+            $data['cubic_dimensions'] = null;
+        }
+        
+        // Filter out empty cubic dimensions
+        if (is_array($data['cubic_dimensions'])) {
+            $hasValues = !empty($data['cubic_dimensions']['length']) || 
+                        !empty($data['cubic_dimensions']['width']) || 
+                        !empty($data['cubic_dimensions']['height']);
+            if (!$hasValues) {
+                $data['cubic_dimensions'] = null;
+            }
         }
         
         return $data;

@@ -57,6 +57,8 @@ class GarmentResource extends Resource
                             ->default([]),
                         Forms\Components\Hidden::make('measurements')
                             ->default([]),
+                        Forms\Components\Hidden::make('cubic_dimensions')
+                            ->default([]),
                     ])->columns(2),
             ]);
     }

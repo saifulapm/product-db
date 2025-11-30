@@ -77,6 +77,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Bottles'),
                 NavigationGroup::make('Towels'),
                 NavigationGroup::make('Inventory'),
+                NavigationGroup::make('Shipping'),
                 NavigationGroup::make('Incoming Shipments'),
                 NavigationGroup::make('Events'),
                 NavigationGroup::make('Customer Service'),

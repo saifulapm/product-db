@@ -15,6 +15,7 @@ class Garment extends Model
         'description',
         'variants',
         'measurements',
+        'cubic_dimensions',
         'is_active',
     ];
 
@@ -22,5 +23,6 @@ class Garment extends Model
         'is_active' => 'boolean',
         'variants' => 'array',
         'measurements' => 'array',
+        'cubic_dimensions' => 'array',
     ];
 }

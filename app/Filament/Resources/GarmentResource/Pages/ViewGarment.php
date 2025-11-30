@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\GarmentResource\Pages;
 
 use App\Filament\Resources\GarmentResource;
+use App\Filament\Resources\GarmentResource\Widgets\CubicDimensionsViewWidget;
 use App\Filament\Resources\GarmentResource\Widgets\GarmentMeasurementsViewWidget;
 use App\Filament\Resources\GarmentResource\Widgets\GarmentVariantsViewWidget;
 use Filament\Actions;
@@ -30,6 +31,7 @@ class ViewGarment extends ViewRecord
     {
         return [
             GarmentVariantsViewWidget::class,
+            CubicDimensionsViewWidget::class,
         ];
     }
 }
