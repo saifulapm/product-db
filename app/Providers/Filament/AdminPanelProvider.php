@@ -74,12 +74,13 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Headwear'),
                 NavigationGroup::make('Patches'),
                 NavigationGroup::make('Socks'),
-                NavigationGroup::make('Incoming Shipments'),
                 NavigationGroup::make('Bottles'),
                 NavigationGroup::make('Towels'),
+                NavigationGroup::make('Inventory'),
+                NavigationGroup::make('Incoming Shipments'),
+                NavigationGroup::make('Events'),
                 NavigationGroup::make('Customer Service'),
                 NavigationGroup::make('Data'),
-                NavigationGroup::make('Events'),
                 NavigationGroup::make('Admin'),
             ])
             ->navigationItems([
@@ -95,6 +96,12 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn (): string => \App\Filament\Resources\MockupsSubmissionResource::getUrl('index'))
                     ->sort(1)
                     ->visible(fn (): bool => auth()->check() && auth()->user()->hasPermission('mockups.submissions.view')),
+                NavigationItem::make('Inventory')
+                    ->group('Inventory')
+                    ->icon('heroicon-o-cube')
+                    ->url(fn (): string => \App\Filament\Pages\Inventory::getUrl())
+                    ->sort(0)
+                    ->visible(fn (): bool => auth()->check()),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
@@ -106,6 +113,7 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Pages\ManageDtfInHousePrints::class,
                 \App\Filament\Pages\QuickCadBuilder::class,
                 \App\Filament\Pages\PoSubmission::class,
+                \App\Filament\Pages\Inventory::class,
             ])
             ->userMenuItems([
                 'profile' => MenuItem::make()
