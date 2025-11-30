@@ -26,7 +26,51 @@ class ViewUser extends ViewRecord
             ->schema([
                 Infolists\Components\Section::make('User Information')
                     ->schema([
-                        Infolists\Components\TextEntry::make('profile_picture')
+                        Infolists\Components\TextEntry::make('avatar')
+                            ->label('Avatar')
+                            ->formatStateUsing(function ($state, $record) {
+                                // Generate initials
+                                $initials = '';
+                                if ($record->first_name && $record->last_name) {
+                                    $initials = strtoupper(substr($record->first_name, 0, 1) . substr($record->last_name, 0, 1));
+                                } else {
+                                    $name = $record->name ?? '';
+                                    $parts = explode(' ', trim($name));
+                                    if (count($parts) >= 2) {
+                                        $initials = strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1));
+                                    } else {
+                                        $initials = strtoupper(substr($name, 0, 1));
+                                    }
+                                }
+                                
+                                // Generate unique color based on user ID
+                                $seed = $record->id ?? crc32($record->name ?? 'user');
+                                $colors = [
+                                    ['bg' => 'bg-red-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-blue-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-green-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-yellow-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-purple-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-pink-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-indigo-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-teal-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-orange-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-cyan-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-amber-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-emerald-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-violet-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-fuchsia-500', 'text' => 'text-white'],
+                                    ['bg' => 'bg-rose-500', 'text' => 'text-white'],
+                                ];
+                                
+                                $colorIndex = abs($seed) % count($colors);
+                                $color = $colors[$colorIndex];
+                                
+                                return new \Illuminate\Support\HtmlString(
+                                    '<div class="w-16 h-16 rounded-full ' . $color['bg'] . ' flex items-center justify-center"><span class="text-lg font-semibold ' . $color['text'] . '">' . htmlspecialchars($initials) . '</span></div>'
+                                );
+                            })
+                            ->html()
                             ->label('Profile Picture')
                             ->formatStateUsing(function ($state, $record) {
                                 if ($state) {

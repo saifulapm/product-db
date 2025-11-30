@@ -74,11 +74,12 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Headwear'),
                 NavigationGroup::make('Patches'),
                 NavigationGroup::make('Socks'),
-                NavigationGroup::make('Sock Pre Orders'),
+                NavigationGroup::make('Incoming Shipments'),
                 NavigationGroup::make('Bottles'),
                 NavigationGroup::make('Towels'),
                 NavigationGroup::make('Customer Service'),
                 NavigationGroup::make('Data'),
+                NavigationGroup::make('Events'),
                 NavigationGroup::make('Admin'),
             ])
             ->navigationItems([

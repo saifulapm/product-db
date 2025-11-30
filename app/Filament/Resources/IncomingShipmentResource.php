@@ -21,7 +21,7 @@ class IncomingShipmentResource extends Resource
     protected static ?string $navigationLabel = 'Incoming Shipments';
     protected static ?string $modelLabel = 'Incoming Shipment';
     protected static ?string $pluralModelLabel = 'Incoming Shipments';
-    protected static ?string $navigationGroup = 'Sock Pre Orders';
+    protected static ?string $navigationGroup = 'Incoming Shipments';
     protected static ?int $navigationSort = 2;
 
     public static function shouldRegisterNavigation(): bool

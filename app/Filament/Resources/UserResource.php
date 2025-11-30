@@ -38,15 +38,6 @@ class UserResource extends Resource
             ->schema([
                 Forms\Components\Section::make('User Information')
                     ->schema([
-                        Forms\Components\FileUpload::make('profile_picture')
-                            ->label('Profile Picture')
-                            ->image()
-                            ->avatar()
-                            ->imageEditor()
-                            ->disk('public')
-                            ->directory('profile-pictures')
-                            ->columnSpanFull()
-                            ->helperText('Upload a profile picture. It will be displayed in a circle on task cards.'),
                         Forms\Components\TextInput::make('first_name')
                             ->label('First Name')
                             ->required()
@@ -60,6 +51,12 @@ class UserResource extends Resource
                             ->required()
                             ->unique(ignoreRecord: true)
                             ->maxLength(255),
+                        Forms\Components\TextInput::make('phone')
+                            ->label('Phone Number')
+                            ->tel()
+                            ->maxLength(255)
+                            ->placeholder('e.g., +15551234567')
+                            ->helperText('Phone number for SMS reminders (E.164 format)'),
                         Forms\Components\TextInput::make('password')
                             ->password()
                             ->required(fn (string $context): bool => $context === 'create')

@@ -21,7 +21,7 @@ class SockStyleResource extends Resource
     protected static ?string $navigationLabel = 'Unique Sock Product';
     protected static ?string $modelLabel = 'Unique Sock Product';
     protected static ?string $pluralModelLabel = 'Unique Sock Products';
-    protected static ?string $navigationGroup = 'Sock Pre Orders';
+    protected static ?string $navigationGroup = 'Incoming Shipments';
     protected static ?int $navigationSort = 1;
 
     public static function shouldRegisterNavigation(): bool

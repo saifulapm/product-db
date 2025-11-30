@@ -34,12 +34,15 @@ class ProfileSettings extends Page
 
     protected function fillForm(): void
     {
+        $user = Auth::user();
+        
+        // Fill form with user data
         $this->form->fill([
-            'name' => Auth::user()->name,
-            'email' => Auth::user()->email,
-            'first_name' => Auth::user()->first_name,
-            'last_name' => Auth::user()->last_name,
-            'profile_picture' => Auth::user()->profile_picture,
+            'name' => $user->name ?? '',
+            'email' => $user->email ?? '',
+            'first_name' => $user->first_name ?? '',
+            'last_name' => $user->last_name ?? '',
+            'phone' => $user->phone ?? '',
         ]);
     }
 
@@ -59,14 +62,6 @@ class ProfileSettings extends Page
             ->schema([
                 Forms\Components\Section::make('Personal Information')
                     ->schema([
-                        Forms\Components\FileUpload::make('profile_picture')
-                            ->label('Profile Picture')
-                            ->image()
-                            ->avatar()
-                            ->imageEditor()
-                            ->disk('public')
-                            ->directory('profile-pictures')
-                            ->columnSpanFull(),
                         Forms\Components\TextInput::make('first_name')
                             ->label('First Name')
                             ->maxLength(255),
@@ -82,6 +77,12 @@ class ProfileSettings extends Page
                             ->email()
                             ->required()
                             ->maxLength(255),
+                        Forms\Components\TextInput::make('phone')
+                            ->label('Phone Number')
+                            ->tel()
+                            ->maxLength(255)
+                            ->placeholder('e.g., +15551234567')
+                            ->helperText('Phone number for SMS reminders (E.164 format)'),
                     ])->columns(2),
                 
                 Forms\Components\Section::make('Change Password')
@@ -91,7 +92,6 @@ class ProfileSettings extends Page
                             ->label('Current Password')
                             ->password()
                             ->revealable()
-                            ->visible(fn (Forms\Get $get) => !empty($get('new_password')) || !empty($get('new_password_confirmation')))
                             ->required(fn (Forms\Get $get) => !empty($get('new_password')) || !empty($get('new_password_confirmation')))
                             ->currentPassword(),
                         Forms\Components\TextInput::make('new_password')
@@ -99,18 +99,16 @@ class ProfileSettings extends Page
                             ->password()
                             ->revealable()
                             ->minLength(8)
-                            ->visible(fn (Forms\Get $get) => !empty($get('current_password')) || !empty($get('new_password_confirmation')))
                             ->required(fn (Forms\Get $get) => !empty($get('current_password')) || !empty($get('new_password_confirmation'))),
                         Forms\Components\TextInput::make('new_password_confirmation')
                             ->label('Confirm New Password')
                             ->password()
                             ->revealable()
                             ->same('new_password')
-                            ->visible(fn (Forms\Get $get) => !empty($get('current_password')) || !empty($get('new_password')))
                             ->required(fn (Forms\Get $get) => !empty($get('current_password')) || !empty($get('new_password'))),
                     ])->columns(2)
                     ->collapsible()
-                    ->collapsed(),
+                    ->collapsed(false),
             ]);
     }
 
@@ -134,19 +132,25 @@ class ProfileSettings extends Page
         $user = Auth::user();
 
         // Update basic info
-        $user->update([
+        $updateData = [
             'name' => $data['name'],
             'email' => $data['email'],
             'first_name' => $data['first_name'] ?? null,
             'last_name' => $data['last_name'] ?? null,
-            'profile_picture' => $data['profile_picture'] ?? null,
-        ]);
+            'phone' => $data['phone'] ?? null,
+        ];
+        
+        $user->update($updateData);
 
         // Update password if provided
         if (!empty($data['new_password'])) {
             $user->password = Hash::make($data['new_password']);
             $user->save();
         }
+
+        // Refresh user data and refill form
+        $user->refresh();
+        $this->fillForm();
 
         Notification::make()
             ->title('Profile updated successfully!')

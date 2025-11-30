@@ -18,7 +18,7 @@ class PackingListResource extends Resource
     protected static ?string $navigationLabel = 'Packing Lists';
     protected static ?string $modelLabel = 'Packing List';
     protected static ?string $pluralModelLabel = 'Packing Lists';
-    protected static ?string $navigationGroup = 'Sock Pre Orders';
+    protected static ?string $navigationGroup = 'Incoming Shipments';
     protected static ?int $navigationSort = 3;
 
     public static function shouldRegisterNavigation(): bool

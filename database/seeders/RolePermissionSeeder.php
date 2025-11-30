@@ -85,6 +85,12 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'View Franchisees', 'slug' => 'franchisees.view', 'resource' => 'data', 'action' => 'franchisees.view'],
             ['name' => 'View Files', 'slug' => 'files.view', 'resource' => 'data', 'action' => 'files.view'],
             
+            // Events Group
+            ['name' => 'View Events', 'slug' => 'events.view', 'resource' => 'events', 'action' => 'view'],
+            ['name' => 'Create Events', 'slug' => 'events.create', 'resource' => 'events', 'action' => 'create'],
+            ['name' => 'Update Events', 'slug' => 'events.update', 'resource' => 'events', 'action' => 'update'],
+            ['name' => 'Delete Events', 'slug' => 'events.delete', 'resource' => 'events', 'action' => 'delete'],
+            
             // Admin Group
             ['name' => 'View Team Members', 'slug' => 'users.view', 'resource' => 'users', 'action' => 'view'],
             ['name' => 'Create Users', 'slug' => 'users.create', 'resource' => 'users', 'action' => 'create'],
@@ -137,6 +143,7 @@ class RolePermissionSeeder extends Seeder
                     'towels.view',
                     'email-drafts.view', 'faqs.view', 'contact-info.view', 'login-info.view', 'how-tos.view',
                     'franchisees.view', 'files.view',
+                    'events.view', 'events.create', 'events.update', 'events.delete',
                     'users.view', 'users.create', 'users.update',
                     'roles.view',
                     'permissions.view',
