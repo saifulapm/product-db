@@ -52,14 +52,13 @@ class CreateGarment extends CreateRecord
 
     protected function getHeaderWidgets(): array
     {
-        return [
-            GarmentMeasurementsWidget::class,
-        ];
+        return [];
     }
 
     protected function getFooterWidgets(): array
     {
         return [
+            GarmentMeasurementsWidget::class,
             VariantsSummaryWidget::class,
             VariantEntryWidget::class,
         ];
