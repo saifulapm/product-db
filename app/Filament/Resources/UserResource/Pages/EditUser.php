@@ -31,6 +31,12 @@ class EditUser extends EditRecord
             unset($data['roles']);
         }
         
+        // Handle permission assignment
+        if (isset($data['permissions'])) {
+            $this->record->permissions()->sync($data['permissions']);
+            unset($data['permissions']);
+        }
+        
         return $data;
     }
 }

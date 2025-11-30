@@ -200,7 +200,7 @@ class RolePermissionSeeder extends Seeder
         }
 
         // Assign Super Admin role to existing admin users
-        $adminEmails = ['admin@ethos.com', 'admin@example.com'];
+        $adminEmails = ['admin@ethos.com', 'admin@example.com', 'will@ethos.community'];
         $superAdminRole = Role::where('slug', 'super-admin')->first();
         
         if ($superAdminRole) {

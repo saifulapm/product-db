@@ -6,6 +6,7 @@ use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Permission;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -79,6 +80,14 @@ class UserResource extends Resource
                             ->preload()
                             ->searchable()
                             ->helperText('Assign roles to this user. Super Admin has full access.'),
+                        Forms\Components\Select::make('permissions')
+                            ->label('Individual Permissions')
+                            ->multiple()
+                            ->relationship('permissions', 'name')
+                            ->preload()
+                            ->searchable()
+                            ->getOptionLabelFromRecordUsing(fn (Permission $record): string => $record->name . ' (' . $record->slug . ')')
+                            ->helperText('Assign individual permissions directly to this user. These are in addition to permissions granted through roles.'),
                     ]),
             ]);
     }

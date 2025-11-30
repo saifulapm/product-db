@@ -10,6 +10,7 @@ class CreateUser extends CreateRecord
     protected static string $resource = UserResource::class;
 
     public ?array $roles = null;
+    public ?array $permissions = null;
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
@@ -22,6 +23,10 @@ class CreateUser extends CreateRecord
         $this->roles = $data['roles'] ?? [];
         unset($data['roles']);
         
+        // Store permissions for afterCreate
+        $this->permissions = $data['permissions'] ?? [];
+        unset($data['permissions']);
+        
         return $data;
     }
 
@@ -30,6 +35,11 @@ class CreateUser extends CreateRecord
         // Assign roles after user is created
         if (isset($this->roles) && !empty($this->roles)) {
             $this->record->roles()->sync($this->roles);
+        }
+        
+        // Assign permissions after user is created
+        if (isset($this->permissions) && !empty($this->permissions)) {
+            $this->record->permissions()->sync($this->permissions);
         }
     }
 }

@@ -70,6 +70,14 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Get the permissions directly assigned to the user.
+     */
+    public function permissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions');
+    }
+
+    /**
      * Check if user has a specific role.
      */
     public function hasRole(string $role): bool
@@ -80,6 +88,7 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Check if user has a specific permission.
      * Super-admin users automatically have all permissions.
+     * Checks both role permissions and direct user permissions.
      */
     public function hasPermission(string $permission): bool
     {
@@ -88,6 +97,16 @@ class User extends Authenticatable implements FilamentUser
             return true;
         }
         
+        // Check if user has permission directly assigned
+        $hasDirectPermission = $this->permissions()
+            ->where('slug', $permission)
+            ->exists();
+        
+        if ($hasDirectPermission) {
+            return true;
+        }
+        
+        // Check if user has permission through roles
         return $this->roles()
             ->whereHas('permissions', function ($query) use ($permission) {
                 $query->where('slug', $permission);
