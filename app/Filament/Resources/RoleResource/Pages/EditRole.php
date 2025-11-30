@@ -16,4 +16,15 @@ class EditRole extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        // Handle permission assignment
+        if (isset($data['permissions'])) {
+            $this->record->permissions()->sync($data['permissions']);
+            unset($data['permissions']);
+        }
+        
+        return $data;
+    }
 }
