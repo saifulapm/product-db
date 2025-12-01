@@ -12,10 +12,13 @@ class Supply extends Model
         'weight',
         'reorder_link',
         'quantity',
+        'reorder_point',
         'cubic_measurements',
+        'shipment_tracking',
     ];
 
     protected $casts = [
         'cubic_measurements' => 'array',
+        'shipment_tracking' => 'array',
     ];
 }

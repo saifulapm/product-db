@@ -23,7 +23,7 @@ class SupplyResource extends Resource
 
     protected static ?string $navigationGroup = 'Shipping';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
@@ -55,6 +55,12 @@ class SupplyResource extends Resource
                     ->default(0)
                     ->minValue(0)
                     ->label('Quantity'),
+                Forms\Components\TextInput::make('reorder_point')
+                    ->numeric()
+                    ->default(0)
+                    ->minValue(0)
+                    ->label('Reorder Point')
+                    ->helperText('Email reminder will be sent when quantity reaches this level or below'),
                 Forms\Components\Section::make('Cubic Measurements')
                     ->schema([
                         Forms\Components\TextInput::make('cubic_measurements.length')
@@ -96,7 +102,61 @@ class SupplyResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('quantity')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->color(fn ($record) => 
+                        $record->reorder_point !== null && $record->quantity <= $record->reorder_point 
+                            ? 'danger' 
+                            : 'success'
+                    ),
+                Tables\Columns\TextColumn::make('reorder_point')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('average_monthly_usage')
+                    ->label('Avg/Month')
+                    ->state(function ($record) {
+                        $tracking = $record->shipment_tracking ?? [];
+                        
+                        if (empty($tracking) || !is_array($tracking)) {
+                            return 0;
+                        }
+
+                        $totalUsed = count($tracking);
+                        $firstShipmentDate = null;
+                        $lastShipmentDate = null;
+
+                        foreach ($tracking as $shipment) {
+                            if (empty($shipment['used_at'])) {
+                                continue;
+                            }
+
+                            try {
+                                $date = \Carbon\Carbon::parse($shipment['used_at']);
+                                
+                                if ($firstShipmentDate === null || $date->lt($firstShipmentDate)) {
+                                    $firstShipmentDate = $date;
+                                }
+                                if ($lastShipmentDate === null || $date->gt($lastShipmentDate)) {
+                                    $lastShipmentDate = $date;
+                                }
+                            } catch (\Exception $e) {
+                                continue;
+                            }
+                        }
+
+                        if ($firstShipmentDate && $lastShipmentDate) {
+                            $monthsTracked = $firstShipmentDate->diffInMonths($lastShipmentDate) + 1;
+                            if ($monthsTracked < 1) {
+                                $monthsTracked = 1;
+                            }
+                            return $monthsTracked > 0 ? round($totalUsed / $monthsTracked, 1) : 0;
+                        }
+
+                        return 0;
+                    })
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('reorder_link')
                     ->label('Reorder')
                     ->formatStateUsing(fn ($state) => $state ? 'Reorder' : '—')
@@ -116,6 +176,7 @@ class SupplyResource extends Resource
                 //
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -137,6 +198,7 @@ class SupplyResource extends Resource
         return [
             'index' => Pages\ListSupplies::route('/'),
             'create' => Pages\CreateSupply::route('/create'),
+            'view' => Pages\ViewSupply::route('/{record}'),
             'edit' => Pages\EditSupply::route('/{record}/edit'),
         ];
     }
