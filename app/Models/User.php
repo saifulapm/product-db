@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -83,7 +84,17 @@ class User extends Authenticatable implements FilamentUser
      */
     public function hasRole(string $role): bool
     {
-        return $this->roles()->where('slug', $role)->exists();
+        try {
+            return $this->roles()->where('slug', $role)->exists();
+        } catch (\Exception $e) {
+            // If there's any database error (e.g., user_roles table doesn't exist), return false
+            Log::warning('Role check failed', [
+                'user_id' => $this->id,
+                'role' => $role,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
     }
 
     /**
@@ -93,26 +104,42 @@ class User extends Authenticatable implements FilamentUser
      */
     public function hasPermission(string $permission): bool
     {
-        // Super-admin users have all permissions
-        if ($this->hasRole('super-admin')) {
-            return true;
+        try {
+            // Super-admin users have all permissions
+            if ($this->hasRole('super-admin')) {
+                return true;
+            }
+            
+            // Check if user has permission directly assigned
+            // Wrap in try-catch in case user_permissions table doesn't exist
+            try {
+                $hasDirectPermission = $this->permissions()
+                    ->where('slug', $permission)
+                    ->exists();
+                
+                if ($hasDirectPermission) {
+                    return true;
+                }
+            } catch (\Exception $e) {
+                // If user_permissions table doesn't exist, continue to role check
+            }
+            
+            // Check if user has permission through roles
+            return $this->roles()
+                ->whereHas('permissions', function ($query) use ($permission) {
+                    $query->where('slug', $permission);
+                })
+                ->exists();
+        } catch (\Exception $e) {
+            // If there's any database error, log it and return false
+            // This prevents 500 errors when permissions system isn't fully set up
+            Log::warning('Permission check failed', [
+                'user_id' => $this->id,
+                'permission' => $permission,
+                'error' => $e->getMessage()
+            ]);
+            return false;
         }
-        
-        // Check if user has permission directly assigned
-        $hasDirectPermission = $this->permissions()
-            ->where('slug', $permission)
-            ->exists();
-        
-        if ($hasDirectPermission) {
-            return true;
-        }
-        
-        // Check if user has permission through roles
-        return $this->roles()
-            ->whereHas('permissions', function ($query) use ($permission) {
-                $query->where('slug', $permission);
-            })
-            ->exists();
     }
     
     /**
