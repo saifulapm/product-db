@@ -18,6 +18,11 @@ class Shipments extends Page
 
     protected static string $view = 'filament.pages.shipments';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('shipments.view');
+    }
+
     #[Url]
     public ?string $search = '';
 

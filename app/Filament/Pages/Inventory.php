@@ -40,7 +40,7 @@ class Inventory extends Page
     
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check();
+        return auth()->check() && auth()->user()->hasPermission('inventory.view');
     }
 
     public function mount(): void

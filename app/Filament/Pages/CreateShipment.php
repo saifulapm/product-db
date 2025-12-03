@@ -27,6 +27,11 @@ class CreateShipment extends Page implements HasForms
 
     protected static string $view = 'filament.pages.create-shipment';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->check() && auth()->user()->hasPermission('shipments.create');
+    }
+
     public ?array $data = [];
     public ?array $recommendedSupply = null;
 

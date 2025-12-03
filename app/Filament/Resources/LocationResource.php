@@ -27,7 +27,7 @@ class LocationResource extends Resource
     
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->check();
+        return auth()->check() && auth()->user()->hasPermission('locations.view');
     }
 
     public static function form(Form $form): Form
