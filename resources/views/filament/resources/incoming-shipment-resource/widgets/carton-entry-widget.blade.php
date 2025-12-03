@@ -209,9 +209,10 @@
                         onclick="
                             const form = document.querySelector('form[wire\\:submit]');
                             if (form) {
+                                // Wait longer to ensure sync completes
                                 setTimeout(() => {
                                     form.requestSubmit();
-                                }, 300);
+                                }, 500);
                             }
                         "
                         class="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 transition-colors"

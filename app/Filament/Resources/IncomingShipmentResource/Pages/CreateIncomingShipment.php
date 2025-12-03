@@ -14,6 +14,8 @@ class CreateIncomingShipment extends CreateRecord
 {
     protected static string $resource = IncomingShipmentResource::class;
 
+    public array $syncedCartons = [];
+
     protected $listeners = [
         'update-shipment-name' => 'updateShipmentName',
         'sync-cartons-to-form' => 'syncCartonsToForm',
@@ -26,6 +28,9 @@ class CreateIncomingShipment extends CreateRecord
 
     public function syncCartonsToForm($cartons): void
     {
+        // Store cartons for use during creation
+        $this->syncedCartons = $cartons;
+        
         // Convert cartons from widget to items format
         $items = [];
         foreach ($cartons as $carton) {
@@ -119,6 +124,54 @@ class CreateIncomingShipment extends CreateRecord
             } else {
                 $data['status'] = 'shipped';
             }
+        }
+        
+        // Use synced cartons if available, otherwise use items from form data
+        // This ensures we have the latest carton data even if sync didn't happen via event
+        if (!empty($this->syncedCartons)) {
+            // Convert cartons to items format
+            $items = [];
+            foreach ($this->syncedCartons as $carton) {
+                // Include carton if it has any meaningful data
+                if (!empty($carton['product_name']) || !empty($carton['carton_number']) || !empty($carton['order_number']) || !empty($carton['quantity']) || !empty($carton['eid'])) {
+                    // Try to parse product name to extract style and color
+                    $productName = $carton['product_name'] ?? '';
+                    $style = '';
+                    $color = '';
+                    $packingWay = 'Hook';
+                    
+                    if (!empty($productName)) {
+                        // Try to split by " - " to get style and color
+                        $parts = explode(' - ', $productName);
+                        if (count($parts) >= 2) {
+                            $style = trim($parts[0]);
+                            $color = trim($parts[1]);
+                            // Check if last part is packing way
+                            if (count($parts) >= 3) {
+                                $lastPart = trim($parts[count($parts) - 1]);
+                                if (stripos($lastPart, 'sleeve') !== false || stripos($lastPart, 'wrap') !== false) {
+                                    $packingWay = 'Sleeve Wrap';
+                                    $color = trim($parts[count($parts) - 2]);
+                                }
+                            }
+                        } else {
+                            $style = trim($productName);
+                            $color = '';
+                        }
+                    }
+                    
+                    $items[] = [
+                        'carton_number' => $carton['carton_number'] ?? '',
+                        'order_number' => $carton['order_number'] ?? '',
+                        'style' => $style,
+                        'color' => $color,
+                        'eid' => $carton['eid'] ?? '',
+                        'packing_way' => $packingWay,
+                        'quantity' => !empty($carton['quantity']) ? (int)$carton['quantity'] : 0,
+                    ];
+                }
+            }
+            $data['items'] = $items;
         }
         
         // Ensure items is set and is an array

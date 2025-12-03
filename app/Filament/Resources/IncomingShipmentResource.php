@@ -67,7 +67,8 @@ class IncomingShipmentResource extends Resource
                             ->placeholder('Optional notes for this shipment')
                             ->columnSpanFull(),
                         Forms\Components\Hidden::make('items')
-                            ->default([]),
+                            ->default([])
+                            ->dehydrated(true),
                     ])
                     ->columns(2),
                 
