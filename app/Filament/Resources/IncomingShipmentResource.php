@@ -45,13 +45,6 @@ class IncomingShipmentResource extends Resource
                             ->displayFormat('M d, Y')
                             ->default(now())
                             ->required(),
-                        Forms\Components\DateTimePicker::make('created_at')
-                            ->label('Date Created')
-                            ->displayFormat('M d, Y g:i A')
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->default(fn ($record) => $record?->created_at ?? now())
-                            ->visible(fn ($record) => $record !== null),
                         Forms\Components\Textarea::make('description')
                             ->label('Notes')
                             ->rows(3)
