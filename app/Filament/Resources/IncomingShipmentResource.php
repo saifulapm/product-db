@@ -43,7 +43,7 @@ class IncomingShipmentResource extends Resource
                         Forms\Components\DatePicker::make('shipment_date')
                             ->label('Shipment Date')
                             ->displayFormat('M d, Y')
-                            ->default(fn ($record) => $record?->shipment_date ?? now())
+                            ->default(now())
                             ->required(),
                         Forms\Components\DateTimePicker::make('created_at')
                             ->label('Date Created')

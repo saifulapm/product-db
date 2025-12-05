@@ -114,7 +114,7 @@ class CartonEntryWidget extends Widget implements HasForms
         $this->dispatch('update-shipment-name', name: $this->shipmentNumber);
     }
 
-    protected function syncCartonsToForm(): void
+    public function syncCartonsToForm(): void
     {
         // Dispatch event to sync cartons to parent form's items field
         $this->dispatch('sync-cartons-to-form', cartons: $this->cartons);

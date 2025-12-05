@@ -111,6 +111,11 @@ class CreateIncomingShipment extends CreateRecord
             $data['name'] = $this->generateNextShipmentNumber();
         }
         
+        // Ensure shipment_date is set (defaults to today if not provided)
+        if (empty($data['shipment_date'])) {
+            $data['shipment_date'] = now()->format('Y-m-d');
+        }
+        
         // Track when tracking number is first added
         if (!empty($data['tracking_number'])) {
             $data['tracking_added_at'] = now();
