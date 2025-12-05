@@ -318,6 +318,9 @@ class EditIncomingShipment extends EditRecord
         // Call the parent save method which handles validation and persistence
         try {
             $this->save();
+            
+            // Redirect to view page after successful save
+            return $this->redirect($this->getResource()::getUrl('view', ['record' => $this->record]));
         } catch (\Exception $e) {
             // If save fails, dispatch an error notification
             \Filament\Notifications\Notification::make()
@@ -326,5 +329,11 @@ class EditIncomingShipment extends EditRecord
                 ->danger()
                 ->send();
         }
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        // Redirect to view page after saving
+        return $this->getResource()::getUrl('view', ['record' => $this->record]);
     }
 }
