@@ -14,6 +14,7 @@ class IncomingShipment extends Model
         'tracking_number',
         'carrier',
         'supplier',
+        'shipment_date',
         'expected_date',
         'received_date',
         'status',

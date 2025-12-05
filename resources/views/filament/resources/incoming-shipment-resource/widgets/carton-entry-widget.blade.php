@@ -92,36 +92,36 @@
                 <table class="w-full">
                     <thead class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider w-12">
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider w-12">
                                 <input
                                     type="checkbox"
                                     wire:model.live="selectAll"
                                     class="w-4 h-4 rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-900"
                                 />
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 10%;">
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 10%;">
                                 Carton #
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 15%;">
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 15%;">
                                 Order Number
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 25%;">
-                                Ethos ID
-                            </th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 40%;">
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 40%;">
                                 Product Name
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 10%;">
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 10%;">
                                 QTY
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider w-12">
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 25%;">
+                                Tracking Number
+                            </th>
+                            <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider w-12">
                             </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                         @foreach($this->cartons as $index => $carton)
                             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                <td class="px-2 py-2 whitespace-nowrap">
                                     <input
                                         type="checkbox"
                                         wire:model.live="selectedRows"
@@ -129,47 +129,52 @@
                                         class="w-4 h-4 rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-900"
                                     />
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap" style="width: 10%;">
+                                <td class="px-2 py-2 whitespace-nowrap" style="width: 10%;">
                                     <input
                                         type="text"
                                         wire:model.live="cartons.{{ $index }}.carton_number"
                                         class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                        style="font-size: 9pt;"
                                         placeholder=""
                                     />
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap" style="width: 15%;">
+                                <td class="px-2 py-2 whitespace-nowrap" style="width: 15%;">
                                     <input
                                         type="text"
                                         wire:model.live="cartons.{{ $index }}.order_number"
                                         class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                        style="font-size: 9pt;"
                                         placeholder=""
                                     />
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap" style="width: 25%;">
-                                    <input
-                                        type="text"
-                                        wire:model.live="cartons.{{ $index }}.eid"
-                                        class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
-                                        placeholder=""
-                                    />
-                                </td>
-                                <td class="px-4 py-3" style="width: 40%;">
+                                <td class="px-2 py-2" style="width: 40%;">
                                     <input
                                         type="text"
                                         wire:model.live="cartons.{{ $index }}.product_name"
                                         class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                        style="font-size: 9pt;"
                                         placeholder=""
                                     />
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap" style="width: 10%;">
+                                <td class="px-2 py-2 whitespace-nowrap" style="width: 10%;">
                                     <input
                                         type="text"
                                         wire:model.live="cartons.{{ $index }}.quantity"
                                         class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                        style="font-size: 9pt;"
                                         placeholder=""
                                     />
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                <td class="px-2 py-2 whitespace-nowrap" style="width: 25%;">
+                                    <input
+                                        type="text"
+                                        wire:model.live="cartons.{{ $index }}.eid"
+                                        class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                        style="font-size: 9pt;"
+                                        placeholder=""
+                                    />
+                                </td>
+                                <td class="px-2 py-2 whitespace-nowrap">
                                     <button
                                         type="button"
                                         wire:click="removeCarton({{ $index }})"

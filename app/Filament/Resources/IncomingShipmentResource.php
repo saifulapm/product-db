@@ -40,6 +40,11 @@ class IncomingShipmentResource extends Resource
                             ->maxLength(255)
                             ->placeholder('e.g., BDR1399 Shipment, November Order, etc.')
                             ->helperText('A descriptive name for this shipment'),
+                        Forms\Components\DatePicker::make('shipment_date')
+                            ->label('Shipment Date')
+                            ->displayFormat('M d, Y')
+                            ->default(fn ($record) => $record?->shipment_date ?? now())
+                            ->required(),
                         Forms\Components\DateTimePicker::make('created_at')
                             ->label('Date Created')
                             ->displayFormat('M d, Y g:i A')
@@ -47,20 +52,6 @@ class IncomingShipmentResource extends Resource
                             ->dehydrated(false)
                             ->default(fn ($record) => $record?->created_at ?? now())
                             ->visible(fn ($record) => $record !== null),
-                        Forms\Components\Select::make('carrier')
-                            ->label('Shipping Provider')
-                            ->options([
-                                'UPS' => 'UPS',
-                                'FedEx' => 'FedEx',
-                                'USPS' => 'USPS',
-                                'DHL' => 'DHL',
-                            ])
-                            ->searchable()
-                            ->native(false),
-                        Forms\Components\TextInput::make('tracking_number')
-                            ->label('Tracking Number')
-                            ->maxLength(255)
-                            ->placeholder('Enter tracking number'),
                         Forms\Components\Textarea::make('description')
                             ->label('Notes')
                             ->rows(3)

@@ -131,7 +131,7 @@
                         <thead class="bg-gray-50 dark:bg-gray-800">
                             <tr>
                                 @if($isEditable)
-                                    <th class="px-1 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider w-12">
+                                    <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider w-12">
                                         <input
                                             type="checkbox"
                                             wire:model.live="selectAll"
@@ -139,28 +139,28 @@
                                         />
                                     </th>
                                 @endif
-                                <th class="px-1 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 8%;">
+                                <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 8%;">
                                     Carton #
                                 </th>
-                                <th class="px-1 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 12%;">
+                                <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 12%;">
                                     Order Number
                                 </th>
-                                <th class="px-1 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 20%;">
-                                    Ethos ID
-                                </th>
-                                <th class="px-1 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 35%;">
+                                <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 35%;">
                                     Product Name
                                 </th>
-                                <th class="px-1 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 8%;">
+                                <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 8%;">
                                     QTY
                                 </th>
                                 @if($hasSavedItems)
-                                    <th class="px-1 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 10%;">
+                                    <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 10%;">
                                         Received QTY
                                     </th>
                                 @endif
+                                <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider" style="width: 20%;">
+                                    Tracking Number
+                                </th>
                                 @if($isEditable)
-                                    <th class="px-1 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider w-12">
+                                    <th class="px-2 py-2 text-left text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider w-12">
                                     </th>
                                 @endif
                             </tr>
@@ -169,7 +169,7 @@
                             @foreach($this->items as $index => $item)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
                                     @if($isEditable)
-                                        <td class="px-1 py-2 whitespace-nowrap">
+                                        <td class="px-2 py-2 whitespace-nowrap">
                                             <input
                                                 type="checkbox"
                                                 wire:model.live="selectedRows"
@@ -178,12 +178,13 @@
                                             />
                                         </td>
                                     @endif
-                                    <td class="px-1 py-2 whitespace-nowrap" style="width: 8%;">
+                                    <td class="px-2 py-2 whitespace-nowrap" style="width: 8%;">
                                         @if($isEditable)
                                             <input
                                                 type="text"
                                                 wire:model.live="items.{{ $index }}.carton_number"
                                                 class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                                style="font-size: 9pt;"
                                                 placeholder=""
                                                 required
                                             />
@@ -191,12 +192,13 @@
                                             <span class="text-sm text-gray-900 dark:text-white">{{ $item['carton_number'] ?? '—' }}</span>
                                         @endif
                                     </td>
-                                    <td class="px-1 py-2 whitespace-nowrap" style="width: 12%;">
+                                    <td class="px-2 py-2 whitespace-nowrap" style="width: 12%;">
                                         @if($isEditable)
                                             <input
                                                 type="text"
                                                 wire:model.live="items.{{ $index }}.order_number"
                                                 class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                                style="font-size: 9pt;"
                                                 placeholder=""
                                                 required
                                             />
@@ -204,25 +206,13 @@
                                             <span class="text-sm text-gray-900 dark:text-white">{{ $item['order_number'] ?? '—' }}</span>
                                         @endif
                                     </td>
-                                    <td class="px-1 py-2 whitespace-nowrap" style="width: 20%;">
-                                        @if($isEditable)
-                                            <input
-                                                type="text"
-                                                wire:model.live="items.{{ $index }}.eid"
-                                                class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
-                                                placeholder=""
-                                                required
-                                            />
-                                        @else
-                                            <span class="text-sm text-gray-900 dark:text-white">{{ $item['eid'] ?? '—' }}</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-1 py-2" style="width: 35%;">
+                                    <td class="px-2 py-2" style="width: 35%;">
                                         @if($isEditable)
                                             <input
                                                 type="text"
                                                 wire:model.live="items.{{ $index }}.product_name"
                                                 class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                                style="font-size: 9pt;"
                                                 placeholder=""
                                                 required
                                             />
@@ -242,12 +232,13 @@
                                             <span class="text-sm text-gray-900 dark:text-white">{{ $productName ?: '—' }}</span>
                                         @endif
                                     </td>
-                                    <td class="px-1 py-2 whitespace-nowrap" style="width: 8%;">
+                                    <td class="px-2 py-2 whitespace-nowrap" style="width: 8%;">
                                         @if($isEditable)
                                             <input
                                                 type="text"
                                                 wire:model.live="items.{{ $index }}.quantity"
                                                 class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                                style="font-size: 9pt;"
                                                 placeholder=""
                                                 required
                                             />
@@ -256,7 +247,7 @@
                                         @endif
                                     </td>
                                     @if(!empty($item['is_saved']) && $item['is_saved'] === true)
-                                        <td class="px-1 py-2 whitespace-nowrap" style="width: 10%;">
+                                        <td class="px-2 py-2 whitespace-nowrap" style="width: 10%;">
                                             @if($canReceiveQty)
                                                 <div class="flex items-center gap-2">
                                                     <input
@@ -264,6 +255,7 @@
                                                         min="0"
                                                         wire:model.live="items.{{ $index }}.received_qty"
                                                         class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm @if((int)($item['received_qty'] ?? 0) > (int)($item['quantity'] ?? 0)) border-yellow-400 dark:border-yellow-600 @endif"
+                                                        style="font-size: 9pt;"
                                                         placeholder="0"
                                                         @if((int)($item['received_qty'] ?? 0) > (int)($item['quantity'] ?? 0))
                                                             title="Over by {{ (int)($item['received_qty'] ?? 0) - (int)($item['quantity'] ?? 0) }}"
@@ -292,8 +284,22 @@
                                             @endif
                                         </td>
                                     @endif
+                                    <td class="px-2 py-2 whitespace-nowrap" style="width: 20%;">
+                                        @if($isEditable)
+                                            <input
+                                                type="text"
+                                                wire:model.live="items.{{ $index }}.eid"
+                                                class="block w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white sm:text-sm"
+                                                style="font-size: 9pt;"
+                                                placeholder=""
+                                                required
+                                            />
+                                        @else
+                                            <span class="text-sm text-gray-900 dark:text-white">{{ $item['eid'] ?? '—' }}</span>
+                                        @endif
+                                    </td>
                                     @if($isEditable)
-                                        <td class="px-1 py-2 whitespace-nowrap">
+                                        <td class="px-2 py-2 whitespace-nowrap">
                                             <button
                                                 type="button"
                                                 wire:click="removeItem({{ $index }})"
