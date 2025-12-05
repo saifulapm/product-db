@@ -218,15 +218,18 @@
                                             />
                                         @else
                                             @php
-                                                $style = $item['style'] ?? '';
-                                                $color = $item['color'] ?? '';
-                                                $productName = '';
-                                                if (!empty($style) && !empty($color)) {
-                                                    $productName = $style . ' - ' . $color;
-                                                } elseif (!empty($style)) {
-                                                    $productName = $style;
-                                                } elseif (!empty($color)) {
-                                                    $productName = $color;
+                                                // Use product_name if available, otherwise construct from style/color
+                                                $productName = $item['product_name'] ?? '';
+                                                if (empty($productName)) {
+                                                    $style = $item['style'] ?? '';
+                                                    $color = $item['color'] ?? '';
+                                                    if (!empty($style) && !empty($color)) {
+                                                        $productName = $style . ' - ' . $color;
+                                                    } elseif (!empty($style)) {
+                                                        $productName = $style;
+                                                    } elseif (!empty($color)) {
+                                                        $productName = $color;
+                                                    }
                                                 }
                                             @endphp
                                             <span class="text-sm text-gray-900 dark:text-white">{{ $productName ?: '—' }}</span>

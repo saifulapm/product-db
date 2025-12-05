@@ -127,15 +127,18 @@ class ShipmentContentsWidget extends Widget
         // Convert saved items to editable format
         $this->items = [];
         foreach ($savedItems as $item) {
-            $style = $item['style'] ?? '';
-            $color = $item['color'] ?? '';
-            $productName = '';
-            if (!empty($style) && !empty($color)) {
-                $productName = $style . ' - ' . $color;
-            } elseif (!empty($style)) {
-                $productName = $style;
-            } elseif (!empty($color)) {
-                $productName = $color;
+            // Use stored product_name if available, otherwise construct from style/color
+            $productName = $item['product_name'] ?? '';
+            if (empty($productName)) {
+                $style = $item['style'] ?? '';
+                $color = $item['color'] ?? '';
+                if (!empty($style) && !empty($color)) {
+                    $productName = $style . ' - ' . $color;
+                } elseif (!empty($style)) {
+                    $productName = $style;
+                } elseif (!empty($color)) {
+                    $productName = $color;
+                }
             }
 
             $this->items[] = [
@@ -143,6 +146,9 @@ class ShipmentContentsWidget extends Widget
                 'order_number' => $item['order_number'] ?? '',
                 'eid' => $item['eid'] ?? '',
                 'product_name' => $productName,
+                'style' => $item['style'] ?? '',
+                'color' => $item['color'] ?? '',
+                'packing_way' => $item['packing_way'] ?? 'Hook',
                 'quantity' => $item['quantity'] ?? 0,
                 'received_qty' => $item['received_qty'] ?? 0,
                 'is_saved' => true, // Mark as saved since it came from the database

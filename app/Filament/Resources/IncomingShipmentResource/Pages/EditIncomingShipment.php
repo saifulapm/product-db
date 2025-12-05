@@ -264,7 +264,7 @@ class EditIncomingShipment extends EditRecord
                         'carton_number' => $item['carton_number'] ?? '',
                         'order_number' => $item['order_number'] ?? '',
                         'eid' => $item['eid'] ?? '',
-                        'product_name' => ($item['style'] ?? '') . ' - ' . ($item['color'] ?? ''),
+                        'product_name' => $item['product_name'] ?? (($item['style'] ?? '') . ' - ' . ($item['color'] ?? '')),
                         'quantity' => $item['quantity'] ?? 0,
                         'received_qty' => $newReceivedQty,
                         'previous_received_qty' => $oldReceivedQty,
