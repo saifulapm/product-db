@@ -348,6 +348,11 @@
                                         const form = document.querySelector('form[wire\\:submit]');
                                         if (form) {
                                             form.requestSubmit();
+                                            // Redirect after a short delay to allow save to complete
+                                            setTimeout(() => {
+                                                const viewUrl = '{{ \App\Filament\Resources\IncomingShipmentResource::getUrl('view', ['record' => $this->record]) }}';
+                                                window.location.href = viewUrl;
+                                            }, 500);
                                         }
                                     }, 300);
                                 "

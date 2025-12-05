@@ -320,7 +320,7 @@ class EditIncomingShipment extends EditRecord
             $this->save();
             
             // Redirect to view page after successful save
-            return $this->redirect($this->getResource()::getUrl('view', ['record' => $this->record]));
+            $this->redirect($this->getResource()::getUrl('view', ['record' => $this->record]));
         } catch (\Exception $e) {
             // If save fails, dispatch an error notification
             \Filament\Notifications\Notification::make()
