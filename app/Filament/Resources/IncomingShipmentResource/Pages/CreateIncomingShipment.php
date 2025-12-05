@@ -65,6 +65,7 @@ class CreateIncomingShipment extends CreateRecord
                 $items[] = [
                     'carton_number' => $carton['carton_number'] ?? '',
                     'order_number' => $carton['order_number'] ?? '',
+                    'product_name' => $productName,
                     'style' => $style,
                     'color' => $color,
                     'eid' => $carton['eid'] ?? '',
@@ -168,6 +169,7 @@ class CreateIncomingShipment extends CreateRecord
                     $items[] = [
                         'carton_number' => $carton['carton_number'] ?? '',
                         'order_number' => $carton['order_number'] ?? '',
+                        'product_name' => $productName,
                         'style' => $style,
                         'color' => $color,
                         'eid' => $carton['eid'] ?? '',
@@ -211,6 +213,7 @@ class CreateIncomingShipment extends CreateRecord
                 // Ensure all required fields are present
                 $cleanedItem['carton_number'] = $cartonNumber;
                 $cleanedItem['order_number'] = $orderNumber;
+                $cleanedItem['product_name'] = $item['product_name'] ?? '';
                 $cleanedItem['style'] = $style;
                 $cleanedItem['color'] = $color;
                 $cleanedItem['eid'] = $eid;
