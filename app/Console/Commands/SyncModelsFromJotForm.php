@@ -98,16 +98,29 @@ class SyncModelsFromJotForm extends Command
         $answers = $submission['answers'] ?? [];
         
         // Map JotForm answers to our database fields
+        // Helper function to convert arrays to strings for text fields
+        $toString = function($value) {
+            if (is_array($value)) {
+                return implode(', ', array_filter($value));
+            }
+            return $value;
+        };
+        
         $modelData = [
-            'first_name' => $this->getAnswerValue($answers, 'first_name') ?? $this->getAnswerValue($answers, 'name', 'first'),
-            'last_name' => $this->getAnswerValue($answers, 'last_name') ?? $this->getAnswerValue($answers, 'name', 'last'),
-            'email' => $this->getAnswerValue($answers, 'email'),
-            'phone_number' => $this->getAnswerValue($answers, 'phone_number') ?? $this->getAnswerValue($answers, 'phone'),
-            'social_media' => $this->getAnswerValue($answers, 'social_media'),
-            'coffee_order' => $this->getAnswerValue($answers, 'coffee_order'),
-            'food_allergies' => $this->getAnswerValue($answers, 'food_allergies'),
-            'height' => $this->getAnswerValue($answers, 'height'),
+            'first_name' => $toString($this->getAnswerValue($answers, 'first_name') ?? $this->getAnswerValue($answers, 'name', 'first')),
+            'last_name' => $toString($this->getAnswerValue($answers, 'last_name') ?? $this->getAnswerValue($answers, 'name', 'last')),
+            'email' => $toString($this->getAnswerValue($answers, 'email')),
+            'phone_number' => $toString($this->getAnswerValue($answers, 'phone_number') ?? $this->getAnswerValue($answers, 'phone')),
+            'social_media' => $toString($this->getAnswerValue($answers, 'social_media')),
+            'coffee_order' => $toString($this->getAnswerValue($answers, 'coffee_order')),
+            'food_allergies' => $toString($this->getAnswerValue($answers, 'food_allergies')),
+            'height' => $toString($this->getAnswerValue($answers, 'height')),
         ];
+        
+        // Remove null/empty values
+        $modelData = array_filter($modelData, function($value) {
+            return $value !== null && $value !== '';
+        });
         
         // Build full name
         $nameParts = array_filter([$modelData['first_name'], $modelData['last_name']]);
